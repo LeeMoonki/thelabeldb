@@ -9,6 +9,13 @@ var passport = require('passport');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var labels = require('./routes/labels');
+var posts = require('./routes/posts');
+var messages = require('./routes/messages');
+var likes = require('./routes/likes');
+var auth = require('./routes/auth');
+var alarms = require('./routes/alarms');
+
 
 var redis = require('redis');
 var redisClient = redis.createClient();
@@ -50,6 +57,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/users', users);
+app.use('/labels', labels);
+app.use('/posts', posts);
+app.use('/messages', messages);
+app.use('/likes', likes);
+app.use('/auth', auth);
+app.use('/alarms', alarms);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
