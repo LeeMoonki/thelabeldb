@@ -4,11 +4,19 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
+var passport = require('passport');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
+var redis = require('redis');
+var redisClient = redis.createClient();
+var RedisStore = require('connect-redis')(session);
+
 var app = express();
+
+app.set('env', 'development');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -20,6 +28,24 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+
+app.use(session({
+  secret: '4e4adcc0-f2bf-40ac-ba32-cd373cc0981a',
+  sore: new RedisStore({
+    host: '127.0.0.1',
+    port: 6379,
+    client: redisClient
+  }),
+  resave: true,
+  saveUninitialized: false
+}));
+
+// session을 만든 '다음에' passport 설정
+// npm -> passport -> middleware
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
