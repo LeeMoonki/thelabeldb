@@ -1,4 +1,4 @@
-//더미 data
+//dummy data
 var dummyUser = {};
 
 dummyUser.dummy_email = 'abcd@naver.com';
@@ -73,8 +73,6 @@ function dummyShowMe(page, count, callback){
       data: [
         {
           id: 2,
-          user_id: dummyUser.dummy_id,
-          nickname: dummyUser.dummy_nickname,
           filetype: 0,
           file_path: '/usr/desktop/didimdol.mp3',
           date: '2016-08-23',
@@ -82,8 +80,6 @@ function dummyShowMe(page, count, callback){
         },
         {
           id: 5,
-          user_id: dummyUser.dummy_id,
-          nickname: dummyUser.dummy_nickname,
           filetype: 0,
           file_path: '/usr/desktop/didimdol2.mp3',
           date: '2016-08-23',
@@ -110,8 +106,6 @@ function dummyShowOther(id, page, count, callback){
       data: [
         {
           id: 1,
-          user_id: id,
-          nickname: '다른 계정 닉네임',
           filetype: 0,
           file_path: '/usr/desktop/didimdol.mp3',
           date: '2016-08-23',
@@ -119,8 +113,6 @@ function dummyShowOther(id, page, count, callback){
         },
         {
           id: 4,
-          user_id: id,
-          nickname: '다른 계정 닉네임',
           filetype: 0,
           file_path: '/usr/desktop/didimdol2.mp3',
           date: '2016-08-23',

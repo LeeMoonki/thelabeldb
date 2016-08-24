@@ -3,6 +3,7 @@ var router = express.Router();
 
 var User = require('../models/user');
 var isAuthenticate = require('./common').isAuthenticate;
+var isSecure = require('./common').isSecure;
 
 
 router.get('/', isAuthenticate, function(req, res, next) {
