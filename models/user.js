@@ -1,7 +1,15 @@
-//더미 이메일 패스워드
-var dummy_email = 'abcd@naver.com';
-var dummy_password = '1234';
-var dummy_id = 1;
+//더미 data
+var dummyUser = {};
+
+dummyUser.dummy_email = 'abcd@naver.com';
+dummyUser.dummy_password = '1234';
+dummyUser.dummy_id = 1;
+dummyUser.dummy_nickname = '닉네임';
+dummyUser.dummy_gender = '남자';
+dummyUser.dummy_position = '보컬';
+dummyUser.dummy_genre = '발라드';
+dummyUser.dummy_city = '서울';
+dummyUser.dummy_town = '관악구';
 
 
 function findByEmail(email, callback) {
@@ -13,10 +21,10 @@ function findByEmail(email, callback) {
     }
     else {
         var user = {};
-        user.id = 1;
-        user.name = 'thelabel';
+        user.id = dummyUser.dummy_id;
+        user.nickname = dummyUser.dummy_nickname;
         user.email = email;
-        user.password = dummy_password;
+        user.password = dummyUser.dummy_password;
         callback(null, user);
     }
 }
@@ -25,7 +33,7 @@ function verifyPassword(password, storedpassword, callback) {
     // if (err) {
     //     return callback(err);
     // }
-    storedpassword = dummy_password;
+    storedpassword = dummyUser.dummy_password;
     if (password !== storedpassword) {
         return callback(null, false);
     }
@@ -36,9 +44,14 @@ function verifyPassword(password, storedpassword, callback) {
 
 function  findUser(userId, callback) {
     var user = {};
-    user.id = dummy_id;
-    user.name = 'thelabel';
-    user.email = dummy_email;
+    user.id = dummyUser.dummy_id;
+    user.nickname = dummyUser.dummy_nickname;
+    user.email = dummyUser.dummy_email;
+    user.gender = dummyUser.dummy_gender;
+    user.position = dummyUser.dummy_position;
+    user.genre = dummyUser.dummy_genre;
+    user.city = dummyUser.dummy_city;
+    user.town = dummyUser.dummy_town;
     callback(null, user);
 }
 
@@ -52,16 +65,16 @@ function dummyShowMe(page, count, callback){
     page: page,
     count: count,
     result: {
-      id: 1,
-      nickname: '닉네임',
+      id: dummyUser.dummy_id,
+      nickname: dummyUser.dummy_nickname,
       image_page: '/usr/desktop/didimdol.jpg',
-      genre: '발라드',
+      genre: dummyUser.dummy_genre,
       post_count: 2,
       data: [
         {
           id: 2,
-          user_id: 1,
-          nickname: '닉네임',
+          user_id: dummyUser.dummy_id,
+          nickname: dummyUser.dummy_nickname,
           filetype: 0,
           file_path: '/usr/desktop/didimdol.mp3',
           date: '2016-08-23',
@@ -69,8 +82,8 @@ function dummyShowMe(page, count, callback){
         },
         {
           id: 5,
-          user_id: 1,
-          nickname: '닉네임',
+          user_id: dummyUser.dummy_id,
+          nickname: dummyUser.dummy_nickname,
           filetype: 0,
           file_path: '/usr/desktop/didimdol2.mp3',
           date: '2016-08-23',
@@ -120,10 +133,38 @@ function dummyShowOther(id, page, count, callback){
   callback(null, user);
 }
 
+function dummyShowProfilePage(callback){
+  var user = {};
+  user.id = dummyUser.dummy_id;
+  user.email = dummyUser.dummy_email;
+  user.nickname = dummyUser.dummy_nickname;
+  user.gender = dummyUser.dummy_gender;
+  user.position = dummyUser.dummy_position;
+  user.genre = dummyUser.dummy_genre;
+  user.city = dummyUser.dummy_city;
+  user.town = dummyUser.dummy_town;
+
+  callback(null, user);
+}
+
 function dummyRegisterUser(user, callback){
 
   callback(null, true);
 
+}
+
+function dummyUpdateUser(user, callback){
+  callback(null, true);
+}
+
+function dummyUpdatePassword(userId, password, newPassword, callback){
+  // userId 를 통해 기존 password를 찾아 받은 password와 비교해야 한다
+  if (dummyUser.dummy_password !== password) {
+    callback(new Error('기존 비밀번호를 다르게 입력했습니다'), false);
+  } else {
+    dummyUser.dummy_password = newPassword;
+    callback(null, true);
+  }
 }
 
 module.exports.findByEmail = findByEmail;
@@ -134,3 +175,7 @@ module.exports.findUser = findUser;
 module.exports.dummyShowMe = dummyShowMe;
 module.exports.dummyShowOther = dummyShowOther;
 module.exports.dummyRegisterUser = dummyRegisterUser;
+module.exports.dummyShowProfilePage = dummyShowProfilePage;
+module.exports.dummyUpdateUser = dummyUpdateUser;
+module.exports.dummyUpdatePassword = dummyUpdatePassword;
+module.exports.dummyUser = dummyUser;
