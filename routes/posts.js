@@ -52,7 +52,7 @@ router.get('/', isAuthenticate, function(req, res, next) {
     });
 });
 
-router.post('/', function (req, res, next) {
+router.post('/', isAuthenticate, function (req, res, next) {
    res.send({
       message: '업로드 완료'
    });
