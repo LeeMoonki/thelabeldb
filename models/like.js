@@ -3,7 +3,7 @@ var dummyLike = [];
 
 dummyLike.push({
   id: 9,
-  user_id: 3,
+  label_id: 3,
   nickname: '닉네임23',
   filetype: 0,
   file_path: '/usr/desktop/didimdol2.mp3',
@@ -13,7 +13,7 @@ dummyLike.push({
 
 dummyLike.push({
   id: 8,
-  user_id: 8,
+  label_id: 8,
   nickname: '닉네임10',
   filetype: 0,
   file_path: '/usr/desktop/mdol2.mp3',
@@ -23,7 +23,7 @@ dummyLike.push({
 
 dummyLike.push({
   id: 5,
-  user_id: 3,
+  label_id: 3,
   nickname: '닉네임7',
   filetype: 0,
   file_path: '/usr/desktop/didim.mp3',

@@ -60,7 +60,7 @@ function  findUser(userId, callback) {
 
 // models showing JSON data for dummy test
 function dummyShowMe(page, count, callback){
-  
+
   var user = {
     page: page,
     count: count,
@@ -207,4 +207,4 @@ module.exports.dummyShowProfilePage = dummyShowProfilePage;
 module.exports.dummyUpdateUser = dummyUpdateUser;
 module.exports.dummyUpdatePassword = dummyUpdatePassword;
 module.exports.dummySearchUsers = dummySearchUsers;
-module.exports.dummyUser = dummyUser;
+module.exports.dummyLabel = dummyUser;

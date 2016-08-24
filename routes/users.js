@@ -103,19 +103,19 @@ router.post('/', function(req, res, next){
       }
     });
   } else {
-    User.dummyUser.dummy_email = req.body.email;
-    User.dummyUser.dummy_password = req.body.password;
-    User.dummyUser.dummy_nickname = req.body.nickname;
+    User.dummyLabel.dummy_email = req.body.email;
+    User.dummyLabel.dummy_password = req.body.password;
+    User.dummyLabel.dummy_nickname = req.body.nickname;
 
-    User.dummyUser.dummy_gender = req.body.gender || '';
-    User.dummyUser.dummy_position = req.body.position || ''; // position 필수인지 다시 확인
-    User.dummyUser.dummy_genre = req.body.genre || '';
-    User.dummyUser.dummy_city = req.body.city || '';
-    User.dummyUser.dummy_town = req.body.town || '';
+    User.dummyLabel.dummy_gender = req.body.gender || '';
+    User.dummyLabel.dummy_position = req.body.position || ''; // position 필수인지 다시 확인
+    User.dummyLabel.dummy_genre = req.body.genre || '';
+    User.dummyLabel.dummy_city = req.body.city || '';
+    User.dummyLabel.dummy_town = req.body.town || '';
 
-    console.log(User.dummyUser);
+    console.log(User.dummyLabel);
 
-    User.dummyRegisterUser(User.dummyUser, function(err, result){
+    User.dummyRegisterUser(User.dummyLabel, function(err, result){
       if (err) {
         res.send({
           error: {
@@ -129,7 +129,7 @@ router.post('/', function(req, res, next){
           res.send({
             message: '회원 가입이 정상적으로 처리되었습니다',
             dummyMessage: 'dummy test를 위한 입력 데이터 출력입니다',
-            dummyData: User.dummyUser
+            dummyData: User.dummyLabel
           });
         } else {
           res.send({
@@ -178,7 +178,7 @@ router.put('/', isAuthenticate, function(req, res, next){
             res.send({
               message: '비밀번호 변경',
               dummyMessage: 'dummy test를 위한 입력 데이터 출력입니다',
-              dummyData: User.dummyUser.dummy_password
+              dummyData: User.dummyLabel.dummy_password
             });
           } else {
             res.send({
@@ -193,16 +193,16 @@ router.put('/', isAuthenticate, function(req, res, next){
     }
 
   } else {
-    User.dummyUser.dummy_id = req.body.id || req.user.id;
-    User.dummyUser.dummy_email = req.body.email || req.user.email;
-    User.dummyUser.dummy_nickname = req.body.nickname || req.user.nickname;
-    User.dummyUser.dummy_gender = req.body.gender || req.user.gender;
-    User.dummyUser.dummy_position = req.body.position || req.user.position;
-    User.dummyUser.dummy_genre = req.body.genre || req.user.genre;
-    User.dummyUser.dummy_city = req.body.city || req.user.city;
-    User.dummyUser.dummy_town = req.body.town || req.user.town;
+    User.dummyLabel.dummy_id = req.body.id || req.user.id;
+    User.dummyLabel.dummy_email = req.body.email || req.user.email;
+    User.dummyLabel.dummy_nickname = req.body.nickname || req.user.nickname;
+    User.dummyLabel.dummy_gender = req.body.gender || req.user.gender;
+    User.dummyLabel.dummy_position = req.body.position || req.user.position;
+    User.dummyLabel.dummy_genre = req.body.genre || req.user.genre;
+    User.dummyLabel.dummy_city = req.body.city || req.user.city;
+    User.dummyLabel.dummy_town = req.body.town || req.user.town;
 
-    User.dummyUpdateUser(User.dummyUser, function (err, result) {
+    User.dummyUpdateUser(User.dummyLabel, function (err, result) {
       if (err) {
         res.send({
           error: {
@@ -215,7 +215,7 @@ router.put('/', isAuthenticate, function(req, res, next){
           res.send({
             message: '수정 완료',
             dummyMessage: 'dummy test를 위한 입력 데이터 출력입니다',
-            dummyData: User.dummyUser
+            dummyData: User.dummyLabel
           });
         } else {
           res.send({

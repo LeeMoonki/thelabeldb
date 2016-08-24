@@ -5,7 +5,7 @@ var dummyPosts = [];
 
 dummyMeetPosts.push({
   id: 2,
-  user_id: 1,
+  label_id: 1,
   nickname: '닉네임1',
   filetype: 0,
   file_path: '/usr/desktop/qwedfd.mp3',
@@ -14,7 +14,7 @@ dummyMeetPosts.push({
 });
 dummyMeetPosts.push({
   id: 3,
-  user_id: 7,
+  label_id: 7,
   nickname: '닉네임3',
   filetype: 0,
   file_path: '/usr/desktop/didimdol.mp3',
@@ -23,7 +23,7 @@ dummyMeetPosts.push({
 });
 dummyMeetPosts.push({
   id: 9,
-  user_id: 2,
+  label_id: 2,
   nickname: '닉네임2',
   filetype: 0,
   file_path: '/usr/desktop/lake.mp3',
@@ -34,7 +34,7 @@ dummyMeetPosts.push({
 
 dummyPosts.push({
   id: 11,
-  user_id: 1,
+  label_id: 1,
   nickname: '닉네임8',
   filetype: 1,
   file_path: '/usr/desktop/didimdol2.jpg',
@@ -43,7 +43,7 @@ dummyPosts.push({
 });
 dummyPosts.push({
   id: 4,
-  user_id: 1,
+  label_id: 1,
   nickname: '닉네임4',
   filetype: 0,
   file_path: '/usr/desktop/didimdol2.mp3',
@@ -52,7 +52,7 @@ dummyPosts.push({
 });
 dummyPosts.push({
   id: 17,
-  user_id: 1,
+  label_id: 1,
   nickname: '닉네임11',
   filetype: 0,
   file_path: '/usr/desktop/didimdol2.mp3',
@@ -61,7 +61,7 @@ dummyPosts.push({
 });
 dummyPosts.push({
   id: 19,
-  user_id: 1,
+  label_id: 1,
   nickname: '닉네임10',
   filetype: 0,
   file_path: '/usr/desktop/didimdol2.mp3',
