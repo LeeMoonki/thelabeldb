@@ -147,6 +147,40 @@ function dummyShowProfilePage(callback){
   callback(null, user);
 }
 
+function dummySearchUsers(page, count, info, callback){
+  var user = [];
+
+  user.push({
+    user_id: 11,
+    user_nickname: '타인1',
+    user_image_path: '/usr/desktop/asdqwe.jpg',
+    user_genre_id: info.genre,
+    user_position_id: info.position,
+    user_city_id: info.city,
+    user_town_id: info.town
+  });
+  user.push({
+    user_id: 8,
+    user_nickname: '타인2',
+    user_image_path: '/usr/desktop/love.jpg',
+    user_genre_id: info.genre,
+    user_position_id: info.position,
+    user_city_id: info.city,
+    user_town_id: info.town
+  });
+  user.push({
+    user_id: 15,
+    user_nickname: '타인3',
+    user_image_path: '/usr/desktop/sing.jpg',
+    user_genre_id: info.genre,
+    user_position_id: info.position,
+    user_city_id: info.city,
+    user_town_id: info.town
+  });
+
+  callback(null, user);
+}
+
 function dummyRegisterUser(user, callback){
 
   callback(null, true);
@@ -154,7 +188,9 @@ function dummyRegisterUser(user, callback){
 }
 
 function dummyUpdateUser(user, callback){
+
   callback(null, true);
+
 }
 
 function dummyUpdatePassword(userId, password, newPassword, callback){
@@ -178,4 +214,5 @@ module.exports.dummyRegisterUser = dummyRegisterUser;
 module.exports.dummyShowProfilePage = dummyShowProfilePage;
 module.exports.dummyUpdateUser = dummyUpdateUser;
 module.exports.dummyUpdatePassword = dummyUpdatePassword;
+module.exports.dummySearchUsers = dummySearchUsers;
 module.exports.dummyUser = dummyUser;
