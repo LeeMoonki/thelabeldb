@@ -1,20 +1,33 @@
 var express = require('express');
 var router = express.Router();
-
+var mysql = require('mysql');
 var Alarm = require('../models/alarm');
+
+var dbPool = require('../models/common').dbPool;
+
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
-
-    var page = parseInt(req.query.page) || 1;
-    var count = parseInt(req.query.count) || 10;
-
-    res.send({
-        message: "get alarm",
-        page: page,
-        count: count
+    var sql = 'select * from city';
+    dbPool.getConnection(function (err, dbConn) {
+       if (err) {
+           return next (err);
+       }
+       else {
+           dbConn.query(sql,[], function (err, results) {
+               dbConn.release();
+               if(err) {
+                   return next(err);
+               }
+               else {
+                   res.send({
+                      results: results
+                   });
+               }
+           })
+       }
     });
-
+    // res.send('aaa');
 });
 
 router.post('/', function (req, res, next) {
