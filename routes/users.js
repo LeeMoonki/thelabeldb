@@ -24,26 +24,16 @@ router.get('/', isAuthenticate, function(req, res, next) {
     var count = parseInt(req.query.count) || 5;
     var id = parseInt(req.query.id);
 
-    User.dummyShowOther(id, page, count, function(err, user){
+    User.userPage(id, page, count, function(err, result){
       if (err) {
-        res.send({
-          error: {
-            message: '페이지를 불러오지 못했습니다'
-          }
-        });
         return next(err);
       }
-      res.send(user);
+      res.send(result);
     });
   } else if (setting) {
     // dummy test 용 프로필 설정 페이지
     User.dummyShowProfilePage(function(err, result){
       if (err) {
-        res.send({
-          error: {
-            message: '페이지를 불러오지 못했습니다'
-          }
-        });
         return next(err);
       }
       res.send(result);
@@ -61,11 +51,6 @@ router.get('/', isAuthenticate, function(req, res, next) {
     
     User.dummySearchUsers(page, count, searchInfo, function(err, results){
       if (err) {
-        res.send({
-          error: {
-            message: '검색 실패'
-          }
-        });
         return next(err);
       } else {
         res.send({
@@ -82,11 +67,6 @@ router.get('/', isAuthenticate, function(req, res, next) {
     var count = parseInt(req.query.count) || 5;
     User.dummyShowMe(page, count, function(err, user){
       if (err) {
-        res.send({
-          error: {
-            message: '페이지를 불러오지 못했습니다'
-          }
-        });
         return next(err);
       }
       res.send(user);
@@ -117,11 +97,6 @@ router.post('/', function(req, res, next){
 
     User.dummyRegisterUser(User.dummyLabel, function(err, result){
       if (err) {
-        res.send({
-          error: {
-            message: '회원 가입을 실패했습니'
-          }
-        });
         return next(err);
       }
       else {
@@ -132,11 +107,6 @@ router.post('/', function(req, res, next){
             dummyData: User.dummyLabel
           });
         } else {
-          res.send({
-            error: {
-              message: '회원 가입을 실패했습니'
-            }
-          });
         }
       }
     });
