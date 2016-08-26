@@ -7,14 +7,14 @@ var isSecure = require('./common').isSecure;
 
 
 router.get('/', isAuthenticate, function(req, res, next) {
-
+  
   var setting = req.query.setting || false; // req.qury 를 통해 Boolean 값을 넘기면 String이 아닌 Boolean으로 넘어온다
   var search = req.query.search || false;
 
   if (!req.user) {
     res.send({
       error: {
-        message: '페이지를 불러오지 못했습니다'
+        message: '페이지를 불러오지 못했습니다1'
       }
     });
   }
@@ -28,7 +28,7 @@ router.get('/', isAuthenticate, function(req, res, next) {
       if (err) {
         res.send({
           error: {
-            message: '페이지를 불러오지 못했습니다'
+            message: '페이지를 불러오지 못했습니다2'
           }
         });
         return next(err);
@@ -41,7 +41,7 @@ router.get('/', isAuthenticate, function(req, res, next) {
       if (err) {
         res.send({
           error: {
-            message: '페이지를 불러오지 못했습니다'
+            message: '페이지를 불러오지 못했습니다3'
           }
         });
         return next(err);
@@ -80,13 +80,8 @@ router.get('/', isAuthenticate, function(req, res, next) {
     // dummy test 용 내계정 페이지
     var page = parseInt(req.query.page) || 1;
     var count = parseInt(req.query.count) || 5;
-    User.dummyShowMe(page, count, function(err, user){
+    User.dummyShowMe(req.user.id, page, count, function(err, user){
       if (err) {
-        res.send({
-          error: {
-            message: '페이지를 불러오지 못했습니다'
-          }
-        });
         return next(err);
       }
       res.send(user);

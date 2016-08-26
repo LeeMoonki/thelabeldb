@@ -12,6 +12,15 @@ dummyUser.dummy_city = '서울';
 dummyUser.dummy_town = '관악구';
 
 
+
+var mysql = require('mysql');
+var async = require('async');
+var path = require('path');
+var url  = require('url');
+var fs = require('fs');
+var dbPool = require('../models/common').dbPool;
+
+
 function findByEmail(email, callback) {
     // if (err) {
     //     return callback(err);
@@ -59,38 +68,56 @@ function  findUser(userId, callback) {
 
 
 // models showing JSON data for dummy test
-function dummyShowMe(page, count, callback){
+function dummyShowMe(userId, page, count, callback){
 
-  var user = {
-    page: page,
-    count: count,
-    result: {
-      id: dummyUser.dummy_id,
-      nickname: dummyUser.dummy_nickname,
-      image_page: '/usr/desktop/didimdol.jpg',
-      genre: dummyUser.dummy_genre,
-      post_count: 2,
-      data: [
-        {
-          id: 2,
-          filetype: 0,
-          file_path: '/usr/desktop/didimdol.mp3',
-          date: '2016-08-23',
-          like: 3
-        },
-        {
-          id: 5,
-          filetype: 0,
-          file_path: '/usr/desktop/didimdol2.mp3',
-          date: '2016-08-23',
-          like: 0
-        }
-      ]
+  var sql_user_info = 'select u.id id, nickname, imagepath image_path, g.name genre ' +
+    'from user u join genre g on (u.genre_id = g.id) ' +
+    'where u.id = ?';
+  var sql_posts = 'select id, filetype, filepath, ctime, numlike from post where user_id = ? limit ?, ?';
+
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
     }
-  };
-  
-  callback(null, user);
+    async.waterfall([showMeGetPosts, showMeGetUser], function(err, user){
+      dbConn.release();
+      if (err) {
+        return callback(err);
+      } else {
+        callback(null, user);
+      }
+    });
+
+    function showMeGetPosts(callback){
+      dbConn.query(sql_posts, [userId, (page - 1) * count, count], function(err, results){
+        if (err) {
+          return callback(err);
+        } else {
+          callback(null, results);
+        }
+      });
+    }
+
+    function showMeGetUser(posts, callback){
+      dbConn.query(sql_user_info, [userId], function(err, result){
+        if (err) {
+          return callback(err);
+        } else {
+          var user = {};
+          user.page = page;
+          user.count = count;
+          result[0].post_count = posts.length;
+          user.result = result[0];
+          user.data = posts;
+
+          callback(null, user);
+        }
+      });
+    }
+  });
 }
+
+
 
 function dummyShowOther(id, page, count, callback){
   
