@@ -24,16 +24,11 @@ router.get('/', isAuthenticate, function(req, res, next) {
     var count = parseInt(req.query.count) || 5;
     var id = parseInt(req.query.id);
 
-    User.dummyShowOther(id, page, count, function(err, user){
+    User.userPage(id, page, count, function(err, result){
       if (err) {
-        res.send({
-          error: {
-            message: '페이지를 불러오지 못했습니다2'
-          }
-        });
         return next(err);
       }
-      res.send(user);
+      res.send(result);
     });
   } else if (setting) {
     // dummy test 용 프로필 설정 페이지

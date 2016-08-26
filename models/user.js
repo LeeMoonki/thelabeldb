@@ -119,38 +119,85 @@ function dummyShowMe(userId, page, count, callback){
 
 
 
-function dummyShowOther(id, page, count, callback){
-  
-  var user = {
-    page: page,
-    count: count,
-    result: {
-      id: id,
-      nickname: '다른 계정 닉네임',
-      image_page: '/usr/desktop/didimdol.jpg',
-      genre: '발라드',
-      post_count: 2,
-      data: [
-        {
-          id: 1,
-          filetype: 0,
-          file_path: '/usr/desktop/didimdol.mp3',
-          date: '2016-08-23',
-          like: 2
-        },
-        {
-          id: 4,
-          filetype: 0,
-          file_path: '/usr/desktop/didimdol2.mp3',
-          date: '2016-08-23',
-          like: 10
-        }
-      ]
+function userPage(id, page, rowCount, callback) {
+  var sql_member = 'select u.id id, u.nickname nickname, u.imagepath imagepath, u.genre_id genre, lm.label_id label_id ' +
+      'from user u join label_member lm on (lm.user_id = u.id) ' +
+      'where user_id = ?';
+
+  var sql_post = 'select p.id, p.filetype, p.filepath, p.ctime, p.numlike ' +
+      'from user u join post p on (p.user_id = u.id) ' +
+      'where user_id = ? ' +
+      'limit ?, ?';
+
+  var yourpage = {};
+
+  var member = [];
+  var post = [];
+  dbPool.getConnection(function (err, dbConn) {
+    if (err) {
+      return callback(err);
     }
-  };
-  
-  callback(null, user);
+
+    async.waterfall([memberF, postF], function(err){
+      dbConn.release();
+      if (err) {
+        return callback(err);
+      }
+
+      yourpage.page = page;
+      yourpage.count = rowCount;
+
+      var labelCount = {};
+      labelCount.id = member[0].id;
+      labelCount.nickname = member[0].nickname;
+      labelCount.image_path = member[0].imagepath;
+      labelCount.genre = member[0].genre;
+
+      var label = [];
+      for (var i = 0; i < member.length; i++) {
+        label.push(member[i].label_id)
+      }
+      labelCount.label_id = label;
+      labelCount.post_count = post.length;
+
+      yourpage.result = labelCount;
+      yourpage.data = post;
+
+      callback(null, yourpage);
+    });
+
+
+
+    function memberF(callback){
+      dbConn.query(sql_member, [id], function (err, result) {
+        console.log(result);
+        if (err) {
+          return callback(err);
+        }
+        else {
+          member = result;
+          callback(null, true);
+        }
+      });
+    }
+    function postF(fuckyou, callback){
+      dbConn.query(sql_post, [id, (page - 1) * rowCount, rowCount], function (err, result) {
+        console.log(result);
+        if (err) {
+          return callback(err);
+        }
+        else {
+          post = result;
+          callback(null);
+        }
+      });
+    }
+
+  });
+
 }
+
+
 
 function dummyShowProfilePage(callback){
   var user = {};
@@ -228,7 +275,7 @@ module.exports.findUser = findUser;
 
 // models showing JSON data for dummy test
 module.exports.dummyShowMe = dummyShowMe;
-module.exports.dummyShowOther = dummyShowOther;
+module.exports.userPage = userPage;
 module.exports.dummyRegisterUser = dummyRegisterUser;
 module.exports.dummyShowProfilePage = dummyShowProfilePage;
 module.exports.dummyUpdateUser = dummyUpdateUser;
