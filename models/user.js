@@ -20,56 +20,119 @@ var url  = require('url');
 var fs = require('fs');
 var dbPool = require('../models/common').dbPool;
 
-
+// using in Localstrategy in auth
 function findByEmail(email, callback) {
-    // if (err) {
-    //     return callback(err);
-    // }
+    var sql_search_by_email = 'select id, email, nickname, gender, text, imagepath, ' +
+                                         'position_id, genre_id, city_id, town_id, password ' +
+                              'from user ' +
+                              'where email = ?';
+
+    var user = {};
+
     if (email === undefined) {
         return callback(null, null);
     }
     else {
-        var user = {};
-        user.id = dummyUser.dummy_id;
-        user.nickname = dummyUser.dummy_nickname;
-        user.email = email;
-        user.password = dummyUser.dummy_password;
-        callback(null, user);
+      dbPool.getConnection(function(err, dbConn){
+        if (err) {
+          return callback(err);
+        } else {
+          dbConn.query(sql_search_by_email, [email], function (err, result) {
+            dbConn.release();
+            if (err) {
+              return callback(err);
+            } else {
+              if (result[0] === undefined) {
+                // no such email
+                callback(new Error('there is no user have such email'));
+              } else {
+                user.id = result[0].id;
+                user.email = result[0].email;
+                user.nickname = result[0].nickname;
+                user.gender = result[0].gender;
+                user.text = result[0].text;
+                user.imagepath = result[0].imagepath;
+                user.position_id = result[0].position_id;
+                user.genre_id = result[0].genre_id;
+                user.city_id = result[0].city_id;
+                user.town_id = result[0].town_id;
+                user.password = result[0].password;
+                callback(null, user);
+              }
+            }
+          });
+        }
+      });
     }
 }
 
-function verifyPassword(password, storedpassword, callback) {
-    // if (err) {
-    //     return callback(err);
-    // }
-    storedpassword = dummyUser.dummy_password;
-    if (password !== storedpassword) {
-        return callback(null, false);
+// using in Localstrategy of auth
+function verifyPassword(typedPassword, storedPassword, callback) {
+  
+
+  var sql_make_sha2 = 'select sha2(?, 512) password';
+
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+      dbConn.query(sql_make_sha2, [typedPassword], function(err, result){
+        dbConn.release();
+        if (err) {
+          return callback(err);
+        } else {
+          if (result[0].password === storedPassword) {
+            callback(null, true);
+          } else {
+            callback(null, false);
+          }
+        }
+      });
     }
-    else {
-        callback(null, true);
-    }
+  });
 }
 
+// using in deserialize of auth 
 function  findUser(userId, callback) {
-    var user = {};
-    user.id = dummyUser.dummy_id;
-    user.nickname = dummyUser.dummy_nickname;
-    user.email = dummyUser.dummy_email;
-    user.gender = dummyUser.dummy_gender;
-    user.position = dummyUser.dummy_position;
-    user.genre = dummyUser.dummy_genre;
-    user.city = dummyUser.dummy_city;
-    user.town = dummyUser.dummy_town;
-    callback(null, user);
+  var sql_search_by_userId = 'select id, email, nickname, gender, text, ' +
+    'imagepath, position_id, genre_id, city_id, town_id ' +
+    'from user ' +
+    'where id = ?';
+
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+      dbConn.query(sql_search_by_userId, [userId], function(err, result){
+        dbConn.release();
+        if (err) {
+          return callback(err);
+        } else {
+          var user = {};
+          user.id = result[0].id;
+          user.email = result[0].email;
+          user.nickname = result[0].nickname;
+          user.gender = result[0].gender;
+          user.text = result[0].text;
+          user.imagepath = result[0].imagepath;
+          user.position_id = result[0].position_id;
+          user.genre_id = result[0].genre_id;
+          user.city_id = result[0].city_id;
+          user.town_id = result[0].town_id;
+          callback(null, user);
+        }
+      });
+    }
+  });
 }
 
 
 
 
-// models showing JSON data for dummy test
-function dummyShowMe(userId, page, count, callback){
+// used in users's get route 
+function showMe(userId, page, count, callback){
 
+  console.log('showMe userId : ' + userId);
   var sql_user_info = 'select u.id id, nickname, imagepath image_path, g.name genre ' +
     'from user u join genre g on (u.genre_id = g.id) ' +
     'where u.id = ?';
@@ -170,7 +233,6 @@ function userPage(id, page, rowCount, callback) {
 
     function memberF(callback){
       dbConn.query(sql_member, [id], function (err, result) {
-        console.log(result);
         if (err) {
           return callback(err);
         }
@@ -182,7 +244,6 @@ function userPage(id, page, rowCount, callback) {
     }
     function postF(fuckyou, callback){
       dbConn.query(sql_post, [id, (page - 1) * rowCount, rowCount], function (err, result) {
-        console.log(result);
         if (err) {
           return callback(err);
         }
@@ -199,18 +260,40 @@ function userPage(id, page, rowCount, callback) {
 
 
 
-function dummyShowProfilePage(callback){
-  var user = {};
-  user.id = dummyUser.dummy_id;
-  user.email = dummyUser.dummy_email;
-  user.nickname = dummyUser.dummy_nickname;
-  user.gender = dummyUser.dummy_gender;
-  user.position = dummyUser.dummy_position;
-  user.genre = dummyUser.dummy_genre;
-  user.city = dummyUser.dummy_city;
-  user.town = dummyUser.dummy_town;
+function dummyShowProfilePage(userId, callback){
+  var sql_search_by_userId = 'select u.id id, nickname, gender, text, imagepath, p.name position, ' +
+                                    'g.name genre, c.name city, t.name town ' +
+                             'from user u join position p on(u.position_id = p.id) ' +
+                                         'join genre g on(u.genre_id = g.id) ' +
+                                         'join city c on(u.city_id = c.id) ' +
+                                         'join town t on(u.town_id = t.id) ' +
+                             'where u.id = ?';
 
-  callback(null, user);
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+      dbConn.query(sql_search_by_userId, [userId], function(err, result){
+        dbConn.release();
+        if (err) {
+          return callback(err);
+        } else {
+          var user = {};
+          user.id = result[0].id;
+          user.nickname = result[0].nickname;
+          user.gender = result[0].gender;
+          user.text = result[0].text;
+          user.image_path = result[0].imagepath;
+          user.position = result[0].position;
+          user.genre = result[0].genre;
+          user.city = result[0].city;
+          user.town = result[0].town;
+          callback(null, user);
+        }
+      });
+    }
+  });
+
 }
 
 function dummySearchUsers(page, count, info, callback){
@@ -274,7 +357,7 @@ module.exports.verifyPassword = verifyPassword;
 module.exports.findUser = findUser;
 
 // models showing JSON data for dummy test
-module.exports.dummyShowMe = dummyShowMe;
+module.exports.showMe = showMe;
 module.exports.userPage = userPage;
 module.exports.dummyRegisterUser = dummyRegisterUser;
 module.exports.dummyShowProfilePage = dummyShowProfilePage;

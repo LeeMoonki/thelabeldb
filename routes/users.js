@@ -14,7 +14,7 @@ router.get('/', isAuthenticate, function(req, res, next) {
   if (!req.user) {
     res.send({
       error: {
-        message: '페이지를 불러오지 못했습니다1'
+        message: '페이지를 불러오지 못했습니다'
       }
     });
   }
@@ -32,11 +32,11 @@ router.get('/', isAuthenticate, function(req, res, next) {
     });
   } else if (setting) {
     // dummy test 용 프로필 설정 페이지
-    User.dummyShowProfilePage(function(err, result){
+    User.dummyShowProfilePage(req.user.id, function(err, result){
       if (err) {
         res.send({
           error: {
-            message: '페이지를 불러오지 못했습니다3'
+            message: '페이지를 불러오지 못했습니다'
           }
         });
         return next(err);
@@ -75,7 +75,7 @@ router.get('/', isAuthenticate, function(req, res, next) {
     // dummy test 용 내계정 페이지
     var page = parseInt(req.query.page) || 1;
     var count = parseInt(req.query.count) || 5;
-    User.dummyShowMe(req.user.id, page, count, function(err, user){
+    User.showMe(req.user.id, page, count, function(err, user){
       if (err) {
         return next(err);
       }
@@ -89,7 +89,7 @@ router.post('/', function(req, res, next){
   if (!req.body.email || !req.body.nickname || !req.body.password || req.user) {
     res.send({
       error: {
-        message: '회원 가입을 실패했습니'
+        message: '회원 가입을 실패했습니다'
       }
     });
   } else {
