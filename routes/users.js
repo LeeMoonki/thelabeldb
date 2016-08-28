@@ -7,7 +7,7 @@ var isSecure = require('./common').isSecure;
 
 
 router.get('/', isAuthenticate, function(req, res, next) {
-
+  
   var setting = req.query.setting || false; // req.qury 를 통해 Boolean 값을 넘기면 String이 아닌 Boolean으로 넘어온다
   var search = req.query.search || false;
 
@@ -32,7 +32,7 @@ router.get('/', isAuthenticate, function(req, res, next) {
     });
   } else if (setting) {
     // dummy test 용 프로필 설정 페이지
-    User.dummyShowProfilePage(function(err, result){
+    User.dummyShowProfilePage(req.user.id, function(err, result){
       if (err) {
         return next(err);
       }
@@ -65,7 +65,7 @@ router.get('/', isAuthenticate, function(req, res, next) {
     // dummy test 용 내계정 페이지
     var page = parseInt(req.query.page) || 1;
     var count = parseInt(req.query.count) || 5;
-    User.dummyShowMe(page, count, function(err, user){
+    User.showMe(req.user.id, page, count, function(err, user){
       if (err) {
         return next(err);
       }
@@ -79,7 +79,7 @@ router.post('/', function(req, res, next){
   if (!req.body.email || !req.body.nickname || !req.body.password || req.user) {
     res.send({
       error: {
-        message: '회원 가입을 실패했습니'
+        message: '회원 가입을 실패했습니다'
       }
     });
   } else {

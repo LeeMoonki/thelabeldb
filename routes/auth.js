@@ -31,10 +31,11 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(id, done) {
     User.findUser(id, function(err, user) {
-        if (err) {
-            return done(err);
-        }
+      if (err) {
+        return done(err);
+      } else {
         done(null, user);
+      }
     });
 });
 
@@ -58,9 +59,9 @@ router.post('/local/login', function(req, res, next) {
 }, function(req, res, next) {
     var user = {};
     user.email = req.user.email;
-    user.name = req.user.name;
+    user.nickname = req.user.nickname;
     res.send({
-        message: 'local login',
+        message: '로그인이 정상적으로 처리되었습니다',
         user: user
     });
 });

@@ -1,10 +1,10 @@
 var express = require('express');
 var router = express.Router();
-var mysql = require('mysql');
-var path = require('path');
+var Label = require('../models/label');
+
 var isSecure = require('./common').isSecure;
 
-var Label = require('../models/label');
+
 
 var nuga = {};
 nuga.id = 1;
