@@ -94,7 +94,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                     var searchInfo = {};
                     searchInfo.genre_id = result.genre_id;
                     searchInfo.position_id = result.position_id;
-
+                    
                     Label.searchLabel(page, count, searchInfo, function (err, results) {
                         if (err) {
                             return next(err);

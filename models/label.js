@@ -191,9 +191,12 @@ function labelMain(labelId, page, count, callback) {
 
 function labelPage(userId, callback) {
 
-    var sql = 'select l.id id, l.name label_name, imagepath, authority_user_id ' +
+    var sql = 'select l.id id, l.name label_name, imagepath image_path, authority_user_id authorization ' +
               'from label l join label_member m on(l.id = m.label_id) ' +
               'where m.user_id = ?';
+
+    var label_list = {};
+    var label_page = [];
 
     dbPool.getConnection(function (err, dbConn) {
        if (err) {
@@ -208,18 +211,10 @@ function labelPage(userId, callback) {
               if (result[0] === undefined) {
                   callback(null, {});
               } else {
-                  var label_list = {};
-                  var label_page = [];
-                  var label = {};
                   for (var i = 0; i < result.length; i++) {
-                      label.id = result[i].id;
-                      label.label_name = result[i].label_name;
-                      label.image_path = result[i].imagepath;
-                      label.authorization = result[i].authority_user_id;
-                      label_page.push(label);
+                      label_page.push(result[i]);
                   }
                   label_list.data = label_page;
-
                   callback(null, label_list);
               }
           }
@@ -228,10 +223,13 @@ function labelPage(userId, callback) {
 }
 
 function labelMember(label_id, callback) {
-    var sql = 'select lm.user_id, u.nickname, u.imagepath ' +
-    'from label l join label_member lm on (lm.label_id = l.id) ' +
-    'join user u on (u.id = lm.user_id) ' +
-    'where l.id = ?';
+    var sql = 'select u.id user_id, u.nickname user_name, u.imagepath user_image_path ' +
+              'from label l join label_member m on(l.id = m.label_id) ' +
+                           'join user u on (m.user_id = u.id) ' +
+              'where l.id = ?';
+
+    var label_member = {};
+    var member =[];
 
     dbPool.getConnection(function (err, dbConn) {
 
@@ -244,22 +242,14 @@ function labelMember(label_id, callback) {
                 return callback (err);
             }
             else {
-                var label_member = {};
-                var member =[];
-                var user = {};
 
-                user = result;
-
-                user.user_id = result[0].user_id;
-                user.user_name = result[0].user_nickname;
-                user.user_image_path = result[0].user_image_path;
-
-                member = user;
+                for (var i = 0; i < result.length; i++) {
+                    member.push(result[i]);
+                }
                 label_member.data = member;
 
                 callback(null, label_member);
-
-
+                
             }
         });
     });
