@@ -19,43 +19,61 @@ function updateLabel(info, callback){
     callback(null, label);
 }
 
-function showSettingLabelPage(info, callback){
-    var label = info;
-    callback(null, label);
+function showSettingLabelPage(labelId, callback){
+
+    var sql_select_setting_info = 'select l.name label_name, text, imagepath image_path, g.name need_genre, p.name need_position ' +
+                                  'from label l join genre g on(l.genre_id = g.id) ' +
+                                               'join label_need n on(l.id = n.label_id) ' +
+                                               'join position p on(n.position_id = p.id) ' +
+                                  'where l.id = ?';
+
+    var sql_select_need_info = 'select p.name pname ' +
+                               'from label_need n join position p on(n.position_id = p.id) ' +
+                               'where label_id = ?';
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            dbConn.query(sql_select_setting_info, [labelId], function(err, results){
+                dbConn.release();
+                if (err) {
+                    return callback(err);
+                } else {
+                    var label = {};
+                    label.label_name = results[0].label_name;
+                    label.text = results[0].text;
+                    label.image_path = results[0].image_path;
+                    label.need_genre = results[0].need_genre;
+                    dbConn.query(sql_select_need_info, [labelId], function(err, needResults){
+                        if (err) {
+                            return callback(err);
+                        } else {
+                            if (needResults[0] === undefined) {
+                                label.need_positio = {};
+                                callback(null, label);
+                            } else {
+                                var temp = [];
+                                for (var i = 0; i < needResults.length; i++) {
+                                    temp.push(needResults[i].pname);
+                                }
+                                label.need_position = temp;
+                                callback(null, label);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    });
+
 }
 
 function searchLabel(page, count, info, callback){
-    var label = [];
 
-    label.push({
-        label_id: 11,
-        label_name: '타인1',
-        label_image_path: '/usr/desktop/asdqwe.jpg',
-        label_need_genre_id: info.genre,
-        label_need_position_id: info.position,
-        label_city_id: info.city,
-        label_town_id: info.town
-    });
-    label.push({
-        label_id: 8,
-        label_name: '타인2',
-        label_image_path: '/usr/desktop/love.jpg',
-        label_need_genre_id: info.genre,
-        label_need_position_id: info.position,
-        label_city_id: info.city,
-        label_town_id: info.town
-    });
-    label.push({
-        label_id: 15,
-        label_name: '타인3',
-        label_image_path: '/usr/desktop/sing.jpg',
-        label_need_genre_id: info.genre,
-        label_need_position_id: info.position,
-        label_city_id: info.city,
-        label_town_id: info.town
-    });
+    callback(null, info);
 
-    callback(null, label);
+
 }
 
 function dummyRegisterLabel(label, callback) {
@@ -81,7 +99,8 @@ function labelMain(labelId, page, count, callback) {
     // data block
     var sql_select_posts = 'select p.id id, user_id, nickname, filetype, filepath file_path, p.ctime date, numlike ' +
                            'from post p join user u on(p.user_id = u.id) ' +
-                           'where p.label_id = ?';
+                           'where p.label_id = ? ' +
+                           'limit ?, ?';
 
     var result = {};
     var members = [];
@@ -157,7 +176,7 @@ function labelMain(labelId, page, count, callback) {
 
 
         function getLabelPosts(callback) {
-            dbConn.query(sql_select_posts, [labelId], function(err, results){
+            dbConn.query(sql_select_posts, [labelId, (page - 1) * count, count], function(err, results){
                 if (err) {
                     callback(new Error('Error sql_select_posts'));
                 } else {
@@ -245,7 +264,33 @@ function labelMember(label_id, callback) {
     });
 }
 
-
+function getLabelSearchInfo(labelId, callback) {
+    var sql_find_ids = 'select l.genre_id genre_id, n.position_id position_id ' +
+                       'from label l join label_need n on(l.id = n.label_id) ' +
+                       'where l.id = ?';
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            dbConn.query(sql_find_ids, [labelId], function(err, results){
+                dbConn.release();
+                if (err) {
+                    callback(new Error('Error sql_find_ids'));
+                } else {
+                    var info = {};
+                    var pos = [];
+                    info.genre_id = results[0].genre_id;
+                    for (var i = 0; i < results.length; i++) {
+                        pos.push(results[i].position_id);
+                    }
+                    info.position_id = pos;
+                    
+                    callback(null, info);
+                }
+            });
+        }
+    });
+}
 
 
 module.exports.dummyRegisterLabel = dummyRegisterLabel;
@@ -257,3 +302,5 @@ module.exports.updateLabel = updateLabel;
 module.exports.labelMain = labelMain;
 module.exports.labelPage = labelPage;
 module.exports.labelMember = labelMember;
+
+module.exports.getLabelSearchInfo = getLabelSearchInfo;

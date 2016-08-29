@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var Label = require('../models/label');
+var User = require('../models/user');
 
 var isSecure = require('./common').isSecure;
 var isAuthenticate = require('./common').isAuthenticate;
@@ -15,7 +16,7 @@ nuga.need_position = '베이스';
 nuga.text = 'hihihihihihihihihi';
 
 
-router.post('/', isSecure, function (req, res, next) {
+router.post('/', isSecure, isAuthenticate, function (req, res, next) {
     if (!req.body.label_name || req.label) {
         res.send({
             error: {
@@ -68,7 +69,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
         });
     } else {
         // 레이블 페이지
-        if (req.query.label_id) {
+        if (!search && !setting && req.query.label_id) {
             //레이블 메인페이지
             var page = parseInt(req.query.page) || 1;
             var count = parseInt(req.query.count) || 10;
@@ -84,37 +85,37 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
             // dummy test 용 사람 찾기 페이지
             var page = parseInt(req.query.page) || 1;
             var count = parseInt(req.query.count) || 10;
-            var searchInfo = {};
-            // 지금은 모두 string 처리, 향후 paseInt를 통해 id로 관리
-            searchInfo.genre = req.query.genre_id || nuga.need_genre;
-            searchInfo.position = req.query.position_id || nuga.need_position;
-            searchInfo.city = req.query.city_id || '서울';
-            searchInfo.town = req.query.town_id || '관악구';
 
-            Label.searchLabel(page, count, searchInfo, function (err, results) {
+            User.findUser(req.user.id, function(err, result){
                 if (err) {
-                    res.send({
-                        error: {
-                            message: '검색 실패'
-                        }
-                    });
                     return next(err);
                 } else {
-                    res.send({
-                        page: page,
-                        count: count,
-                        result: results
+
+                    var searchInfo = {};
+                    searchInfo.genre_id = result.genre_id;
+                    searchInfo.position_id = result.position_id;
+
+                    Label.searchLabel(page, count, searchInfo, function (err, results) {
+                        if (err) {
+                            return next(err);
+                        } else {
+                            res.send({
+                                page: page,
+                                count: count,
+                                result: results
+                            });
+                        }
                     });
                 }
             });
-        } else if (setting) {
-            Label.showSettingLabelPage(nuga, function (err, result) {
+
+
+        } else if (setting && req.query.label_id) {
+            
+            var id = parseInt(req.query.label_id);
+            
+            Label.showSettingLabelPage(id, function (err, result) {
                 if (err) {
-                    res.send({
-                        error: {
-                            message: "페이지를 불러오지 못했습니다"
-                        }
-                    });
                     return next(err);
                 } else {
                     res.send(result);
@@ -154,16 +155,9 @@ router.get('/members', isSecure, isAuthenticate,function (req, res, next) {
 
 });
 
-// router.get('/', isSecure, function(req, res, next) {
-//     res.send('label');
-// });
-//
-// router.get('/', isSecure, function(req, res, next) {
-//     res.send('label');
-// });
-//
+
 //레이블 설정
-router.put('/', isSecure, function (req, res, next) {
+router.put('/', isSecure, isAuthenticate,function (req, res, next) {
     var settingInfo = {};
 
     settingInfo.text = req.body.text || nuga.text;
