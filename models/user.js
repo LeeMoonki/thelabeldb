@@ -242,7 +242,7 @@ function userPage(id, page, rowCount, callback) {
         }
       });
     }
-    function postF(fuckyou, callback){
+    function postF(flag, callback){
       dbConn.query(sql_post, [id, (page - 1) * rowCount, rowCount], function (err, result) {
         if (err) {
           return callback(err);
@@ -260,7 +260,7 @@ function userPage(id, page, rowCount, callback) {
 
 
 
-function dummyShowProfilePage(userId, callback){
+function showProfilePage(userId, callback){
   var sql_search_by_userId = 'select u.id id, nickname, gender, text, imagepath, p.name position, ' +
                                     'g.name genre, c.name city, t.name town ' +
                              'from user u join position p on(u.position_id = p.id) ' +
@@ -360,7 +360,7 @@ module.exports.findUser = findUser;
 module.exports.showMe = showMe;
 module.exports.userPage = userPage;
 module.exports.dummyRegisterUser = dummyRegisterUser;
-module.exports.dummyShowProfilePage = dummyShowProfilePage;
+module.exports.showProfilePage = showProfilePage;
 module.exports.dummyUpdateUser = dummyUpdateUser;
 module.exports.dummyUpdatePassword = dummyUpdatePassword;
 module.exports.dummySearchUsers = dummySearchUsers;

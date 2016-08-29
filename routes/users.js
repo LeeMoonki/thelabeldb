@@ -32,7 +32,7 @@ router.get('/', isAuthenticate, function(req, res, next) {
     });
   } else if (setting) {
     // dummy test 용 프로필 설정 페이지
-    User.dummyShowProfilePage(req.user.id, function(err, result){
+    User.showProfilePage(req.user.id, function(err, result){
       if (err) {
         return next(err);
       }
