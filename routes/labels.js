@@ -57,72 +57,80 @@ router.post('/', isSecure, function (req, res, next) {
 
 router.get('/', isSecure, isAuthenticate, function (req, res, next) {
     
-    var search = parseInt(req.query.search) || false;
-    var setting = parseInt(req.query.setting) || false;
+    var search = req.query.search || false;
+    var setting = req.query.setting || false;
 
-    // 레이블 페이지
-    if (req.query.label_id) {
-        //레이블 메인페이지
-        var page = parseInt(req.query.page) || 1;
-        var count = parseInt(req.query.count) || 10;
-        var id = parseInt(req.query.label_id);
-
-        Label.labelMain(id, page, count, function (err, result) {
-            if (err) {
-                return next(err);
-            }
-            res.send(result);
-        });
-    } else if (req.query.search) {
-        // dummy test 용 사람 찾기 페이지
-        var page = parseInt(req.query.page) || 1;
-        var count = parseInt(req.query.count) || 10;
-        var searchInfo = {};
-        // 지금은 모두 string 처리, 향후 paseInt를 통해 id로 관리
-        searchInfo.genre = req.query.genre_id || nuga.need_genre;
-        searchInfo.position = req.query.position_id || nuga.need_position;
-        searchInfo.city = req.query.city_id || '서울';
-        searchInfo.town = req.query.town_id || '관악구';
-
-        Label.searchLabel(page, count, searchInfo, function(err, results){
-            if (err) {
-                res.send({
-                    error: {
-                        message: '검색 실패'
-                    }
-                });
-                return next(err);
-            } else {
-                res.send({
-                    page: page,
-                    count: count,
-                    result : results
-                });
+    if (search && setting) {
+        res.send({
+            error: {
+                message: '페이지를 불러오지 못했습니다'
             }
         });
-    } else if (setting) {
-        Label.showSettingLabelPage(nuga, function(err, result){
-            if (err) {
-                res.send({
-                    error: {
-                        message: "페이지를 불러오지 못했습니다"
-                    }
-                });
-                return next(err);
-            } else {
+    } else {
+        // 레이블 페이지
+        if (req.query.label_id) {
+            //레이블 메인페이지
+            var page = parseInt(req.query.page) || 1;
+            var count = parseInt(req.query.count) || 10;
+            var id = parseInt(req.query.label_id);
+
+            Label.labelMain(id, page, count, function (err, result) {
+                if (err) {
+                    return next(err);
+                }
                 res.send(result);
-            }
-        });
-    }
-    else {
-        var id = parseInt(req.user.id);
+            });
+        } else if (search) {
+            // dummy test 용 사람 찾기 페이지
+            var page = parseInt(req.query.page) || 1;
+            var count = parseInt(req.query.count) || 10;
+            var searchInfo = {};
+            // 지금은 모두 string 처리, 향후 paseInt를 통해 id로 관리
+            searchInfo.genre = req.query.genre_id || nuga.need_genre;
+            searchInfo.position = req.query.position_id || nuga.need_position;
+            searchInfo.city = req.query.city_id || '서울';
+            searchInfo.town = req.query.town_id || '관악구';
 
-        Label.labelPage(id, function (err, list) {
-            if (err) {
-                return next(err);
-            }
-            res.send(list);
-        });
+            Label.searchLabel(page, count, searchInfo, function (err, results) {
+                if (err) {
+                    res.send({
+                        error: {
+                            message: '검색 실패'
+                        }
+                    });
+                    return next(err);
+                } else {
+                    res.send({
+                        page: page,
+                        count: count,
+                        result: results
+                    });
+                }
+            });
+        } else if (setting) {
+            Label.showSettingLabelPage(nuga, function (err, result) {
+                if (err) {
+                    res.send({
+                        error: {
+                            message: "페이지를 불러오지 못했습니다"
+                        }
+                    });
+                    return next(err);
+                } else {
+                    res.send(result);
+                }
+            });
+        }
+        else {
+            var id = parseInt(req.user.id);
+
+            Label.labelPage(id, function (err, list) {
+                if (err) {
+                    return next(err);
+                }
+                res.send(list);
+            });
+        }
     }
 });
 

@@ -6,71 +6,80 @@ var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
 
 
-router.get('/', isAuthenticate, function(req, res, next) {
+router.get('/', isSecure, isAuthenticate, function(req, res, next) {
   
   var setting = req.query.setting || false; // req.qury 를 통해 Boolean 값을 넘기면 String이 아닌 Boolean으로 넘어온다
   var search = req.query.search || false;
 
-  if (!req.user) {
+  if (setting && search) {
     res.send({
       error: {
         message: '페이지를 불러오지 못했습니다'
       }
     });
-  }
-  if (req.query.id) {
-    // dummy test 용 타계정 페이지
-    var page = parseInt(req.query.page) || 1;
-    var count = parseInt(req.query.count) || 5;
-    var id = parseInt(req.query.id);
-
-    User.userPage(id, page, count, function(err, result){
-      if (err) {
-        return next(err);
-      }
-      res.send(result);
-    });
-  } else if (setting) {
-    // dummy test 용 프로필 설정 페이지
-    User.showProfilePage(req.user.id, function(err, result){
-      if (err) {
-        return next(err);
-      }
-      res.send(result);
-    });
-  } else if (search) {
-    // dummy test 용 사람 찾기 페이지
-    var page = parseInt(req.query.page) || 1;
-    var count = parseInt(req.query.count) || 10;
-    var searchInfo = {};
-    // 지금은 모두 string 처리, 향후 paseInt를 통해 id로 관리
-    searchInfo.genre = req.query.genre_id || req.user.genre;
-    searchInfo.position = req.query.position_id || req.user.position;
-    searchInfo.city = req.query.city_id || req.user.city;
-    searchInfo.town = req.query.town_id || req.user.town;
-    
-    User.dummySearchUsers(page, count, searchInfo, function(err, results){
-      if (err) {
-        return next(err);
-      } else {
-        res.send({
-          page: page,
-          count: count,
-          result : results
-        });
-      }
-    });
-
   } else {
-    // dummy test 용 내계정 페이지
-    var page = parseInt(req.query.page) || 1;
-    var count = parseInt(req.query.count) || 5;
-    User.showMe(req.user.id, page, count, function(err, user){
-      if (err) {
-        return next(err);
-      }
-      res.send(user);
-    });
+
+    if (!req.user) {
+      res.send({
+        error: {
+          message: '페이지를 불러오지 못했습니다'
+        }
+      });
+    }
+    if (req.query.id) {
+      // dummy test 용 타계정 페이지
+      var page = parseInt(req.query.page) || 1;
+      var count = parseInt(req.query.count) || 5;
+      var id = parseInt(req.query.id);
+
+      User.userPage(id, page, count, function (err, result) {
+        if (err) {
+          return next(err);
+        }
+        res.send(result);
+      });
+    } else if (setting) {
+      // dummy test 용 프로필 설정 페이지
+      User.showProfilePage(req.user.id, function (err, result) {
+        if (err) {
+          return next(err);
+        }
+        res.send(result);
+      });
+    } else if (search) {
+      // dummy test 용 사람 찾기 페이지
+      var page = parseInt(req.query.page) || 1;
+      var count = parseInt(req.query.count) || 10;
+      var searchInfo = {};
+      // 지금은 모두 string 처리, 향후 paseInt를 통해 id로 관리
+      searchInfo.genre = req.query.genre_id || req.user.genre;
+      searchInfo.position = req.query.position_id || req.user.position;
+      searchInfo.city = req.query.city_id || req.user.city;
+      searchInfo.town = req.query.town_id || req.user.town;
+
+      User.dummySearchUsers(page, count, searchInfo, function (err, results) {
+        if (err) {
+          return next(err);
+        } else {
+          res.send({
+            page: page,
+            count: count,
+            result: results
+          });
+        }
+      });
+
+    } else {
+      // dummy test 용 내계정 페이지
+      var page = parseInt(req.query.page) || 1;
+      var count = parseInt(req.query.count) || 5;
+      User.showMe(req.user.id, page, count, function (err, user) {
+        if (err) {
+          return next(err);
+        }
+        res.send(user);
+      });
+    }
   }
 });
 
