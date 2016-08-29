@@ -56,24 +56,23 @@ router.post('/', isSecure, function (req, res, next) {
 });
 
 router.get('/', isSecure, function (req, res, next) {
-    var create = req.query.create || false;
-
+    var search = parseInt(req.query.search) || false;
+    var setting = parseInt(req.query.setting) || false;
+    
     // 레이블 페이지
     if (req.query.label_id) {
         //레이블 메인페이지
         var page = parseInt(req.query.page) || 1;
         var count = parseInt(req.query.count) || 10;
-        var id = parseInt(req.query.id);
-        var search = parseInt(req.query.search) || false;
-        var setting = parseInt(req.query.setting) || false;
+        var id = parseInt(req.query.label_id);
 
-        Label.dummylist(page, count, function (err, result) {
+        Label.labelMain(id, page, count, function (err, result) {
             if (err) {
                 return next(err);
             }
             res.send(result);
         });
-    } else if (req.query.search) {
+    } else if (search) {
         // dummy test 용 사람 찾기 페이지
         var page = parseInt(req.query.page) || 1;
         var count = parseInt(req.query.count) || 10;
