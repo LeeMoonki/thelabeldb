@@ -277,8 +277,31 @@ function homePost(id, page, rowCount, meet, callback) {
 //     });
 // }
 
+function test(pid, page, count, callback) {
+    var sql = 'select p.id, u.nickname, numlike ' +
+    'from post p join user u on(p.user_id = u.id) ' +
+    'where opento = 0 and filetype = 0 and u.position_id = ? ' +
+    'order by id desc ' +
+    'limit ?, ?;';
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            dbConn.query(sql, [pid, (page - 1) * count, count], function(err, results){
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null, results);
+                }
+            });
+        }
+    });
+
+}
 
 module.exports.dummyShowPosts = dummyShowPosts;
 module.exports.dummyUploadPost = dummyUploadPost;
 
 module.exports.homePost = homePost;
+module.exports.test = test;

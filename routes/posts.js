@@ -15,14 +15,22 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
     var meet = parseInt(req.query.meet) || 2;
     var id = parseInt(req.query.position_id);
 
+    if (req.query.test) {
 
-    Post.homePost(id, page, count, meet, function (err, results) {
-        if (err) {
-            return next(err);
-        } else {
-            res.send(results);
-        }
-    });
+        Post.test(2, 1, 10, function(err, result){
+            res.send(result);
+        });
+    } else {
+
+
+        Post.homePost(id, page, count, meet, function (err, results) {
+            if (err) {
+                return next(err);
+            } else {
+                res.send(results);
+            }
+        });
+    }
 });
 
 router.post('/', isAuthenticate, isSecure, function (req, res, next) {
