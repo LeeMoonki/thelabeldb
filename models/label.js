@@ -1,10 +1,4 @@
 //dummy function
-var mysql = require('mysql');
-var async = require('async');
-var path = require('path');
-var url  = require('url');
-var fs = require('fs');
-var dbPool = require('../models/common').dbPool;
 
 var dummyLabel = {};
 dummyLabel.id = 1;
@@ -12,7 +6,6 @@ dummyLabel.name = 'NUGA';
 dummyLabel.image_path = '/usr/desktop/didimdol1.jpg';
 dummyLabel.need_genre = '발라드';
 dummyLabel.need_position = '보컬';
-
 
 var mysql = require('mysql');
 var async = require('async');
@@ -65,40 +58,10 @@ function searchLabel(page, count, info, callback){
     callback(null, label);
 }
 
-function labelList(callback) {
-    if (label_name === undefined) {
-        return callback(null, null);
-    }
-    else {
-        var list = {};
-        label.label_name = label_name;
-        callback(null, label);
-    }
-    callback(null, label);
-}
-
-function findLabel(name, callback) {
-    var list = {};
-    list.name = dummyLabel.name;
-    callback(null, list);
-}
-
-
 function dummyRegisterLabel(label, callback) {
     callback(null, true);
 }
 
-function dummy_labelPage(id, page, count, callback) {
-    var list =
-    {
-        id: 1,
-        label_name: 'nuga',
-        image_path: '/usr/desktop/didimdol1.jpg',
-        authorization: 'setting'
-    };
-    callback(null, list)
-
-}
 
 function labelMain(labelId, page, count, callback) {
     // result block
@@ -206,37 +169,8 @@ function labelMain(labelId, page, count, callback) {
     });
 }
 
-// 레이블 구성멤버
-function dummy_labelMember(callback) {
-        var member =
-            [
-                {
-                    user_id: 1,
-                    user_name: '가나다',
-                    image_path: '/usr/desktop/didimdol1.jpg'
-                },
-                {
-                    user_id: 2,
-                    user_name: '거너더',
-                    image_path: '/usr/desktop/didimdol2.jpg'
-                },
-                {
-                    user_id: 3,
-                    user_name: '리미비',
-                    image_path: '/usr/desktop/didimdol3.jpg'
-                }
-            ];
-        callback(null, member);
-}
 
-
-//레이블 셋팅
-// function labelSet( callback) {
-//     var set =
-//     callback(null );
-// }
-
-function labelPage(id, page, count, callback) {
+function labelPage(userId, callback) {
 
     var sql = 'select l.id label_id, l.name label_name, l.imagepath image_path, l.authority_user_id authorization ' +
     'from user u join label l on (l.authority_user_id = u.id) ' +
@@ -246,26 +180,28 @@ function labelPage(id, page, count, callback) {
        if (err) {
            return callback(err);
        }
-       dbConn.query(sql, [id], function (err, result) {
+       dbConn.query(sql, [userId], function (err, result) {
            dbConn.release();
           if (err) {
               return callback (err);
           }
           else {
-              var label_list = {};
-              var label_page = [];
-              var label = {};
+              if (result[0] === undefined) {
+                  callback(null, {});
+              } else {
+                  var label_list = {};
+                  var label_page = [];
+                  var label = {};
+                  label.id = result[0].label_id;
+                  label.label_name = result[0].label_name;
+                  label.image_path = result[0].image_path;
+                  label.authorization = result[0].authorization;
 
-              label = result;
-              label.id = result[0].label_id;
-              label.label_name = result[0].label_name;
-              label.image_path = result[0].label_image_path;
-              label.authorization = result[0].authority_user_id;
+                  label_page.push(label);
+                  label_list.data = label_page;
 
-              label_page = label;
-              label_list.data = label_page;
-
-              callback(null, label_list);
+                  callback(null, label_list);
+              }
           }
        });
     });
@@ -309,16 +245,15 @@ function labelMember(label_id, callback) {
     });
 }
 
-module.exports.labelList = labelList;
+
+
+
 module.exports.dummyRegisterLabel = dummyRegisterLabel;
-module.exports.labelMain = labelMain;
-module.exports.dummyLabel = dummyLabel;
-module.exports.dummy_labelPage = dummy_labelPage;
-module.exports.dummy_labelMember = dummy_labelMember;
+
 module.exports.searchLabel = searchLabel;
 module.exports.showSettingLabelPage = showSettingLabelPage;
 module.exports.updateLabel = updateLabel;
-//module.exports.labelSet = labelSet;
 
+module.exports.labelMain = labelMain;
 module.exports.labelPage = labelPage;
 module.exports.labelMember = labelMember;

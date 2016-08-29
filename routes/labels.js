@@ -3,7 +3,7 @@ var router = express.Router();
 var Label = require('../models/label');
 
 var isSecure = require('./common').isSecure;
-
+var isAuthenticate = require('./common').isAuthenticate;
 
 
 var nuga = {};
@@ -55,19 +55,19 @@ router.post('/', isSecure, function (req, res, next) {
     }
 });
 
-router.get('/', isSecure, function (req, res, next) {
-    var create = req.query.create || false;
+router.get('/', isSecure, isAuthenticate, function (req, res, next) {
+    
+    var search = parseInt(req.query.search) || false;
+    var setting = parseInt(req.query.setting) || false;
 
     // 레이블 페이지
     if (req.query.label_id) {
         //레이블 메인페이지
         var page = parseInt(req.query.page) || 1;
         var count = parseInt(req.query.count) || 10;
-        var id = parseInt(req.query.id);
-        var search = parseInt(req.query.search) || false;
-        var setting = parseInt(req.query.setting) || false;
+        var id = parseInt(req.query.label_id);
 
-        Label.dummylist(page, count, function (err, result) {
+        Label.labelMain(id, page, count, function (err, result) {
             if (err) {
                 return next(err);
             }
@@ -115,11 +115,9 @@ router.get('/', isSecure, function (req, res, next) {
         });
     }
     else {
-        var page = parseInt(req.query.page) || 1;
-        var count = parseInt(req.query.count) || 3;
-        var id = parseInt(req.query.id);
+        var id = parseInt(req.user.id);
 
-        Label.labelPage(id, page, count, function (err, list) {
+        Label.labelPage(id, function (err, list) {
             if (err) {
                 return next(err);
             }
