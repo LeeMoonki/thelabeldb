@@ -3,7 +3,7 @@ var router = express.Router();
 var Label = require('../models/label');
 
 var isSecure = require('./common').isSecure;
-var isAuthenticate = require('./common').isAuthenticate;
+
 
 
 var nuga = {};
@@ -15,7 +15,7 @@ nuga.need_position = '베이스';
 nuga.text = 'hihihihihihihihihi';
 
 
-router.post('/', isSecure, isAuthenticate, function (req, res, next) {
+router.post('/', isSecure, function (req, res, next) {
     if (!req.body.label_name || req.label) {
         res.send({
             error: {
@@ -55,15 +55,17 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
     }
 });
 
-router.get('/', isSecure, isAuthenticate, function (req, res, next) {
-    var search = parseInt(req.query.search) || false;
-    var setting = parseInt(req.query.setting) || false;
+router.get('/', isSecure, function (req, res, next) {
+    var create = req.query.create || false;
+
     // 레이블 페이지
     if (req.query.label_id) {
         //레이블 메인페이지
         var page = parseInt(req.query.page) || 1;
         var count = parseInt(req.query.count) || 10;
         var id = parseInt(req.query.id);
+        var search = parseInt(req.query.search) || false;
+        var setting = parseInt(req.query.setting) || false;
 
         Label.dummylist(page, count, function (err, result) {
             if (err) {
@@ -71,7 +73,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
             }
             res.send(result);
         });
-    } else if (search) {
+    } else if (req.query.search) {
         // dummy test 용 사람 찾기 페이지
         var page = parseInt(req.query.page) || 1;
         var count = parseInt(req.query.count) || 10;
@@ -115,7 +117,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
     else {
         var page = parseInt(req.query.page) || 1;
         var count = parseInt(req.query.count) || 3;
-        var id = parseInt(req.user.id);
+        var id = parseInt(req.query.id);
 
         Label.labelPage(id, page, count, function (err, list) {
             if (err) {
@@ -128,10 +130,8 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
 
 
 //레이블 구성멤버
-router.get('/members', isSecure, isAuthenticate, function (req, res, next) {
-
-
-    Label.labelMember(req.user.id, function (err, result) {
+router.get('/members', isSecure, function (req, res, next) {
+    Label.labelMember(function (err, result) {
         if (err) {
             return next(err);
         }

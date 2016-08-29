@@ -13,6 +13,14 @@ dummyLabel.image_path = '/usr/desktop/didimdol1.jpg';
 dummyLabel.need_genre = '발라드';
 dummyLabel.need_position = '보컬';
 
+
+var mysql = require('mysql');
+var async = require('async');
+var path = require('path');
+var url  = require('url');
+var fs = require('fs');
+var dbPool = require('../models/common').dbPool;
+
 function updateLabel(info, callback){
     var label = info;
     callback(null, label);
@@ -92,53 +100,110 @@ function dummy_labelPage(id, page, count, callback) {
 
 }
 
-function dummylist(page, count, callback) {
+function labelMain(labelId, page, count, callback) {
+    // result block
+    var sql_select_label_info = 'select l.id id, l.name name, imagepath, g.name genre ' +
+                                'from label l join genre g on(l.genre_id = g.id) ' +
+                                'where l.id = ?';
+    var sql_select_label_need = 'select name ' +
+                                'from label_need n join position p on(n.position_id = p.id) ' +
+                                'where label_id = ?';
 
-    var listpg = {
-        page: page,
-        count: count,
-        result: {
-            id: 1,
-            name: '래이블',
-            image_page: '/usr/desktop/didimdol.jpg',
-            genre: '발라드',
-            need_position: '보컬'
-        },
-        member: [
-            {
-                user_id: 1,
-                usdr_name: 'A',
-                user_position: '피아노',
-                user_imagepath: '/usr/desktop/didimdol1.jpg'
-            },
-            {
-                user_id: 2,
-                usdr_name: 'B',
-                user_position: '드럼',
-                user_imagepath: '/usr/desktop/didimdol2.jpg'
-            }
-        ],
-        data: [{
-            id: 1,
-            user_id: 1,
-            nickname: 'nnn',
-            filetype: 0,
-            file_path: '/usr/desktop/didimdol.mp3',
-            date: '2016-08-23',
-            like: 2
-        },
-            {
-                id: 4,
-                user_id: 1,
-                nickname: 'nnn',
-                filetype: 0,
-                file_path: '/usr/desktop/didimdol2.mp3',
-                date: '2016-08-23',
-                like: 10
-            }
-        ]
-    };
-    callback(null, listpg);
+    // member block
+    var sql_select_member_info = 'select user_id, nickname user_nickname, p.name user_possition, imagepath user_imagepath ' +
+                                 'from user u join label_member m on(u.id = m.user_id) ' +
+                                 'join position p on(u.position_id = p.id) ' +
+                                 'where label_id = ?';
+
+    // data block
+    var sql_select_posts = 'select p.id id, user_id, nickname, filetype, filepath file_path, p.ctime date, numlike ' +
+                           'from post p join user u on(p.user_id = u.id) ' +
+                           'where p.label_id = ?';
+
+    var result = {};
+    var members = [];
+    var data = [];
+
+    var memberResult = [];
+    var postResult = [];
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            async.waterfall([getLabelInfo, getLabelMember, getLabelPosts], function(err){
+                dbConn.release();
+                if (err) {
+                    return callback(err);
+                } else {
+                    var user = {};
+                    // var member = {};
+                    // var post = {};
+                    user.page = page;
+                    user.count = count;
+
+                    user.result = result;
+                    for (var i = 0; i < memberResult.length; i++) {
+                        members.push(memberResult[i]);
+                    }
+                    for (var j = 0; j < postResult.length; j++) {
+                        data.push(postResult[j]);
+                    }
+                    user.member = members;
+                    user.data = data;
+                    callback(null, user);
+                }
+            });
+        }
+
+        function getLabelInfo(callback) {
+            dbConn.query(sql_select_label_info, [labelId], function(err, results){
+                if (err) {
+                    callback(new Error('Error sql_select_label_info'));
+                } else {
+                    result.label_id = results[0].id;
+                    result.label_name = results[0].name;
+                    result.label_image_path = results[0].imagepath;
+                    result.label_genre = results[0].genre;
+                    dbConn.query(sql_select_label_need, [labelId], function(err, needResults){
+                        if (err) {
+                            callback(new Error('Error sql_select_label_need'));
+                        } else {
+                            var need = [];
+                            for (var i = 0; i < needResults.length; i++) {
+                                need.push(needResults[i].name);
+                            }
+                            result.label_need_position = need;
+                            callback(null);
+                        }
+                    });
+                }
+            });
+        }
+
+        function getLabelMember(callback) {
+            dbConn.query(sql_select_member_info, [labelId], function(err, results){
+                if (err) {
+                    callback(new Error('Error sql_select_member_info'));
+                } else {
+                    memberResult = results;
+                    callback(null);
+                }
+            });
+        }
+
+
+        function getLabelPosts(callback) {
+            dbConn.query(sql_select_posts, [labelId], function(err, results){
+                if (err) {
+                    callback(new Error('Error sql_select_posts'));
+                } else {
+                    postResult = results;
+                    callback(null);
+                }
+            });
+        }
+    });
 }
 
 // 레이블 구성멤버
@@ -245,7 +310,7 @@ function labelMember(label_id, callback) {
 
 module.exports.labelList = labelList;
 module.exports.dummyRegisterLabel = dummyRegisterLabel;
-module.exports.dummylist = dummylist;
+module.exports.labelMain = labelMain;
 module.exports.dummyLabel = dummyLabel;
 module.exports.dummy_labelPage = dummy_labelPage;
 module.exports.dummy_labelMember = dummy_labelMember;
