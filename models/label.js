@@ -191,9 +191,9 @@ function labelMain(labelId, page, count, callback) {
 
 function labelPage(userId, callback) {
 
-    var sql = 'select l.id label_id, l.name label_name, l.imagepath image_path, l.authority_user_id authorization ' +
-    'from user u join label l on (l.authority_user_id = u.id) ' +
-    'where u.id = ?';
+    var sql = 'select l.id id, l.name label_name, imagepath, authority_user_id ' +
+              'from label l join label_member m on(l.id = m.label_id) ' +
+              'where m.user_id = ?';
 
     dbPool.getConnection(function (err, dbConn) {
        if (err) {
@@ -211,12 +211,13 @@ function labelPage(userId, callback) {
                   var label_list = {};
                   var label_page = [];
                   var label = {};
-                  label.id = result[0].label_id;
-                  label.label_name = result[0].label_name;
-                  label.image_path = result[0].image_path;
-                  label.authorization = result[0].authorization;
-
-                  label_page.push(label);
+                  for (var i = 0; i < result.length; i++) {
+                      label.id = result[i].id;
+                      label.label_name = result[i].label_name;
+                      label.image_path = result[i].imagepath;
+                      label.authorization = result[i].authority_user_id;
+                      label_page.push(label);
+                  }
                   label_list.data = label_page;
 
                   callback(null, label_list);
