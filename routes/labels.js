@@ -128,13 +128,21 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
 
 
 //레이블 구성멤버
-router.get('/members', isSecure, function (req, res, next) {
-    Label.labelMember(function (err, result) {
-        if (err) {
-            return next(err);
-        }
-        res.send(result);
-    });
+router.get('/members', isSecure, isAuthenticate,function (req, res, next) {
+
+    var label_id = parseInt(req.query.label_id);
+
+    if (!label_id) {
+        res.send('레이블 멤버 출력 실패');
+    } else {
+        Label.labelMember(label_id, function (err, result) {
+            if (err) {
+                return next(err);
+            }
+            res.send(result);
+        });
+    }
+    
 
 });
 
