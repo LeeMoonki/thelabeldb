@@ -105,19 +105,22 @@ function dummyUploadPost(postInfo, callback) {
 function homePost(id, page, rowCount, meet, callback) {
 
     var meet_sql = 'select p.id pid, u.id uid, u.nickname, p.filetype, p.ctime, p.numlike, u.position_id ' +
-    'from user u join post p on (p.user_id = u.id) ' +
-    'where p.opento = 0 and p.filetype = 0 and u.position = ? ' +
-    'order by p.id desc limit ?, ?;';
+        'from user u join post p on (p.user_id = u.id) ' +
+        'where p.opento = 0 and p.filetype = 0 and u.position_id = ? ' +
+        'ORDER by p.id desc ' +
+        'limit ?, ?';
 
     var data_sql = 'select p.id pid, u.id uid, u.nickname, p.filetype, p.ctime, p.numlike, u.position_id ' +
-    'from user u join post p on (p.user_id = u.id) ' +
-    'where p.opento = 0 and p.filetype = 0 ' +
-    'order by p.id desc limit ?, ?;';
+        'from user u join post p on (p.user_id = u.id) ' +
+        'where p.opento = 0 and p.filetype = 0 ' +
+        'ORDER by p.id desc' +
+        'limit ?, ?';
 
-    dbPool.getConnection(function (err, dbConn) {
-        if (err) {
-            return callback(err);
-        }
+
+        dbPool.getConnection(function (err, dbConn) {
+            if (err) {
+                return callback(err);
+            }
         async.waterfall([a, b], function (err) {
             dbConn.release();
             if (err) {
@@ -164,7 +167,7 @@ function homePost(id, page, rowCount, meet, callback) {
         });
 
         function a(callback) {
-            dbConn.query(meet_sql, [id, rowCount], function (err, result) {
+            dbConn.query(meet_sql, [id, (page - 1) * meet, meet], function (err, result) {
                 if (err) {
                     return callback(err);
                 }
@@ -188,120 +191,10 @@ function homePost(id, page, rowCount, meet, callback) {
         }
     });
 }
-//     var home = {};
-//     var position = [];
-//     // var post = {};
-//     var post_data = [];
-//     // var data_post = {};
-//
-//     dbPool.getConnection(function (err, dbConn) {
-//         if (err) {
-//             return callback(err);
-//         }
-//         async.waterfall([a, b], function (err) {
-//             dbConn.release();
-//             if (err) {
-//                 return callback(err);
-//             }
-//
-//             home.page = page;
-//             home.count = rowCount;
-//             home.meet = meet;
-//
-//             var post = {};
-//             post.id = position[0].post_Id;
-//             post.user_id = position[0].user_id;
-//             post.nickname = position[0].user_nickname;
-//             post.filetype = position[0].post_filetype;
-//             post.file_path = position[0].post_file_path;
-//             post.date = position[0].post_ctime;
-//             post.numlike = position[0].post_numlike;
-//
-//             // meetdata.push(post);
-//
-//             var data_post = {};
-//             data_post.id = post_data[0].post_Id;
-//             data_post.user_id = post_data[0].user_id;
-//             data_post.nickname = post_data[0].user_nickname;
-//             data_post.filetype = post_data[0].post_filetype;
-//             data_post.file_path = post_data[0].post_file_path;
-//             data_post.date = post_data[0].post_ctime;
-//             data_post.numlike = post_data[0].post_numlike;
-//
-//             home.meetdata = post;
-//             home.data = data_post;
-//
-//             callback(null, home);
-//         });
-//
-//         function a(callback) {
-//             dbConn.query(meet_sql, [position_id], function (err, result) {
-//                 //    dbConn.release();
-//                 if (err) {
-//                     return callback(err);
-//                 }
-//                 else {
-//                     position = result;
-//                     callback(null, true);
-//                 }
-//             });
-//         }
-//
-//         function b(flag, callback) {
-//             dbConn.query(data_sql, [(page - 1) * rowCount, rowCount], function (err, result) {
-//                 //  dbConn.release();
-//                 if (err) {
-//                     return callback(err);
-//                 }
-//                 else {
-//                     post_data = result;
-//                     callback(null);
-//                 }
-//             });
-//         }
-//     });
-// }
 
-//
-//
-//
-//
-//
-//
-//                // data.push(data_post);
-//             }
-//         })
-//
-//         home.meetdata = meetdata;
-//         home.data = data;
-//     });
-// }
 
-function test(pid, page, count, callback) {
-    var sql = 'select p.id, u.nickname, numlike ' +
-    'from post p join user u on(p.user_id = u.id) ' +
-    'where opento = 0 and filetype = 0 and u.position_id = ? ' +
-    'order by id desc ' +
-    'limit ?, ?;';
-
-    dbPool.getConnection(function(err, dbConn){
-        if (err) {
-            return callback(err);
-        } else {
-            dbConn.query(sql, [pid, (page - 1) * count, count], function(err, results){
-                if (err) {
-                    callback(err);
-                } else {
-                    callback(null, results);
-                }
-            });
-        }
-    });
-
-}
 
 module.exports.dummyShowPosts = dummyShowPosts;
 module.exports.dummyUploadPost = dummyUploadPost;
 
 module.exports.homePost = homePost;
-module.exports.test = test;
