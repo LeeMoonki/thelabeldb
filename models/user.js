@@ -293,7 +293,6 @@ function showProfilePage(userId, callback){
       });
     }
   });
-
 }
 
 function dummySearchUsers(page, count, info, callback){

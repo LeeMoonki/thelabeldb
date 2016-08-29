@@ -275,7 +275,7 @@ function getLabelSearchInfo(labelId, callback) {
                         pos.push(results[i].position_id);
                     }
                     info.position_id = pos;
-                    
+
                     callback(null, info);
                 }
             });
