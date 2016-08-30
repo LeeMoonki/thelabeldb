@@ -57,7 +57,8 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
         if (err) {
           return next(err);
         } else {
-          if (label_ids[0] === undefined) {
+          // 가입한 레이블이 없거나 검색 조건을 입력했다면 다음과 같이 검색한다
+          if (label_ids[0] === undefined || req.query.genre_id || req.query.position_id || req.query.city_id || req.query.city_id) {
             var searchInfo = {};
             searchInfo.genre = req.query.genre_id || req.user.genre_id;
             searchInfo.position = req.query.position_id || req.user.position_id;
