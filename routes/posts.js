@@ -7,13 +7,11 @@ var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
 var Post = require('../models/post');
 
-
 router.get('/', isAuthenticate, isSecure, function (req, res, next) {
 
-    var page = parseInt(req.query.page);
+    var page = parseInt(req.query.page) || 1;
     var count = parseInt(req.query.count) || 10;
     var meet = parseInt(req.query.meet) || 2;
-    var id = parseInt(req.query.position_id);
     
     // 업로드 할 때 레이블 항목을 보여주기 위한 변수
     var setting = req.query.setting || false;
@@ -35,36 +33,22 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
         });
         
     } else {
-    var meet = parseInt(req.query.meet);
 
-    User.findUser(req.user.id, function(err, result){
-        if (err) {
-            return next(err);
-        } else {
-            var position_id = result.position_id;
-            Post.homePost(position_id, page, count, meet, function (err, results) {
-                if (err) {
-                    return next(err);
-                } else {
-                    res.send(results);
-                }
-            });
+        // User.findUser(req.user.id, function (err, result) {
+        //     if (err) {
+        //         return next(err);
+        //     } else {
+        //         var position_id = result.position_id;
+                Post.homePost(req.user.position_id, page, count, meet, function (err, results) {
+                    if (err) {
+                        return next(err);
+                    } else {
+                        res.send(results);
+                    }
+                });
 
-        }
-    });
-
-
-        console.log(page);
-        console.log(count);
-        console.log(meet);
-        console.log(id);
-        Post.homePost(id, page, count, meet, function (err, results) {
-            if (err) {
-                return next(err);
-            } else {
-                res.send(results);
-            }
-        });
+            // }
+        // });
     }
 });
 

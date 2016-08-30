@@ -40,11 +40,11 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
       });
     } else if (setting) {
       // dummy test 용 프로필 설정 페이지
-      User.showProfilePage(req.user.id, function (err, result) {
+      User.showProfilePage(req.user.id, function (err, user) {
         if (err) {
           return next(err);
         }
-        res.send(result);
+        res.send({user: user});
       });
     } else if (search) {
       // dummy test 용 사람 찾기 페이지

@@ -90,20 +90,18 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                 if (err) {
                     return next(err);
                 } else {
-
+                    var page = parseInt(req.query.page) || 1;
+                    var count = parseInt(req.query.count) || 10;
                     var searchInfo = {};
                     searchInfo.genre_id = result.genre_id;
                     searchInfo.position_id = result.position_id;
-                    
-                    Label.searchLabel(page, count, searchInfo, function (err, results) {
+
+                    Label.labelSearch(page, count, req.user.genre_id, req.user.need_position_id, function (err, results) {
+                    // Label.searchLabel(page, count, searchInfo, function (err, results) {
                         if (err) {
                             return next(err);
                         } else {
-                            res.send({
-                                page: page,
-                                count: count,
-                                result: results
-                            });
+                            res.send(results);
                         }
                     });
                 }
@@ -114,11 +112,11 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
             
             var id = parseInt(req.query.label_id);
             
-            Label.showSettingLabelPage(id, function (err, result) {
+            Label.showSettingLabelPage(id, function (err, label) {
                 if (err) {
                     return next(err);
                 } else {
-                    res.send(result);
+                    res.send({label: label});
                 }
             });
         }

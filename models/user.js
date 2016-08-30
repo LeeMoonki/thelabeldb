@@ -278,6 +278,7 @@ function showProfilePage(userId, callback){
         if (err) {
           return callback(err);
         } else {
+
           var user = {};
           user.id = result[0].id;
           user.nickname = result[0].nickname;
