@@ -18,7 +18,6 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
         if (err) {
             return next(err);
         } else {
-
             var position_id = result.position_id;
             Post.homePost(position_id, page, count, meet, function (err, results) {
                 if (err) {

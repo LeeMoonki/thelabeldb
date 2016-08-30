@@ -124,6 +124,7 @@ function homePost(id, page, rowCount, meet, callback) {
     var meetList = [];
     var list = [];
 
+
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
