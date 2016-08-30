@@ -10,22 +10,28 @@ var Post = require('../models/post');
 
 router.get('/', isAuthenticate, isSecure, function (req, res, next) {
 
-    var page = parseInt(req.query.page) || 1;
+    var page = parseInt(req.query.page);
     var count = parseInt(req.query.count) || 10;
-    var meet = parseInt(req.query.meet) || 2;
-    var id = parseInt(req.query.position_id);
+    var meet = parseInt(req.query.meet);
 
-        console.log(page);
-        console.log(count);
-        console.log(meet);
-        console.log(id);
-        Post.homePost(id, page, count, meet, function (err, results) {
-            if (err) {
-                return next(err);
-            } else {
-                res.send(results);
-            }
-        });
+    User.findUser(req.user.id, function(err, result){
+        if (err) {
+            return next(err);
+        } else {
+
+            var position_id = result.position_id;
+            Post.homePost(position_id, page, count, meet, function (err, results) {
+                if (err) {
+                    return next(err);
+                } else {
+                    res.send(results);
+                }
+            });
+
+        }
+    });
+
+
 });
 
 router.post('/', isAuthenticate, isSecure, function (req, res, next) {

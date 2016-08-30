@@ -104,93 +104,105 @@ function dummyUploadPost(postInfo, callback) {
 
 function homePost(id, page, rowCount, meet, callback) {
 
-    var meet_sql = 'select p.id pid, u.id uid, u.nickname, p.filetype, p.ctime, p.numlike, u.position_id ' +
-        'from user u join post p on (p.user_id = u.id) ' +
-        'where p.opento = 0 and p.filetype = 0 and u.position_id = ? ' +
-        'ORDER by p.id desc ' +
-        'limit ?, ?';
-
-    var data_sql = 'select p.id pid, u.id uid, u.nickname, p.filetype, p.ctime, p.numlike, u.position_id ' +
-        'from user u join post p on (p.user_id = u.id) ' +
-        'where p.opento = 0 and p.filetype = 0 ' +
-        'ORDER by p.id desc' +
-        'limit ?, ?';
+    var meet_sql =
+        'select p.id post_id, u.id user_id, u.nickname nickname, p.filetype filetype, p.filepath file_path, date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") ctime, p.numlike numlike ' +
+        'from post p join user u on (p.user_id = u.id) ' +
+        'where p.opento =0 and p.filetype = 0 and u.position_id = ? ' +
+        'order by p.id desc ' +
+        'limit ?;';
 
 
-        dbPool.getConnection(function (err, dbConn) {
-            if (err) {
-                return callback(err);
-            }
+    var data_sql =
+        'select p.id post_id, u.id user_id, u.nickname nickname, p.filetype filetype, p.filepath file_path, date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") ctime, p.numlike numlike ' +
+        'from post p join user u on (p.user_id = u.id) ' +
+        'where p.opento =1 and p.filetype = 0 ' +
+        'order by p.id desc ' +
+        'limit ?, ?;';
+
+    var home = {};
+
+    var meetList = [];
+    var list = [];
+
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+
         async.waterfall([a, b], function (err) {
             dbConn.release();
             if (err) {
                 return callback(err);
             }
 
-            var position = [];
-            var list = [];
-
-            var home = {};
             home.page = page;
             home.count = rowCount;
             home.meet = meet;
 
-            var meet_data = [];
-            var post = {};
-            for (var i = 0; i < result.length; i++) {
-                post.id = position[i].post_Id;
-                post.user_id = position[i].user_id;
-                post.nickname = position[i].user_nickname;
-                post.filetype = position[i].post_filetype;
-                post.file_path = position[i].post_file_path;
-                post.date = position[i].post_ctime;
-                post.numlike = position[i].post_numlike;
-            }
-            meet_data.push(post);
+            var meetData = {};
+            var meetArray = [];
+            for (var i = 0; i < meetList.length; i++) {
+                // meetData.id = meetList[i].post_id;
+                // meetData.user_id = meetList[i].user_id;
+                // meetData.nickname = meetList[i].nickname;
+                // meetData.filetype = meetList[i].filetype;
+                // meetData.file_path = meetList[i].file_path;
+                // meetData.date = meetList[i].ctime;
+                // meetData.numlike = meetList[i].numlike;
 
-            var normal_data = [];
-            var normal_post = {};
-            for (var i = 0; i < result.length; i++) {
-                normal_post.id = list[i].post_Id;
-                normal_post.user_id = list[i].user_id;
-                normal_post.nickname = list[i].user_nickname;
-                normal_post.filetype = list[i].post_filetype;
-                normal_post.file_path = list[i].post_file_path;
-                normal_post.date = list[i].post_ctime;
-                normal_post.numlike = list[i].post_numlike;
-            }
-            normal_data.push(normal_post);
+                meetArray.push(meetList[i]);
 
-            home.meetdata = meet_data;
-            home.data = normal_data;
-            callbaack(null, home);
+                // meetArray.push(meetData);
+
+            }
+
+            var normalData = {};
+            var normal = [];
+            for (var i = 0; i < list.length; i++) {
+                // normalData.id = list[i].position_id;
+                // normalData.user_id = list[i].user_id;
+                // normalData.nickname = list[i].nickname;
+                // normalData.filetype = list[i].filetype;
+                // normalData.file_path = list[i].file_path;
+                // normalData.date = list[i].post_ctime;
+                // normalData.numlike = list[i].post_numlike;
+
+                normal.push(list[i]);
+
+                // normal.push(normalData);
+            }
+            home.meetdata = meetArray;
+            home.data = normal;
+
+            callback(null, home);
         });
 
         function a(callback) {
-            dbConn.query(meet_sql, [id, (page - 1) * meet, meet], function (err, result) {
+            dbConn.query(meet_sql, [id, meet], function (err, result) {
                 if (err) {
                     return callback(err);
                 }
                 else {
-                    position = result;
+                    meetList = result;
                     callback(null, true);
                 }
             });
         }
 
         function b(flag, callback) {
-            dbConn.query(data_sql, [(page - 1) * rowCount, rowCount], function (err, result) {
+            dbConn.query(data_sql, [(page - 1) * rowCount, rowCount], function (err, results) {
                 if (err) {
                     return callback(err);
                 }
                 else {
-                    list = result;
+                    list = results;
                     callback(null);
                 }
             });
         }
     });
 }
+
 
 
 
