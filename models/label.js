@@ -318,6 +318,7 @@ function labelSearch(page, rowCount, genre_id, need_position_id, callback) {
            search.page = page;
            search.count = rowCount;
 
+
            var totalArray = [];
            var genreArray = [];
            var positionArray = [];
