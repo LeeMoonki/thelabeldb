@@ -14,6 +14,27 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
     var count = parseInt(req.query.count) || 10;
     var meet = parseInt(req.query.meet) || 2;
     var id = parseInt(req.query.position_id);
+    
+    // 업로드 할 때 레이블 항목을 보여주기 위한 변수
+    var setting = req.query.setting || false;
+    
+    if (setting) {
+        
+        Post.postLabelInfo(req.user.id, function(err, results){
+            if (err) {
+                res.send({
+                    error: {
+                        message: '업로드 실패'
+                    }
+                });
+            } else {
+                res.send({
+                    labels : results
+                });
+            }
+        });
+        
+    } else {
 
         console.log(page);
         console.log(count);
@@ -26,6 +47,7 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
                 res.send(results);
             }
         });
+    }
 });
 
 router.post('/', isAuthenticate, isSecure, function (req, res, next) {
