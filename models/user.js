@@ -335,6 +335,7 @@ function registerUser(info, callback){
                                                            '`position_id`, `genre_id`, `city_id`, `town_id`) ' +
                           'VALUES (?, sha2(?, 512), ?, ?, ?, ?, ?, ?, ?, ?)';
 
+  
   dbPool.getConnection(function(err, dbConn){
     if (err) {
       return callback(err);

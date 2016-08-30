@@ -85,6 +85,7 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
 
 router.post('/', isSecure,function(req, res, next){
 
+  
   // 필수 정보를 입력하지 않았다면 회원가입에 실패
   if (!req.body.email || !req.body.nickname || !req.body.password || !req.body.gender || req.user) {
     res.send({
