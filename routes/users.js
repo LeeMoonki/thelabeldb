@@ -83,28 +83,32 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
   }
 });
 
-router.post('/', function(req, res, next){
+router.post('/', isSecure,function(req, res, next){
 
-  if (!req.body.email || !req.body.nickname || !req.body.password || req.user) {
+  
+  // 필수 정보를 입력하지 않았다면 회원가입에 실패
+  if (!req.body.email || !req.body.nickname || !req.body.password || !req.body.gender || req.user) {
     res.send({
       error: {
         message: '회원 가입을 실패했습니다'
       }
     });
   } else {
-    User.dummyLabel.dummy_email = req.body.email;
-    User.dummyLabel.dummy_password = req.body.password;
-    User.dummyLabel.dummy_nickname = req.body.nickname;
+    var registerInfo = {};
 
-    User.dummyLabel.dummy_gender = req.body.gender || '';
-    User.dummyLabel.dummy_position = req.body.position || ''; // position 필수인지 다시 확인
-    User.dummyLabel.dummy_genre = req.body.genre || '';
-    User.dummyLabel.dummy_city = req.body.city || '';
-    User.dummyLabel.dummy_town = req.body.town || '';
+    registerInfo.email = req.body.email;
+    registerInfo.password = req.body.password;
+    registerInfo.nickname = req.body.nickname;
+    registerInfo.gender = parseInt(req.body.gender);
 
-    console.log(User.dummyLabel);
+    registerInfo.text = req.body.text || '';
+    registerInfo.imagepath = req.body.image_path || '';
+    registerInfo.position_id = parseInt(req.body.position_id) || 1;
+    registerInfo.genre_id = parseInt(req.body.genre_id) || 1;
+    registerInfo.city_id = parseInt(req.body.city_id) || 1;
+    registerInfo.town_id = parseInt(req.body.town_id) || 1;
 
-    User.dummyRegisterUser(User.dummyLabel, function(err, result){
+    User.registerUser(registerInfo, function(err, result){
       if (err) {
         return next(err);
       }
@@ -112,10 +116,14 @@ router.post('/', function(req, res, next){
         if (result) {
           res.send({
             message: '회원 가입이 정상적으로 처리되었습니다',
-            dummyMessage: 'dummy test를 위한 입력 데이터 출력입니다',
-            dummyData: User.dummyLabel
+            id: result
           });
         } else {
+          res.send({
+            error: {
+              message: '회원 가입을 실패했습니다'
+            }
+          });
         }
       }
     });

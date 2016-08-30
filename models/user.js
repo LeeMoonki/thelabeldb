@@ -329,10 +329,42 @@ function dummySearchUsers(page, count, info, callback){
   callback(null, user);
 }
 
-function dummyRegisterUser(user, callback){
+function registerUser(info, callback){
 
-  callback(null, true);
+  var sql_register_user = 'INSERT INTO `thelabeldb`.`user` (`email`, `password`, `nickname`, `gender`, `text`, `imagepath`, ' +
+                                                           '`position_id`, `genre_id`, `city_id`, `town_id`) ' +
+                          'VALUES (?, sha2(?, 512), ?, ?, ?, ?, ?, ?, ?, ?)';
 
+  
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+      
+      dbConn.beginTransaction(function(err){
+        if (err) {
+          return callback(err);
+        } else {
+          dbConn.query(sql_register_user, [info.email, info.password, info.nickname, info.gender
+              , info.text, info.imagepath, info.position_id, info.genre_id, info.city_id, info.town_id]
+            ,function(err, result){
+              
+              if (err) {
+                return dbConn.rollback(function(){
+                  dbConn.release();
+                  callback(err);
+                });
+              } else {
+                dbConn.commit(function(){
+                  dbConn.release();
+                  callback(null, result.insertId);
+                });
+              }
+            });
+        }
+      });
+    }
+  });
 }
 
 function dummyUpdateUser(user, callback){
@@ -358,7 +390,7 @@ module.exports.findUser = findUser;
 // models showing JSON data for dummy test
 module.exports.showMe = showMe;
 module.exports.userPage = userPage;
-module.exports.dummyRegisterUser = dummyRegisterUser;
+module.exports.registerUser = registerUser;
 module.exports.showProfilePage = showProfilePage;
 module.exports.dummyUpdateUser = dummyUpdateUser;
 module.exports.dummyUpdatePassword = dummyUpdatePassword;
