@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var User = require('../models/user');
+var Label = require('../models/label');
 var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
 
@@ -50,22 +51,46 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
       // dummy test 용 사람 찾기 페이지
       var page = parseInt(req.query.page) || 1;
       var count = parseInt(req.query.count) || 10;
-      var searchInfo = {};
-      // 지금은 모두 string 처리, 향후 paseInt를 통해 id로 관리
-      searchInfo.genre = req.query.genre_id || req.user.genre;
-      searchInfo.position = req.query.position_id || req.user.position;
-      searchInfo.city = req.query.city_id || req.user.city;
-      searchInfo.town = req.query.town_id || req.user.town;
 
-      User.dummySearchUsers(page, count, searchInfo, function (err, results) {
+
+      User.getBelongLabel(req.user.id, function(err, label_ids){
         if (err) {
           return next(err);
         } else {
-          res.send({
-            page: page,
-            count: count,
-            result: results
-          });
+          if (label_ids[0] === undefined) {
+            var searchInfo = {};
+            searchInfo.genre = req.query.genre_id || req.user.genre_id;
+            searchInfo.position = req.query.position_id || req.user.position_id;
+            searchInfo.city = req.query.city_id || req.user.city_id;
+            searchInfo.town = req.query.town_id || req.user.town_id;
+
+            User.searchUsersByUser(page, count, searchInfo, function(err, results){
+              if (err) {
+                return next(err);
+              } else {
+                var searchResult = {};
+                searchResult.page = page;
+                searchResult.count = count;
+                searchResult.result = results;
+                res.send(searchResult);
+              }
+            });
+
+          } else {
+            Label.getLabelSearchInfoArr(label_ids, function(err, searchInfo){
+              if (err) {
+                return next(err);
+              } else {
+                User.searchUsersByLabel(page, count, searchInfo, function(err, results){
+                  if (err) {
+                    return next(err);
+                  } else {
+                    res.send(results);
+                  }
+                });
+              }
+            });
+          }
         }
       });
 

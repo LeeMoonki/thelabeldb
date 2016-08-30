@@ -296,39 +296,7 @@ function showProfilePage(userId, callback){
   });
 }
 
-function dummySearchUsers(page, count, info, callback){
-  var user = [];
 
-  user.push({
-    user_id: 11,
-    user_nickname: '타인1',
-    user_image_path: '/usr/desktop/asdqwe.jpg',
-    user_genre_id: info.genre,
-    user_position_id: info.position,
-    user_city_id: info.city,
-    user_town_id: info.town
-  });
-  user.push({
-    user_id: 8,
-    user_nickname: '타인2',
-    user_image_path: '/usr/desktop/love.jpg',
-    user_genre_id: info.genre,
-    user_position_id: info.position,
-    user_city_id: info.city,
-    user_town_id: info.town
-  });
-  user.push({
-    user_id: 15,
-    user_nickname: '타인3',
-    user_image_path: '/usr/desktop/sing.jpg',
-    user_genre_id: info.genre,
-    user_position_id: info.position,
-    user_city_id: info.city,
-    user_town_id: info.town
-  });
-
-  callback(null, user);
-}
 
 function registerUser(info, callback){
 
@@ -384,6 +352,200 @@ function dummyUpdatePassword(userId, password, newPassword, callback){
   }
 }
 
+
+
+
+// User 검색 시작
+// 특정 유저가 속한 레이블 목록을 검색
+function getBelongLabel(userId, callback) {
+  var sql_select_labels = 'select label_id ' +
+                          'from label_member ' +
+                          'where user_id = ?';
+
+
+  var label_ids = [];
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+      dbConn.query(sql_select_labels, [userId], function(err, results){
+        dbConn.release();
+        if (err) {
+          return callback(err);
+        } else {
+
+          async.each(results, function(item, done){
+            label_ids.push(item.label_id);
+            done(null);
+          }, function(err){
+            if (err) {
+              return callback(err);
+            } else {
+              callback(null, label_ids);
+            }
+          });
+        }
+      });
+    }
+  });
+}
+
+function searchUsersByUser(page, count, info, callback){
+
+  // 이미 검색된 사용자를 검색 결과에서 지우기 위해
+  var alreadySearchedIndex = [];
+  
+  var maxCount = page * count; // 이번 검색으로 뽑아야할 검색 개수
+  var numResults = 0; // 검색하고 있는 내용의 개수를 기록
+  var totalResults = []; // 검색 결과를 저장
+  
+  var sql_first_filter = 'select u.id user_id, nickname, p.name position, g.name genre, c.name city, t.name town ' +
+  'from user u join position p on(u.position_id = p.id) ' +
+  'join genre g on(u.genre_id = g.id) ' +
+  'join city c on(u.city_id = c.id) ' +
+  'join town t on(u.town_id = t.id) ' +
+  'where u.position_id = ? and u.genre_id = ? and u.city_id = ? and u.town_id = ? ';
+
+  var sql_second_filter = 'select u.id user_id, nickname, p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.position_id = ? and u.genre_id = ? ';
+
+
+  
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+
+      async.waterfall([firstFilter, secondFilter], function(err){
+        if (err) {
+          dbConn.release();
+          return callback(err);
+        } else {
+          dbConn.release();
+          var shootResult = [];
+          var startIndex = (page - 1) * count;
+          for (var i = startIndex; i < startIndex + numResults; i++) {
+            shootResult.push(totalResults[i]);
+          }
+          console.log(startIndex + numResults);
+          console.log(shootResult);
+          console.log(alreadySearchedIndex);
+          callback(null, shootResult);
+        }
+      });
+
+      function firstFilter(callback){
+        dbConn.query(sql_first_filter, [info.position, info.genre, info.city, info.town],
+          function(err, results){
+            if (err) {
+              callback(err);
+            } else {
+              numResults = numResults + results.length;
+              async.each(results, function(item, done){
+                // RowDataPacket 없애고 싶으면 여기서 객체 만들어서 한다
+                totalResults.push(item);
+                alreadySearchedIndex.push(item.user_id);
+                done(null);
+              }, function(err){
+                // done
+                if (err) {
+                  // dnoe(err) 발생하지 않음
+                } else {
+                  if (numResults < maxCount) {
+                    // 더 채워야 하는 경우
+                    callback(null, true);
+                  } else {
+                    // 더 채우지 않아도 되는 경우
+                    callback(null, false);
+                  }
+                }
+              });
+            }
+          });
+      }
+
+      function secondFilter(flag, callback){
+        if (!flag) {
+          // 그 전에 검색 결과를 다 채운 경우
+          callback(null, false);
+        } else {
+          dbConn.query(sql_second_filter, [info.position, info.genre], function(err, results){
+            if (err) {
+              callback(err);
+            } else {
+              console.log(results);
+              numResults = numResults + results.length;
+              async.each(results, function(item, done){
+                findAlreadyIndex(alreadySearchedIndex, item.user_id, function(flag){
+                  if (!flag) {
+                    // var tmpObj = {};
+                    // tmpObj.user_id = item.user_id;
+                    // tmpObj.nickname = item.nickname;
+                    // tmpObj.position = item.position;
+                    // tmpObj.genre = item.genre;
+                    // tmpObj.city = item.city;
+                    // tmpObj.town = item.town;
+                    // 그전에 찾은 값이 아니라면, 즉 새로운 검색 결과
+                    totalResults.push(item);
+                    alreadySearchedIndex.push(item.user_id);
+                  } else {
+                    // 그전에 찾은 값이라면, 즉 검색했던 것을 검색한 것
+                    numResults = numResults - 1;
+                  }
+                });
+                done(null);
+              }, function(err){
+                // done
+                if (err) {
+                  // done(err) 발생하지 않음
+                } else {
+                  if (numResults < maxCount) {
+                    // 더 채워야 하는 경우
+                    callback(null, true);
+                  } else {
+                    // 더 채우지 않아도 되는 경우
+                    callback(null, false);
+                  }
+                }
+              });
+            }
+          });
+
+        }
+      }
+
+
+
+
+    }
+  });
+  
+}
+
+function searchUsersByLabel(page, count, info, callback) {
+  callback(null, info);
+}
+
+
+function findAlreadyIndex(indexArr, index, callback) {
+  var length = indexArr.length;
+  var flag = false;
+  for (var i = 0; i < length; i++) {
+    if (indexArr[i] === index) {
+      flag = true;
+      break;
+    }
+  }
+  callback(flag);
+}
+
+// User 검색 끝
+
+
 module.exports.findByEmail = findByEmail;
 module.exports.verifyPassword = verifyPassword;
 module.exports.findUser = findUser;
@@ -395,5 +557,7 @@ module.exports.registerUser = registerUser;
 module.exports.showProfilePage = showProfilePage;
 module.exports.dummyUpdateUser = dummyUpdateUser;
 module.exports.dummyUpdatePassword = dummyUpdatePassword;
-module.exports.dummySearchUsers = dummySearchUsers;
+module.exports.searchUsersByUser = searchUsersByUser;
+module.exports.searchUsersByLabel = searchUsersByLabel;
+module.exports.getBelongLabel = getBelongLabel;
 module.exports.dummyLabel = dummyUser;
