@@ -149,12 +149,6 @@ function showSettingLabelPage(labelId, callback){
 
 }
 
-function searchLabel(page, count, info, callback){
-
-    callback(null, info);
-
-
-}
 
 
 function labelMain(labelId, page, count, callback) {
@@ -408,120 +402,176 @@ function getLabelSearchInfoArr(labelIds, callback){
     });
 }
 
-function labelSearch(page, rowCount, genre_id, need_position_id, callback) {
 
-    var sql_search = 'select l.id label_id, l.name label_name, l.imagepath label_image_path, l.genre_id label_genre_id, lm.position_id label_need_position ' +
-        'from label l join label_need lm on(lm.label_id = l.id)' +
-        'where l.genre_id = ? and lm.position_id = ? limit ?, ?';
+function searchLabel(label_ids, page, count, info, callback){
 
-    var sql_genre = 'select l.id label_id, l.name label_name, l.imagepath label_image_path, l.genre_id label_genre_id, ln.position_id label_need_position ' +
-        'from label l join label_need ln on(ln.label_id = l.id) ' +
-        'where l.genre_id = ? limit ?, ?';
+    var sql_search_both = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
+      'g.name label_genre, p.name label_need_position ' +
+    'from label l join label_need n on(l.id = n.label_id) ' +
+    'join genre g on(l.genre_id = g.id) ' +
+    'join position p on(n.position_id = p.id) ' +
+    'where l.genre_id = ? and n.position_id = ? ' +
+    'limit ?';
 
-    var sql_position = 'select l.id label_id, l.name label_name, l.imagepath label_image_path, l.genre_id label_genre_id, ln.position_id label_need_position ' +
-    'from label l join label_need ln on(ln.label_id = l.id) ' +
-    'where l.genre_id = ? limit ?, ?';
+    var sql_search_genre = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
+      'g.name label_genre, p.name label_need_position ' +
+      'from label l join label_need n on(l.id = n.label_id) ' +
+      'join genre g on(l.genre_id = g.id) ' +
+      'join position p on(n.position_id = p.id) ' +
+      'where l.genre_id = ? ' +
+      'limit ?';
 
-    var totalSearch = [];
-    var genreSearch = [];
-    var positionSearch = [];
+    var sql_search_position = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
+      'g.name label_genre, p.name label_need_position ' +
+      'from label l join label_need n on(l.id = n.label_id) ' +
+      'join genre g on(l.genre_id = g.id) ' +
+      'join position p on(n.position_id = p.id) ' +
+      'where n.position_id = ? ' +
+      'limit ?';
 
+    // 이미 검색된 사용자를 검색 결과에서 지우기 위해
+    var alreadySearchedIndex = label_ids;
 
-
-    dbPool.getConnection(function (err, dbConn) {
-       if (err) {
-           return callback (err);
-       }
-
-       async.waterfall([total_search, genre_search, position_search], function (err, result) {
-           dbConn.release();
-          if (err) {
-              return callback (err);
-          }
-
-           var search = {};
-           search.page = page;
-           search.count = rowCount;
+    var maxCount = page * count; // 이번 검색으로 뽑아야할 검색 개수
+    var totalResults = []; // 검색 결과를 저장
 
 
-           var totalArray = [];
-           var genreArray = [];
-           var positionArray = [];
-
-           if (result[0] === total_search.result ) {
-               for (var i = 0; i < result.length; i++) {
-                   totalArray.push(totalSearch[i])
-               }
-
-               search.result = totalArray;
-           }
-           if (result[0] === genre_search.result) {
-               for (var i = 0; i < result.length; i++) {
-                   genreArray.push(genreSearch[i])
-               }
-
-               search.result = genreArray;
-           }
-           if (result[0] === position_search.result) {
-               for (var i = 0; i < result.length; i++) {
-                   positionArray.push(positionSearch[i])
-               }
-
-               search.result = positionArray
-           }
-          callback (null, search);
-       });
-
-
-        function total_search(callback) {
-            dbConn.query(sql_search, [genre_id, need_position_id, (page - 1) * rowCount, rowCount], function (err, result) {
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            // start search
+            async.waterfall([searchBoth, searchGenre, searchPosition], function(err){
+                dbConn.release();
                 if (err) {
-                    return callback (err);
-                }
-                else {
-                    totalSearch = result;
-                    callback (null);
+                    return callback(err);
+                } else {
+                    callback(null, totalResults);
                 }
             });
         }
 
-        function genre_search(callback) {
-            dbConn.query(sql_genre, [genre_id, (page - 1) * rowCount, rowCount], function (err, result) {
+        function searchBoth(callback) {
+            dbConn.query(sql_search_both, [info.genre_id, info.position_id, maxCount], function(err, results){
                 if (err) {
-                    return callback (err);
-                }
-                else {
-                    genreSearch = result;
-                    callback (null);
+                    callback(err);
+                } else {
+                    async.each(results, function(row, done){
+                        findAlreadyIndex(alreadySearchedIndex, row.label_id, function(flag){
+                            if (!flag) {
+                                totalResults.push(row);
+                                alreadySearchedIndex.push(row.label_id);
+                            }
+                        });
+                        done(null);
+                    }, function(err){
+                        // done
+                        if (err) {
+                            // done(err) 발생하지 않음
+                        } else {
+                            if (totalResults.length < maxCount) {
+                                callback(null, true);
+                            } else {
+                                callback(null, false);
+                            }
+                        }
+                    });
                 }
             });
         }
 
-        function position_search(callback) {
-            dbConn.query(sql_position, [need_position_id, (page - 1) * rowCount, rowCount], function (err, result) {
-                if (err) {
-                    return callback (err);
-                }
-                else {
-                    positionSearch = result;
-                    callback (null);
-                }
-            });
+        function searchGenre(flag, callback) {
+            if (!flag) {
+                callback(null, false);
+            } else {
+                dbConn.query(sql_search_genre, [info.genre_id, maxCount], function(err, results){
+                    if (err) {
+                        callback(err);
+                    } else {
+                        async.each(results, function(row, done){
+                            findAlreadyIndex(alreadySearchedIndex, row.label_id, function(flag){
+                                if (!flag) {
+                                    totalResults.push(row);
+                                    alreadySearchedIndex.push(row.label_id);
+                                }
+                            });
+                            done(null);
+                        }, function(err){
+                            // done
+                            if (err) {
+                                // done(err) 발생하지 않음
+                            } else {
+                                if (totalResults.length < maxCount) {
+                                    callback(null, true);
+                                } else {
+                                    callback(null, false);
+                                }
+                            }
+                        });
+                    }
+                });
+            }
         }
+
+        function searchPosition(flag, callback) {
+            if (!flag) {
+                callback(null, false);
+            } else {
+                dbConn.query(sql_search_position, [info.position_id, maxCount], function(err, results){
+                    if (err) {
+                        callback(err);
+                    } else {
+                        async.each(results, function(row, done){
+                            findAlreadyIndex(alreadySearchedIndex, row.label_id, function(flag){
+                                if (!flag) {
+                                    totalResults.push(row);
+                                    alreadySearchedIndex.push(row.label_id);
+                                }
+                            });
+                            done(null);
+                        }, function(err){
+                            // done
+                            if (err) {
+                                // done(err) 발생하지 않음
+                            } else {
+                                if (totalResults.length < maxCount) {
+                                    callback(null, true);
+                                } else {
+                                    callback(null, false);
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        }
+
     });
 }
+
+function findAlreadyIndex(indexArr, index, callback) {
+    var length = indexArr.length;
+    var flag = false;
+    for (var i = 0; i < length; i++) {
+        if (indexArr[i] === index) {
+            flag = true;
+            break;
+        }
+    }
+    callback(flag);
+}
+
 
 
 module.exports.createLabel = createLabel;
 
-module.exports.searchLabel = searchLabel;
 module.exports.showSettingLabelPage = showSettingLabelPage;
 module.exports.updateLabel = updateLabel;
 
 module.exports.labelMain = labelMain;
 module.exports.labelPage = labelPage;
 module.exports.labelMember = labelMember;
+module.exports.searchLabel = searchLabel;
 
 module.exports.getLabelSearchInfo = getLabelSearchInfo;
 module.exports.getLabelSearchInfoArr = getLabelSearchInfoArr;
-module.exports.labelSearch = labelSearch;

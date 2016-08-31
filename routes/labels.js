@@ -154,22 +154,20 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                 res.send(result);
             });
         } else if (search) {
-            // dummy test 용 사람 찾기 페이지
+            // 레이블 찾기 구현
             var page = parseInt(req.query.page) || 1;
             var count = parseInt(req.query.count) || 10;
 
-            User.findUser(req.user.id, function(err, result){
+            info = {};
+
+            info.genre_id = req.query.genre_id || req.user.genre_id;
+            info.position_id = req.query.position_id || req.user.position_id;
+
+            User.getBelongLabel(req.user.id, function(err, label_ids){
                 if (err) {
                     return next(err);
                 } else {
-                    var page = parseInt(req.query.page) || 1;
-                    var count = parseInt(req.query.count) || 10;
-                    var searchInfo = {};
-                    searchInfo.genre_id = result.genre_id;
-                    searchInfo.position_id = result.position_id;
-
-                    Label.labelSearch(page, count, req.user.genre_id, req.user.need_position_id, function (err, results) {
-                    // Label.searchLabel(page, count, searchInfo, function (err, results) {
+                    Label.searchLabel(label_ids, page, count, info, function(err, results){
                         if (err) {
                             return next(err);
                         } else {
@@ -178,8 +176,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                     });
                 }
             });
-
-
+            
         } else if (setting && req.query.label_id) {
             
             var id = parseInt(req.query.label_id);
