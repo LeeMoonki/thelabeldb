@@ -20,7 +20,6 @@ nuga.text = 'hihihihihihihihihi';
 
 
 router.post('/', isSecure, isAuthenticate, function (req, res, next) {
-    // todo : 레이블 생성
 
     var form = new formidable.IncomingForm();
     // /Users/LEEMOONKI/Desktop/userTestPhotos

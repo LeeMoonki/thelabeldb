@@ -3,6 +3,7 @@ var router = express.Router();
 
 var User = require('../models/user');
 
+var parseBoolean = require('./common').parseBoolean;
 var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
 var Post = require('../models/post');
@@ -14,20 +15,16 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
     var meet = parseInt(req.query.meet) || 2;
     
     // 업로드 할 때 레이블 항목을 보여주기 위한 변수
-    var setting = req.query.setting || false;
+    var setting = parseBoolean(req.query.setting) || false;
     
     if (setting) {
         
         Post.postLabelInfo(req.user.id, function(err, results){
             if (err) {
-                res.send({
-                    error: {
-                        message: '업로드 실패'
-                    }
-                });
+                return next(err);
             } else {
                 res.send({
-                    labels : results
+                    labels: results
                 });
             }
         });
