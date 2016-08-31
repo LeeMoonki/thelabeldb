@@ -3,14 +3,15 @@ var router = express.Router();
 
 var User = require('../models/user');
 var Label = require('../models/label');
+var parseBoolean = require('./common').parseBoolean;
 var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
 
 
 router.get('/', isSecure, isAuthenticate, function(req, res, next) {
   
-  var setting = req.query.setting || false; // req.qury 를 통해 Boolean 값을 넘기면 String이 아닌 Boolean으로 넘어온다
-  var search = req.query.search || false;
+  var setting = parseBoolean(req.query.setting) || false; // req.qury 를 통해 Boolean 값을 넘기면 String이 아닌 Boolean으로 넘어온다
+  var search = parseBoolean(req.query.search) || false;
 
   if (setting && search) {
     res.send({
@@ -241,5 +242,9 @@ router.put('/', isAuthenticate, function(req, res, next){
     });
   }
 });
+
+
+
+
 
 module.exports = router;

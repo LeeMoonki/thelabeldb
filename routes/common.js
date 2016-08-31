@@ -17,5 +17,14 @@ function isSecure(req, res, next) {
     next();
 }
 
+function parseBoolean(requestQuery){
+    if (requestQuery === 'true') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 module.exports.isAuthenticate = isAuthenticate;
 module.exports.isSecure = isSecure;
+module.exports.parseBoolean = parseBoolean;

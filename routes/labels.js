@@ -3,6 +3,7 @@ var router = express.Router();
 var Label = require('../models/label');
 var User = require('../models/user');
 
+var parseBoolean = require('./common').parseBoolean;
 var isSecure = require('./common').isSecure;
 var isAuthenticate = require('./common').isAuthenticate;
 
@@ -58,8 +59,8 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
 
 router.get('/', isSecure, isAuthenticate, function (req, res, next) {
     
-    var search = req.query.search || false;
-    var setting = req.query.setting || false;
+    var search = parseBoolean(req.query.search) || false;
+    var setting = parseBoolean(req.query.setting) || false;
 
     if (search && setting) {
         res.send({
