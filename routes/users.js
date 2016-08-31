@@ -1,3 +1,4 @@
+var formidable = require('formidable');
 var express = require('express');
 var router = express.Router();
 
@@ -60,7 +61,7 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
         } else {
           // 가입한 레이블이 없거나 검색 조건을 입력했다면 다음과 같이 검색한다
           if (label_ids[0] === undefined || req.query.genre_id || req.query.position_id || req.query.city_id || req.query.city_id) {
-            // todo : 검색 조건을 입력했다면 해당 검색 조건이 우선순위로 검색 되어야 하는 구조를 만들어야 한다 
+            // todo : 검색 조건을 입력했다면 해당 검색 조건이 우선순위로 검색 되어야 하는 구조를 만들어야 한다
             var searchInfo = {};
             searchInfo.genre = req.query.genre_id || req.user.genre_id;
             searchInfo.position = req.query.position_id || req.user.position_id;
@@ -114,55 +115,67 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
   }
 });
 
-router.post('/', isSecure,function(req, res, next){
+router.post('/', isSecure, function(req, res, next){
 
-  
-  // 필수 정보를 입력하지 않았다면 회원가입에 실패
-  if (!req.body.email || !req.body.nickname || !req.body.password || !req.body.gender || req.user) {
-    res.send({
-      error: {
-        message: '회원 가입을 실패했습니다'
-      }
-    });
-  } else {
-    var registerInfo = {};
+    var form = new formidable.IncomingForm();
+    // /Users/LEEMOONKI/Desktop/userTestPhotos
+    form.uploadDir = '/Users/LEEMOONKI/Desktop/userTestPhotos';
+    form.keepExtensions = true; // 확장자 유지를 위해, 이걸 false로 하면 확장자가 제거 된다
+    form.multiples = true; // 이렇게 하면 files가 array처럼 된다
 
-    registerInfo.email = req.body.email;
-    registerInfo.password = req.body.password;
-    registerInfo.nickname = req.body.nickname;
-    registerInfo.gender = parseInt(req.body.gender);
-
-    // todo : 이미지 파일을 받아오는 과정 작성 
-    registerInfo.text = req.body.text || '';
-    registerInfo.imagepath = req.body.image_path || '';
-    registerInfo.position_id = parseInt(req.body.position_id) || 1;
-    registerInfo.genre_id = parseInt(req.body.genre_id) || 1;
-    registerInfo.city_id = parseInt(req.body.city_id) || 1;
-    registerInfo.town_id = parseInt(req.body.town_id) || 1;
-
-    User.registerUser(registerInfo, function(err, result){
+    form.parse(req, function(err, fields, files) {
       if (err) {
         return next(err);
+      } else if (!fields.email || !fields.nickname || !fields.password || !fields.gender || req.user) {
+        res.send({
+          error: {
+            message: '회원 가입을 실패했습니다'
+          }
+        });
       }
       else {
-        if (result) {
-          res.send({
-            message: '회원 가입이 정상적으로 처리되었습니다',
-            id: result
-          });
+        var registerInfo = {};
+
+        registerInfo.email = fields.email;
+        registerInfo.password = fields.password;
+        registerInfo.nickname = fields.nickname;
+        registerInfo.gender = parseInt(fields.gender);
+
+        // todo : 이미지 파일을 받아오는 과정 작성
+        registerInfo.text = fields.text || '';
+
+        registerInfo.position_id = parseInt(fields.position_id) || 1;
+        registerInfo.genre_id = parseInt(fields.genre_id) || 1;
+        registerInfo.city_id = parseInt(fields.city_id) || 1;
+        registerInfo.town_id = parseInt(fields.town_id) || 1;
+
+        if (files.image !== undefined) {
+          registerInfo.imagepath = files.image.path;
         } else {
-          res.send({
-            error: {
-              message: '회원 가입을 실패했습니다'
-            }
-          });
+          registerInfo.imagepath = '/Users/LEEMOONKI/Desktop/userTestPhotos/facebookprofile';
         }
+
+        User.registerUser(registerInfo, function(err, result){
+          if (err) {
+            return next(err);
+          }
+          else {
+            if (result) {
+              res.send({
+                message: '회원 가입이 정상적으로 처리되었습니다',
+                id: result
+              });
+            } else {
+              res.send({
+                error: {
+                  message: '회원 가입을 실패했습니다'
+                }
+              });
+            }
+          }
+        });
       }
     });
-
-  }
-
-
 });
 
 router.put('/', isAuthenticate, function(req, res, next){

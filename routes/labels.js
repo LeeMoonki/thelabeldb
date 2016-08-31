@@ -1,4 +1,6 @@
 var express = require('express');
+var formidable = require('formidable');
+var async = require('async');
 var router = express.Router();
 var Label = require('../models/label');
 var User = require('../models/user');
@@ -19,43 +21,111 @@ nuga.text = 'hihihihihihihihihi';
 
 router.post('/', isSecure, isAuthenticate, function (req, res, next) {
     // todo : 레이블 생성
-    if (!req.body.label_name || req.label) {
-        res.send({
-            error: {
-                message: '페이지를 불러올 수 없습니다.'
-            }
-        });
-    } else {
-        var labelList = {};
-        labelList.label_name = req.body.label_name;
 
-        labelList.image_path = req.body.image_path || '';
-        labelList.genre = req.body.genre || '';
-        labelList.text = req.body.text || '';
-        labelList.text = req.body.nickname || '';
-        labelList.need_position = req.body.need_position || ''; // position 필수인지 다시 확인
+    var form = new formidable.IncomingForm();
+    // /Users/LEEMOONKI/Desktop/userTestPhotos
+    form.uploadDir = '/Users/LEEMOONKI/Desktop/userTestPhotos';
+    form.keepExtensions = true; // 확장자 유지를 위해, 이걸 false로 하면 확장자가 제거 된다
+    form.multiples = true; // 이렇게 하면 files가 array처럼 된다
+    
+    var formFields = {};
+    
+    form.on('field', function(name, value){
 
-        Label.dummyRegisterLabel(labelList, function (err, result) {
-            if (err) {
-                return next(err);
-            }
-            else {
-                if (result) {
-                    res.send({
-                        message: '레이블이 생성에 성공했습니다',
-                        dummyMessage: 'dummy test를 위한 입력 데이터 출력입니다',
-                        dummyData: labelList
-                    });
+        function makeFormFields(prop, val) {
+            if (!formFields[prop]) {
+                formFields[prop] = val;
+            } else {
+
+                if (formFields[prop] instanceof Array) {
+                    // 배열일 경우
+                    formFields[prop].push(val);
                 } else {
-                    res.send({
-                        error: {
-                            message: '레이블 생성에실패했습니다.'
-                        }
-                    });
+                    // 배열이 아닐 경우
+                    var tmp = formFields[prop];
+                    formFields[prop] = [];
+                    formFields[prop].push(tmp);
+                    formFields[prop].push(val);
                 }
             }
-        });
-    }
+        }
+        // 원래 []는 [0-9a-zA-Z] 문자 중 하나라는 뜻
+        var re1 = /\[\]/;
+        var re2 = /\[\d+\]/; // + 는 하나 이상
+        if (name.match(re1)) {
+            name = name.replace(re1, '');
+        } else if (name.match(re2)) {
+            name = name.replace(re2, '');
+        }
+        makeFormFields(name, value);
+
+    });
+    
+    form.parse(req, function(err, fields, files) {
+        if (err) {
+            return next(err);
+        } else if (!formFields.label_name || !formFields.genre_id) {
+            res.send({
+                error: {
+                    message: '페이지를 불러올 수 없습니다.'
+                }
+            });
+        }
+        else {
+            var createInfo = {};
+
+            createInfo.authority_user_id = req.user.id;
+            createInfo.label_name = formFields.label_name;
+            createInfo.genre_id = parseInt(formFields.genre_id);
+
+            createInfo.text = formFields.text || '';
+
+            if (formFields.need_position_id !== undefined) {
+                // need_position_id 가 있다면 parseInt 해준다
+                var tempArr = [];
+                async.each(formFields.need_position_id, function(item, done){
+                    tempArr.push(parseInt(item));
+                    done(null);
+                }, function(err){
+                    // done
+                    if (err) {
+                        // done(err) 발생하지 않는다
+                    } else {
+                        createInfo.position_id = tempArr;
+                    }
+                });
+
+            } else {
+                createInfo.position_id = [1];
+            }
+
+            if (files.image !== undefined) {
+                createInfo.imagepath = files.image.path;
+            } else {
+                createInfo.imagepath = '/Users/LEEMOONKI/Desktop/userTestPhotos/theLabel';
+            }
+            console.log(createInfo);
+            Label.createLabel(createInfo, function(err, result){
+                if (err) {
+                    return next(err);
+                }
+                else {
+                    if (result !== 0) {
+                        res.send({
+                            message: '레이블 생성에 성공했습니다',
+                            testResult: result
+                        });
+                    } else {
+                        res.send({
+                            error: {
+                                message: '레이블 생성에 실패했습니다'
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    });
 });
 
 router.get('/', isSecure, isAuthenticate, function (req, res, next) {

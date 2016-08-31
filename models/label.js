@@ -14,6 +14,86 @@ var url  = require('url');
 var fs = require('fs');
 var dbPool = require('../models/common').dbPool;
 
+
+
+function createLabel(info, callback) {
+
+    var sql_insert_label = 'INSERT INTO `thelabeldb`.`label` (`name`, `genre_id`, `text`, ' +
+      '`imagepath`, `authority_user_id`) ' +
+    'VALUES (?, ?, ?, ?, ?)';
+
+    var sql_insert_label_need = 'INSERT INTO `thelabeldb`.`label_need` (`label_id`, `position_id`) ' +
+    'VALUES (?, ?)';
+
+    var labelInsertId = 0;
+    var labelNeedInsertId = [];
+      
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            dbConn.beginTransaction(function(err){
+                if (err) {
+                    return callback(err);
+                } else {
+                    async.waterfall([insertLabel, insertLabelNeed], function(err){
+                        if (err) {
+                            return dbConn.rollback(function(){
+                                dbConn.release();
+                                callback(err);
+                            });
+                        } else {
+                            dbConn.commit(function(){
+                                dbConn.release();
+                                var shootResult = {};
+                                shootResult.label_id = labelInsertId;
+                                shootResult.need_ids = labelNeedInsertId;
+                                callback(null, shootResult);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function insertLabel(callback) {
+            dbConn.query(sql_insert_label, [info.label_name, info.genre_id, info.text, 
+            info.imagepath, info.authority_user_id], function(err, result){
+                if (err) {
+                    callback(err);
+                } else {
+                    labelInsertId = result.insertId;
+                    callback(null, result.insertId);
+                }
+            });
+        }
+
+        function insertLabelNeed(label_id, callback) {
+            // position_id 가 복수개일 수 있으므로 async.each를 사용한다
+            async.each(info.position_id, function(item, done){
+                dbConn.query(sql_insert_label_need, [label_id, item], function(err, result){
+                    if (err) {
+                        done(err);
+                    } else {
+                        labelNeedInsertId.push(result.insertId);
+                        done(null);
+                    }
+                });
+            }, function(err){
+                // done
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null);
+                }
+            });
+        }
+
+    });
+}
+
+
+
 function updateLabel(info, callback){
     var label = info;
     callback(null, label);
@@ -74,10 +154,6 @@ function searchLabel(page, count, info, callback){
     callback(null, info);
 
 
-}
-
-function dummyRegisterLabel(label, callback) {
-    callback(null, true);
 }
 
 
@@ -436,7 +512,7 @@ function labelSearch(page, rowCount, genre_id, need_position_id, callback) {
 }
 
 
-module.exports.dummyRegisterLabel = dummyRegisterLabel;
+module.exports.createLabel = createLabel;
 
 module.exports.searchLabel = searchLabel;
 module.exports.showSettingLabelPage = showSettingLabelPage;
