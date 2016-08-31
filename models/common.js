@@ -1,4 +1,3 @@
-// TODO : dbPool 만들기
 var mysql = require('mysql');
 var dbPoolConfig = require('../config/dbPoolConfig');
 

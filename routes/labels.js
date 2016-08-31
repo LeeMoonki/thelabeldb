@@ -18,6 +18,7 @@ nuga.text = 'hihihihihihihihihi';
 
 
 router.post('/', isSecure, isAuthenticate, function (req, res, next) {
+    // todo : 레이블 생성
     if (!req.body.label_name || req.label) {
         res.send({
             error: {

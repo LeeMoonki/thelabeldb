@@ -302,6 +302,7 @@ function getLabelSearchInfoArr(labelIds, callback){
                     } else {
                         var tmpArr = [];
                         var oneLabel = {};
+                        oneLabel.label_id = label_id;
                         oneLabel.genre_id = results[0].genre_id;
                         async.each(results, function(item, next){
                             tmpArr.push(item.position_id);

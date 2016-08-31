@@ -390,13 +390,13 @@ function getBelongLabel(userId, callback) {
   });
 }
 
-function searchUsersByUser(page, count, info, callback){
+function searchUsersByUser(userId, page, count, info, callback){
 
   // 이미 검색된 사용자를 검색 결과에서 지우기 위해
   var alreadySearchedIndex = [];
-  
+  alreadySearchedIndex.push(userId);
+
   var maxCount = page * count; // 이번 검색으로 뽑아야할 검색 개수
-  var numResults = 0; // 검색하고 있는 내용의 개수를 기록
   var totalResults = []; // 검색 결과를 저장
   
   var sql_first_filter = 'select u.id user_id, nickname, p.name position, g.name genre, c.name city, t.name town ' +
@@ -404,14 +404,16 @@ function searchUsersByUser(page, count, info, callback){
   'join genre g on(u.genre_id = g.id) ' +
   'join city c on(u.city_id = c.id) ' +
   'join town t on(u.town_id = t.id) ' +
-  'where u.position_id = ? and u.genre_id = ? and u.city_id = ? and u.town_id = ? ';
+  'where u.position_id = ? and u.genre_id = ? and u.city_id = ? and u.town_id = ? ' +
+  'limit ?';
 
   var sql_second_filter = 'select u.id user_id, nickname, p.name position, g.name genre, c.name city, t.name town ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
-    'where u.position_id = ? and u.genre_id = ? ';
+    'where u.position_id = ? and u.genre_id = ? ' +
+    'limit ?';
 
 
   
@@ -428,34 +430,41 @@ function searchUsersByUser(page, count, info, callback){
           dbConn.release();
           var shootResult = [];
           var startIndex = (page - 1) * count;
-          for (var i = startIndex; i < startIndex + numResults; i++) {
+          var endIndex = 0;
+          if (count < totalResults.length) {
+            endIndex = startIndex + count;
+          } else {
+            endIndex = startIndex + totalResults.length;
+          }
+          for (var i = startIndex; i < endIndex; i++) {
             shootResult.push(totalResults[i]);
           }
-          console.log(startIndex + numResults);
-          console.log(shootResult);
           console.log(alreadySearchedIndex);
           callback(null, shootResult);
         }
       });
 
       function firstFilter(callback){
-        dbConn.query(sql_first_filter, [info.position, info.genre, info.city, info.town],
+        dbConn.query(sql_first_filter, [info.position, info.genre, info.city, info.town, maxCount],
           function(err, results){
             if (err) {
               callback(err);
             } else {
-              numResults = numResults + results.length;
               async.each(results, function(item, done){
                 // RowDataPacket 없애고 싶으면 여기서 객체 만들어서 한다
-                totalResults.push(item);
-                alreadySearchedIndex.push(item.user_id);
+                findAlreadyIndex(alreadySearchedIndex, item.user_id, function(flag){
+                  if (!flag) {
+                    totalResults.push(item);
+                    alreadySearchedIndex.push(item.user_id);
+                  }
+                });
                 done(null);
               }, function(err){
                 // done
                 if (err) {
                   // dnoe(err) 발생하지 않음
                 } else {
-                  if (numResults < maxCount) {
+                  if (totalResults.length < maxCount) {
                     // 더 채워야 하는 경우
                     callback(null, true);
                   } else {
@@ -473,28 +482,15 @@ function searchUsersByUser(page, count, info, callback){
           // 그 전에 검색 결과를 다 채운 경우
           callback(null, false);
         } else {
-          dbConn.query(sql_second_filter, [info.position, info.genre], function(err, results){
+          dbConn.query(sql_second_filter, [info.position, info.genre, maxCount], function(err, results){
             if (err) {
               callback(err);
             } else {
-              console.log(results);
-              numResults = numResults + results.length;
               async.each(results, function(item, done){
                 findAlreadyIndex(alreadySearchedIndex, item.user_id, function(flag){
                   if (!flag) {
-                    // var tmpObj = {};
-                    // tmpObj.user_id = item.user_id;
-                    // tmpObj.nickname = item.nickname;
-                    // tmpObj.position = item.position;
-                    // tmpObj.genre = item.genre;
-                    // tmpObj.city = item.city;
-                    // tmpObj.town = item.town;
-                    // 그전에 찾은 값이 아니라면, 즉 새로운 검색 결과
                     totalResults.push(item);
                     alreadySearchedIndex.push(item.user_id);
-                  } else {
-                    // 그전에 찾은 값이라면, 즉 검색했던 것을 검색한 것
-                    numResults = numResults - 1;
                   }
                 });
                 done(null);
@@ -503,7 +499,7 @@ function searchUsersByUser(page, count, info, callback){
                 if (err) {
                   // done(err) 발생하지 않음
                 } else {
-                  if (numResults < maxCount) {
+                  if (totalResults.length < maxCount) {
                     // 더 채워야 하는 경우
                     callback(null, true);
                   } else {
@@ -517,17 +513,155 @@ function searchUsersByUser(page, count, info, callback){
 
         }
       }
-
-
-
-
     }
   });
   
 }
 
 function searchUsersByLabel(page, count, info, callback) {
-  callback(null, info);
+
+  var sql_search_genre = 'select u.id user_id, nickname, p.name position, g.name genre, c.name city, t.name town ' +
+  'from user u join position p on(u.position_id = p.id) ' +
+  'join genre g on(u.genre_id = g.id) ' +
+  'join city c on(u.city_id = c.id) ' +
+  'join town t on(u.town_id = t.id) ' +
+  'where u.genre_id = ? ' +
+  'limit ?';
+
+  var sql_search_position = 'select u.id user_id, nickname, p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.position_id = ? ' +
+    'limit ?';
+
+  // 이미 검색된 사용자를 검색 결과에서 지우기 위해
+  var alreadySearchedIndex = [];
+
+  var maxCount = page * count; // 이번 검색으로 뽑아야할 검색 개수
+  var totalResults = []; // 검색 결과를 저장
+
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+
+      async.waterfall([genreFilter, positionFilter], function(err){
+        if (err) {
+          dbConn.release();
+          return callback(err);
+        } else {
+          dbConn.release();
+          var shootResult = [];
+          var startIndex = (page - 1) * count;
+          var endIndex = 0;
+          if (count < totalResults.length) {
+            endIndex = startIndex + count;
+          } else {
+            endIndex = startIndex + totalResults.length;
+          }
+          for (var i = startIndex; i < endIndex; i++) {
+            shootResult.push(totalResults[i]);
+          }
+          callback(null, shootResult);
+        }
+      });
+
+      function genreFilter(callback){
+
+        // 가입한 레이블들의 장르정보들을 가지고 검색을 진행
+        async.each(info, function(item, done){
+          dbConn.query(sql_search_genre, [item.genre_id, maxCount], function(err, genreResults){
+            if (err) {
+              done(err);
+            } else {
+              // 쿼리 결과 정리 구간
+              async.each(genreResults, function(row, next){
+                totalResults.push(row);
+                alreadySearchedIndex.push(item.label_id);
+                next(null);
+              }, function(err){
+                // next
+                if (err) {
+                  // next(err) 발생하지 않음
+                } else {
+                  done(null);
+                }
+              });
+            }
+          });
+        }, function(err){
+          // done
+          if (err) {
+            callback(err);
+          } else {
+            // 채운 개수에 따른 다음 필터 실행 여부
+            if (totalResults.length < maxCount) {
+              callback(null, true);
+            } else {
+              callback(null, false);
+            }
+          }
+        });
+      }
+
+      function positionFilter(flag, callback){
+        if (!flag) {
+          // 그전에 검색 결과를 다 채운경우
+          callback(null, false);
+        } else {
+          // 2중 each를 통한 dbConn.query필요, 집중
+          // approach first row
+          async.each(info, function(firstItem, firstDone){
+            //approach second row
+            async.each(firstItem.position_id, function(secondItem, secondDone){
+              // now secondItem has a position_id for query
+              dbConn.query(sql_search_position, [secondItem, maxCount], function(err, results){
+                // need to write secondDone here
+                if (err) {
+                  secondDone(err);
+                } else {
+                  // need async.each for insert items of results to totalResuts
+                  async.each(results, function(row, done){
+                    findAlreadyIndex(alreadySearchedIndex, row.user_id, function(flag){
+                      if (!flag) {
+                        totalResults.push(row);
+                        alreadySearchedIndex.push(row.user_id);
+                      }
+                    });
+                    done(null);
+                  }, function(err){
+                    // done
+                    if (err) {
+                      // done(err) 발생하지 않음
+                    } else {
+                      secondDone(null);
+                    }
+                  });
+                }
+              });
+            }, function(err){
+              // secondDone
+              // need to write firstDone here
+              if (err) {
+                firstDone(err);
+              } else {
+                firstDone(null);
+              }
+            });
+          }, function(err){
+            // firstDone
+            if (totalResults.length < maxCount) {
+              callback(null, true);
+            } else {
+              callback(null, false);
+            }
+          });
+        }
+      }
+    }
+  });
 }
 
 

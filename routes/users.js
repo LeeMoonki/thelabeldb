@@ -60,13 +60,14 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
         } else {
           // 가입한 레이블이 없거나 검색 조건을 입력했다면 다음과 같이 검색한다
           if (label_ids[0] === undefined || req.query.genre_id || req.query.position_id || req.query.city_id || req.query.city_id) {
+            // todo : 검색 조건을 입력했다면 해당 검색 조건이 우선순위로 검색 되어야 하는 구조를 만들어야 한다 
             var searchInfo = {};
             searchInfo.genre = req.query.genre_id || req.user.genre_id;
             searchInfo.position = req.query.position_id || req.user.position_id;
             searchInfo.city = req.query.city_id || req.user.city_id;
             searchInfo.town = req.query.town_id || req.user.town_id;
 
-            User.searchUsersByUser(page, count, searchInfo, function(err, results){
+            User.searchUsersByUser(req.user.id, page, count, searchInfo, function(err, results){
               if (err) {
                 return next(err);
               } else {
@@ -86,8 +87,11 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
                 User.searchUsersByLabel(page, count, searchInfo, function(err, results){
                   if (err) {
                     return next(err);
-                  } else {
-                    res.send(results);
+                  } else {var searchResult = {};
+                    searchResult.page = page;
+                    searchResult.count = count;
+                    searchResult.result = results;
+                    res.send(searchResult);
                   }
                 });
               }
@@ -128,6 +132,7 @@ router.post('/', isSecure,function(req, res, next){
     registerInfo.nickname = req.body.nickname;
     registerInfo.gender = parseInt(req.body.gender);
 
+    // todo : 이미지 파일을 받아오는 과정 작성 
     registerInfo.text = req.body.text || '';
     registerInfo.imagepath = req.body.image_path || '';
     registerInfo.position_id = parseInt(req.body.position_id) || 1;
