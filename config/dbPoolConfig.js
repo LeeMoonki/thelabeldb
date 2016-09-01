@@ -1,4 +1,3 @@
-// TODO : dbPool 만들기
 var dbPoolConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
