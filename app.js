@@ -37,6 +37,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 사진 url 
+app.use('/labelProfiles', express.static(path.join(__dirname, 'uploads/images/labelProfiles')));
+app.use('/userProfiles', express.static(path.join(__dirname, 'uploads/images/userProfiles')));
+app.use('/postPhotos', express.static(path.join(__dirname, 'uploads/images/postPhotos')));
+
 
 app.use(session({
   secret: '4e4adcc0-f2bf-40ac-ba32-cd373cc0981a',

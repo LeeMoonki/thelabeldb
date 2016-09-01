@@ -1,6 +1,7 @@
 var express = require('express');
 var formidable = require('formidable');
 var async = require('async');
+var path = require('path');
 var router = express.Router();
 var Label = require('../models/label');
 var User = require('../models/user');
@@ -23,7 +24,7 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
 
     var form = new formidable.IncomingForm();
     // /Users/LEEMOONKI/Desktop/userTestPhotos
-    form.uploadDir = '/Users/LEEMOONKI/Desktop/userTestPhotos';
+    form.uploadDir = path.join(__dirname, '../uploads/images/labelProfiles');
     form.keepExtensions = true; // 확장자 유지를 위해, 이걸 false로 하면 확장자가 제거 된다
     form.multiples = true; // 이렇게 하면 files가 array처럼 된다
 
@@ -101,7 +102,7 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
             if (files.image !== undefined) {
                 createInfo.imagepath = files.image.path;
             } else {
-                createInfo.imagepath = '/Users/LEEMOONKI/Desktop/userTestPhotos/theLabel';
+                createInfo.imagepath = path.join(form.uploadDir, '/theLabel.png');
             }
             console.log(createInfo);
             Label.createLabel(createInfo, function(err, result){

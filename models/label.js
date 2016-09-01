@@ -13,6 +13,7 @@ var path = require('path');
 var url  = require('url');
 var fs = require('fs');
 var dbPool = require('../models/common').dbPool;
+var hostAddress = require('../models/common').hostAddress;
 
 
 
@@ -121,9 +122,10 @@ function showSettingLabelPage(labelId, callback){
                     return callback(err);
                 } else {
                     var label = {};
+                    var filename = path.basename(results[0].image_path);
                     label.label_name = results[0].label_name;
                     label.text = results[0].text;
-                    label.image_path = results[0].image_path;
+                    label.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
                     label.need_genre = results[0].need_genre;
                     dbConn.query(sql_select_need_info, [labelId], function(err, needResults){
                         if (err) {
@@ -213,9 +215,10 @@ function labelMain(labelId, page, count, callback) {
                 if (err) {
                     callback(new Error('Error sql_select_label_info'));
                 } else {
+                    var filename = path.basename(results[0].imagepath);
                     result.label_id = results[0].id;
                     result.label_name = results[0].name;
-                    result.label_image_path = results[0].imagepath;
+                    result.label_image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
                     result.label_genre = results[0].genre;
                     dbConn.query(sql_select_label_need, [labelId], function(err, needResults){
                         if (err) {
@@ -272,20 +275,35 @@ function labelPage(userId, callback) {
        if (err) {
            return callback(err);
        }
-       dbConn.query(sql, [userId], function (err, result) {
+       dbConn.query(sql, [userId], function (err, results) {
            dbConn.release();
           if (err) {
               return callback (err);
           }
           else {
-              if (result[0] === undefined) {
+              if (results[0] === undefined) {
+                  // 가입한 레이블이 없다면
                   callback(null, {});
               } else {
-                  for (var i = 0; i < result.length; i++) {
-                      label_page.push(result[i]);
-                  }
-                  label_list.data = label_page;
-                  callback(null, label_list);
+                  // 가입한 레이블이 있다면
+                  async.each(results, function(row, done){
+                      var tmp = {};
+                      var filename = path.basename(row.image_path);
+                      tmp.id = row.id;
+                      tmp.label_name = row.label_name;
+                      tmp.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                      tmp.authorization = row.authorization;
+                      label_page.push(tmp);
+                      done(null);
+                  }, function(err){
+                      //done
+                      if (err) {
+                          // done(err) 발생하지 않음
+                      } else {
+                          label_list.data = label_page;
+                          callback(null, label_list);
+                      }
+                  });
               }
           }
        });
@@ -306,20 +324,29 @@ function labelMember(label_id, callback) {
         if (err) {
             return callback (err);
         }
-        dbConn.query(sql, [label_id], function (err, result) {
+        dbConn.query(sql, [label_id], function (err, results) {
             dbConn.release();
             if (err) {
                 return callback (err);
             }
             else {
-
-                for (var i = 0; i < result.length; i++) {
-                    member.push(result[i]);
-                }
-                label_member.data = member;
-
-                callback(null, label_member);
-                
+                async.each(results, function(row, done){
+                    var tmp = {};
+                    var filename = path.basename(row.user_image_path);
+                    tmp.user_id = row.user_id;
+                    tmp.user_name = row.user_name;
+                    tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                    member.push(tmp);
+                    done(null);
+                }, function(err){
+                    // done
+                    if (err) {
+                        // done(err) 발생하지 않음
+                    } else {
+                        label_member.data = member;
+                        callback(null, label_member);
+                    }
+                });
             }
         });
     });
@@ -459,7 +486,14 @@ function searchLabel(label_ids, page, count, info, callback){
                     async.each(results, function(row, done){
                         findAlreadyIndex(alreadySearchedIndex, row.label_id, function(flag){
                             if (!flag) {
-                                totalResults.push(row);
+                                var tmp = {};
+                                var filename = path.basename(row.label_image_path);
+                                tmp.label_id = row.label_id;
+                                tmp.label_name = row.label_name;
+                                tmp.label_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                                tmp.label_genre = row.label_genre;
+                                tmp.label_need_position = row.label_need_position;
+                                totalResults.push(tmp);
                                 alreadySearchedIndex.push(row.label_id);
                             }
                         });
@@ -491,7 +525,14 @@ function searchLabel(label_ids, page, count, info, callback){
                         async.each(results, function(row, done){
                             findAlreadyIndex(alreadySearchedIndex, row.label_id, function(flag){
                                 if (!flag) {
-                                    totalResults.push(row);
+                                    var tmp = {};
+                                    var filename = path.basename(row.label_image_path);
+                                    tmp.label_id = row.label_id;
+                                    tmp.label_name = row.label_name;
+                                    tmp.label_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                                    tmp.label_genre = row.label_genre;
+                                    tmp.label_need_position = row.label_need_position;
+                                    totalResults.push(tmp);
                                     alreadySearchedIndex.push(row.label_id);
                                 }
                             });
@@ -524,7 +565,14 @@ function searchLabel(label_ids, page, count, info, callback){
                         async.each(results, function(row, done){
                             findAlreadyIndex(alreadySearchedIndex, row.label_id, function(flag){
                                 if (!flag) {
-                                    totalResults.push(row);
+                                    var tmp = {};
+                                    var filename = path.basename(row.label_image_path);
+                                    tmp.label_id = row.label_id;
+                                    tmp.label_name = row.label_name;
+                                    tmp.label_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                                    tmp.label_genre = row.label_genre;
+                                    tmp.label_need_position = row.label_need_position;
+                                    totalResults.push(tmp);
                                     alreadySearchedIndex.push(row.label_id);
                                 }
                             });

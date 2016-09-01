@@ -208,11 +208,11 @@ function homePost(id, page, rowCount, meet, callback) {
 }
 
 function postLabelInfo(userId, callback) {
-    var sql_select_labels = 'select label_id ' +
-        'from label_member ' +
-        'where user_id = ?';
+    var sql_select_labels = 'select l.id label_id, l.name label_name ' +
+        'from label l join label_member m on(l.id = m.label_id) ' +
+        'where m.user_id = ?';
 
-    var label_ids = [];
+    var label = [];
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
@@ -224,14 +224,14 @@ function postLabelInfo(userId, callback) {
                 } else {
                     async.each(results, function (item, done) {
 
-                        label_ids.push(item.label_id);
+                        label.push(item);
                         done(null);
 
                     }, function (err) {
                         if (err) {
                             return callback(err);
                         } else {
-                            callback(null, label_ids);
+                            callback(null, label);
                         }
                     });
                 }

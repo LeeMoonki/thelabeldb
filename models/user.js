@@ -19,6 +19,8 @@ var path = require('path');
 var url  = require('url');
 var fs = require('fs');
 var dbPool = require('../models/common').dbPool;
+var hostAddress = require('../models/common').hostAddress;
+
 
 // using in Localstrategy in auth
 function findByEmail(email, callback) {
@@ -93,7 +95,7 @@ function verifyPassword(typedPassword, storedPassword, callback) {
 }
 
 // using in deserialize of auth 
-function  findUser(userId, callback) {
+function findUser(userId, callback) {
   var sql_search_by_userId = 'select id, email, nickname, gender, text, ' +
     'imagepath, position_id, genre_id, city_id, town_id ' +
     'from user ' +
@@ -132,7 +134,6 @@ function  findUser(userId, callback) {
 // used in users's get route 
 function showMe(userId, page, count, callback){
 
-  console.log('showMe userId : ' + userId);
   var sql_user_info = 'select u.id id, nickname, imagepath image_path, g.name genre ' +
     'from user u join genre g on (u.genre_id = g.id) ' +
     'where u.id = ?';
@@ -167,10 +168,12 @@ function showMe(userId, page, count, callback){
           return callback(err);
         } else {
           var user = {};
+          var filename = path.basename(result[0].image_path);
           user.page = page;
           user.count = count;
           result[0].post_count = posts.length;
           user.result = result[0];
+          user.result.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
           user.data = posts;
 
           callback(null, user);
@@ -184,12 +187,12 @@ function showMe(userId, page, count, callback){
 
 function userPage(id, page, rowCount, callback) {
   var sql_member = 'select u.id id, u.nickname nickname, u.imagepath imagepath, u.genre_id genre, lm.label_id label_id ' +
-      'from user u join label_member lm on (lm.user_id = u.id) ' +
-      'where user_id = ?';
+      'from user u left join label_member lm on (lm.user_id = u.id) ' +
+      'where u.id = ?';
 
   var sql_post = 'select p.id, p.filetype, p.filepath, p.ctime, p.numlike ' +
       'from user u join post p on (p.user_id = u.id) ' +
-      'where user_id = ? ' +
+      'where u.id = ? ' +
       'limit ?, ?';
 
   var yourpage = {};
@@ -210,11 +213,13 @@ function userPage(id, page, rowCount, callback) {
       yourpage.page = page;
       yourpage.count = rowCount;
 
+      console.log(member[0]);
       var labelCount = {};
+      var filename = path.basename(member[0].imagepath);
       labelCount.id = member[0].id;
       labelCount.nickname = member[0].nickname;
-      labelCount.image_path = member[0].imagepath;
       labelCount.genre = member[0].genre;
+      labelCount.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
 
       var label = [];
       for (var i = 0; i < member.length; i++) {
@@ -280,11 +285,12 @@ function showProfilePage(userId, callback){
         } else {
 
           var user = {};
+          var filename = path.basename(result[0].imagepath);
           user.id = result[0].id;
           user.nickname = result[0].nickname;
           user.gender = result[0].gender;
           user.text = result[0].text;
-          user.image_path = result[0].imagepath;
+          user.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
           user.position = result[0].position;
           user.genre = result[0].genre;
           user.city = result[0].city;
@@ -399,7 +405,7 @@ function searchUsersByUser(userId, page, count, info, callback){
   var maxCount = page * count; // 이번 검색으로 뽑아야할 검색 개수
   var totalResults = []; // 검색 결과를 저장
   
-  var sql_first_filter = 'select u.id user_id, nickname, p.name position, g.name genre, c.name city, t.name town ' +
+  var sql_first_filter = 'select u.id user_id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
   'from user u join position p on(u.position_id = p.id) ' +
   'join genre g on(u.genre_id = g.id) ' +
   'join city c on(u.city_id = c.id) ' +
@@ -407,7 +413,7 @@ function searchUsersByUser(userId, page, count, info, callback){
   'where u.position_id = ? and u.genre_id = ? and u.city_id = ? and u.town_id = ? ' +
   'limit ?';
 
-  var sql_second_filter = 'select u.id user_id, nickname, p.name position, g.name genre, c.name city, t.name town ' +
+  var sql_second_filter = 'select u.id user_id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
@@ -454,7 +460,16 @@ function searchUsersByUser(userId, page, count, info, callback){
                 // RowDataPacket 없애고 싶으면 여기서 객체 만들어서 한다
                 findAlreadyIndex(alreadySearchedIndex, item.user_id, function(flag){
                   if (!flag) {
-                    totalResults.push(item);
+                    var tmp = {};
+                    var filename = path.basename(item.imagepath);
+                    tmp.user_id = item.user_id;
+                    tmp.user_nickname = item.nickname;
+                    tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                    tmp.user_position = item.position;
+                    tmp.user_genre = item.genre;
+                    tmp.user_city = item.city;
+                    tmp.user_town = item.town;
+                    totalResults.push(tmp);
                     alreadySearchedIndex.push(item.user_id);
                   }
                 });
@@ -489,7 +504,16 @@ function searchUsersByUser(userId, page, count, info, callback){
               async.each(results, function(item, done){
                 findAlreadyIndex(alreadySearchedIndex, item.user_id, function(flag){
                   if (!flag) {
-                    totalResults.push(item);
+                    var tmp = {};
+                    var filename = path.basename(item.imagepath);
+                    tmp.user_id = item.user_id;
+                    tmp.user_nickname = item.nickname;
+                    tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                    tmp.user_position = item.position;
+                    tmp.user_genre = item.genre;
+                    tmp.user_city = item.city;
+                    tmp.user_town = item.town;
+                    totalResults.push(tmp);
                     alreadySearchedIndex.push(item.user_id);
                   }
                 });
@@ -520,7 +544,7 @@ function searchUsersByUser(userId, page, count, info, callback){
 
 function searchUsersByLabel(page, count, info, callback) {
 
-  var sql_search_genre = 'select u.id user_id, nickname, p.name position, g.name genre, c.name city, t.name town ' +
+  var sql_search_genre = 'select u.id user_id, nickname, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
   'from user u join position p on(u.position_id = p.id) ' +
   'join genre g on(u.genre_id = g.id) ' +
   'join city c on(u.city_id = c.id) ' +
@@ -528,7 +552,7 @@ function searchUsersByLabel(page, count, info, callback) {
   'where u.genre_id = ? ' +
   'limit ?';
 
-  var sql_search_position = 'select u.id user_id, nickname, p.name position, g.name genre, c.name city, t.name town ' +
+  var sql_search_position = 'select u.id user_id, nickname, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
@@ -578,8 +602,17 @@ function searchUsersByLabel(page, count, info, callback) {
             } else {
               // 쿼리 결과 정리 구간
               async.each(genreResults, function(row, next){
-                totalResults.push(row);
-                alreadySearchedIndex.push(item.label_id);
+                var tmp = {};
+                var filename = path.basename(row.imagepath);
+                tmp.user_id = row.user_id;
+                tmp.user_nickname = row.nickname;
+                tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                tmp.user_position = row.position;
+                tmp.user_genre = row.genre;
+                tmp.user_city = row.city;
+                tmp.user_town = row.town;
+                totalResults.push(tmp);
+                alreadySearchedIndex.push(row.label_id);
                 next(null);
               }, function(err){
                 // next
@@ -626,7 +659,16 @@ function searchUsersByLabel(page, count, info, callback) {
                   async.each(results, function(row, done){
                     findAlreadyIndex(alreadySearchedIndex, row.user_id, function(flag){
                       if (!flag) {
-                        totalResults.push(row);
+                        var tmp = {};
+                        var filename = path.basename(row.imagepath);
+                        tmp.user_id = row.user_id;
+                        tmp.user_nickname = row.nickname;
+                        tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                        tmp.user_position = row.position;
+                        tmp.user_genre = row.genre;
+                        tmp.user_city = row.city;
+                        tmp.user_town = row.town;
+                        totalResults.push(tmp);
                         alreadySearchedIndex.push(row.user_id);
                       }
                     });

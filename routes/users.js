@@ -1,5 +1,6 @@
 var formidable = require('formidable');
 var express = require('express');
+var path = require('path');
 var router = express.Router();
 
 var User = require('../models/user');
@@ -119,7 +120,7 @@ router.post('/', isSecure, function(req, res, next){
 
     var form = new formidable.IncomingForm();
     // /Users/LEEMOONKI/Desktop/userTestPhotos
-    form.uploadDir = '/Users/LEEMOONKI/Desktop/userTestPhotos';
+    form.uploadDir = path.join(__dirname, '../uploads/images/userProfiles');
     form.keepExtensions = true; // 확장자 유지를 위해, 이걸 false로 하면 확장자가 제거 된다
     form.multiples = true; // 이렇게 하면 files가 array처럼 된다
 
@@ -152,7 +153,7 @@ router.post('/', isSecure, function(req, res, next){
         if (files.image !== undefined) {
           registerInfo.imagepath = files.image.path;
         } else {
-          registerInfo.imagepath = '/Users/LEEMOONKI/Desktop/userTestPhotos/facebookprofile';
+          registerInfo.imagepath = path.join(form.uploadDir, '/facebookprofile.jpg');
         }
 
         User.registerUser(registerInfo, function(err, result){
