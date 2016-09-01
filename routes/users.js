@@ -14,104 +14,128 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
   
   var setting = parseBoolean(req.query.setting) || false; // req.qury 를 통해 Boolean 값을 넘기면 String이 아닌 Boolean으로 넘어온다
   var search = parseBoolean(req.query.search) || false;
+  var dup = parseBoolean(req.query.dup) || false;
 
-  if (setting && search) {
-    res.send({
-      error: {
-        message: '페이지를 불러오지 못했습니다'
-      }
-    });
+  if (dup && req.query.email) {
+    // email 중복체크
+
+    res.send('email 중복체크');
+  } else if (dup && req.query.nickname) {
+    // nickname 중복체크
+
+    res.send('nickname 중복체크');
   } else {
+    // 기타 user 정보 제공
 
-    if (!req.user) {
+
+    if (setting && search) {
+      // setting 정보와 search 정보를 같이 알려고 할 경우
       res.send({
         error: {
           message: '페이지를 불러오지 못했습니다'
         }
       });
-    }
-    if (req.query.id) {
-      // dummy test 용 타계정 페이지
-      var page = parseInt(req.query.page) || 1;
-      var count = parseInt(req.query.count) || 5;
-      var id = parseInt(req.query.id);
-
-      User.userPage(id, page, count, function (err, result) {
-        if (err) {
-          return next(err);
-        }
-        res.send(result);
-      });
-    } else if (setting) {
-      // dummy test 용 프로필 설정 페이지
-      User.showProfilePage(req.user.id, function (err, user) {
-        if (err) {
-          return next(err);
-        }
-        res.send({user: user});
-      });
-    } else if (search) {
-      // dummy test 용 사람 찾기 페이지
-      var page = parseInt(req.query.page) || 1;
-      var count = parseInt(req.query.count) || 10;
-
-
-      User.getBelongLabel(req.user.id, function(err, label_ids){
-        if (err) {
-          return next(err);
-        } else {
-          // 가입한 레이블이 없거나 검색 조건을 입력했다면 다음과 같이 검색한다
-          if (label_ids[0] === undefined || req.query.genre_id || req.query.position_id || req.query.city_id || req.query.city_id) {
-            // todo : 검색 조건을 입력했다면 해당 검색 조건이 우선순위로 검색 되어야 하는 구조를 만들어야 한다
-            var searchInfo = {};
-            searchInfo.genre = req.query.genre_id || req.user.genre_id;
-            searchInfo.position = req.query.position_id || req.user.position_id;
-            searchInfo.city = req.query.city_id || req.user.city_id;
-            searchInfo.town = req.query.town_id || req.user.town_id;
-
-            User.searchUsersByUser(req.user.id, page, count, searchInfo, function(err, results){
-              if (err) {
-                return next(err);
-              } else {
-                var searchResult = {};
-                searchResult.page = page;
-                searchResult.count = count;
-                searchResult.result = results;
-                res.send(searchResult);
-              }
-            });
-
-          } else {
-            Label.getLabelSearchInfoArr(label_ids, function(err, searchInfo){
-              if (err) {
-                return next(err);
-              } else {
-                User.searchUsersByLabel(page, count, searchInfo, function(err, results){
-                  if (err) {
-                    return next(err);
-                  } else {var searchResult = {};
-                    searchResult.page = page;
-                    searchResult.count = count;
-                    searchResult.result = results;
-                    res.send(searchResult);
-                  }
-                });
-              }
-            });
-          }
-        }
-      });
-
     } else {
-      // dummy test 용 내계정 페이지
-      var page = parseInt(req.query.page) || 1;
-      var count = parseInt(req.query.count) || 5;
-      User.showMe(req.user.id, page, count, function (err, user) {
-        if (err) {
-          return next(err);
-        }
-        res.send(user);
-      });
+
+      if (req.query.id) {
+        // 타계정 페이지 시작
+
+        var page = parseInt(req.query.page) || 1;
+        var count = parseInt(req.query.count) || 5;
+        var id = parseInt(req.query.id);
+
+        User.userPage(id, page, count, function (err, result) {
+          if (err) {
+            return next(err);
+          }
+          res.send(result);
+        });
+
+        // 타계정 페이지 끝
+      } else if (setting) {
+
+        // 사용자 설정 페이지 시작
+
+        User.showProfilePage(req.user.id, function (err, user) {
+          if (err) {
+            return next(err);
+          }
+          res.send({user: user});
+        });
+
+        // 사용자 설정 페이지 끝
+      } else if (search) {
+
+        // 사용자 검색 페이지 시작
+
+        var page = parseInt(req.query.page) || 1;
+        var count = parseInt(req.query.count) || 10;
+
+
+        User.getBelongLabel(req.user.id, function (err, label_ids) {
+          if (err) {
+            return next(err);
+          } else {
+            // 가입한 레이블이 없거나 검색 조건을 입력했다면 다음과 같이 검색한다
+            if (label_ids[0] === undefined || req.query.genre_id || req.query.position_id || req.query.city_id || req.query.city_id) {
+              // 검색 조건을 입력했다면 해당 검색 조건이 우선순위로 검색 되어야 하는 구조를 만들어야 한다
+              var searchInfo = {};
+              searchInfo.genre = req.query.genre_id || req.user.genre_id;
+              searchInfo.position = req.query.position_id || req.user.position_id;
+              searchInfo.city = req.query.city_id || req.user.city_id;
+              searchInfo.town = req.query.town_id || req.user.town_id;
+
+              User.searchUsersByUser(req.user.id, page, count, searchInfo, function (err, results) {
+                if (err) {
+                  return next(err);
+                } else {
+                  var searchResult = {};
+                  searchResult.page = page;
+                  searchResult.count = count;
+                  searchResult.result = results;
+                  res.send(searchResult);
+                }
+              });
+
+            } else {
+              // 가입한 레이블이 있다면 아래와 같이 검색한다
+              Label.getLabelSearchInfoArr(label_ids, function (err, searchInfo) {
+                if (err) {
+                  return next(err);
+                } else {
+                  User.searchUsersByLabel(page, count, searchInfo, function (err, results) {
+                    if (err) {
+                      return next(err);
+                    } else {
+                      var searchResult = {};
+                      searchResult.page = page;
+                      searchResult.count = count;
+                      searchResult.result = results;
+                      res.send(searchResult);
+                    }
+                  });
+                }
+              });
+            }
+          }
+        });
+
+        // 사용자 검색 페이지 끝
+      } else {
+
+        // 내 계정 페이지 시작
+
+        var page = parseInt(req.query.page) || 1;
+        var count = parseInt(req.query.count) || 5;
+        User.showMe(req.user.id, page, count, function (err, user) {
+          if (err) {
+            return next(err);
+          }
+          res.send(user);
+        });
+
+        // 내 계정 페이지 끝
+      }
     }
   }
 });

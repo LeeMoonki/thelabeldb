@@ -46,21 +46,6 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
 
             }
         });
-        // User.findUser(req.user.id, function (err, result) {
-        //     if (err) {
-        //         return next(err);
-        //     } else {
-        //         var position_id = result.position_id;
-                Post.homePost(req.user.position_id, page, count, meet, function (err, results) {
-                    if (err) {
-                        return next(err);
-                    } else {
-                        res.send(results);
-                    }
-                });
-
-            // }
-        // });
     }
 });
 
