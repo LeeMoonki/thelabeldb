@@ -270,7 +270,6 @@ function postUpload(post, callback) {
     });
 }
 
-
 module.exports.dummyShowPosts = dummyShowPosts;
 module.exports.dummyUploadPost = dummyUploadPost;
 

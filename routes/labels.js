@@ -252,7 +252,7 @@ router.put('/', isSecure, isAuthenticate,function (req, res, next) {
 // router.put('/', isSecure, function(req, res, next) {
 //     res.send('label');
 //
-// router.delete('/', isSecure, function(req, res, next) {
-//     res.send('label');
-// });
+router.delete('/', isSecure, function(req, res, next) {
+    res.send('label');
+});
     module.exports = router;

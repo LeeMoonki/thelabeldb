@@ -400,13 +400,10 @@ function getLabelSearchInfoArr(labelIds, callback){
         }
     });
 }
-//TODO: 레이블 설정 models
-function labelSet() {
 
-}
 
 function searchLabel(label_ids, page, count, info, callback){
-//TODO: 레이블 탈퇴 models
+
 
     var sql_search_both = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
       'g.name label_genre, p.name label_need_position ' +
@@ -564,7 +561,68 @@ function findAlreadyIndex(indexArr, index, callback) {
     callback(flag);
 }
 
+//TODO: 레이블 설정 models
+function labelSet() {
 
+}
+
+//TODO: 레이블 탈퇴 models
+function deleteMember(id, callback) {
+// function deleteMember(user_id, label_id, callback) {
+    // var sql_delete = 'DELETE FROM `thelabeldb`.`label_member` ' +
+    //     'WHERE user_id= ? and label_id= ?';
+
+    var sql_delete = 'DELETE FROM `thelabeldb`.`message WHERE id= ?';
+
+    var sql_authority_user = 'select authority_user_id from label where id =?';
+
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.beginTransaction(function (err) {
+            if (err) {
+                dbConn.release();
+                return callback(err);
+            }
+
+            async.waterfall([memberDelete, authorityUser], function (err) {
+                if (err) {
+                    return dbConn.rollback(function () {
+                        dbConn.release();
+                        callback(err);
+                    });
+                }
+                dbConn.commit(function () {
+                    dbConn.release();
+                    callback(null);
+                })
+            });
+        });
+
+        function memberDelete(callback) {
+            dbConn.query(sql_delete, [], function (err, result) {
+                if (err) {
+                    return callback (err);
+                }
+                else {
+
+                }
+            });
+        }
+
+        function authorityUser(callback) {
+            dbConn.query(sql_authority_user, [], function (err, result) {
+                if (err) {
+                    return callback (err);
+                }
+                else {
+
+                }
+            });
+        }
+    });
+}
 
 module.exports.createLabel = createLabel;
 
@@ -574,7 +632,9 @@ module.exports.updateLabel = updateLabel;
 module.exports.labelMain = labelMain;
 module.exports.labelPage = labelPage;
 module.exports.labelMember = labelMember;
+module.exports.labelSet = labelSet;
+module.exports.deleteMember = deleteMember;
 
+module.exports.searchLabel = searchLabel;
 module.exports.getLabelSearchInfo = getLabelSearchInfo;
 module.exports.getLabelSearchInfoArr = getLabelSearchInfoArr;
-module.exports.labelSearch = labelSearch;
