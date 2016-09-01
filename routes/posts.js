@@ -95,7 +95,6 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
             console.log(result);
         });
     });
-
 });
 
 module.exports = router;
