@@ -86,18 +86,9 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
             // dummy test 용 사람 찾기 페이지
             var page = parseInt(req.query.page) || 1;
             var count = parseInt(req.query.count) || 10;
-
-            User.findUser(req.user.id, function(err, result){
-                if (err) {
-                    return next(err);
-                } else {
-                    var page = parseInt(req.query.page) || 1;
-                    var count = parseInt(req.query.count) || 10;
-                    var searchInfo = {};
-                    searchInfo.genre_id = result.genre_id;
-                    searchInfo.position_id = result.position_id;
-
-                    Label.labelSearch(page, count, req.user.genre_id, req.user.need_position_id, function (err, results) {
+            var genre_id = req.query.genre_id || req.user.genre_id;
+            var position_id = req.query.position_id || req.user.position_id;
+                    Label.labelSearch(genre_id, position_id, page, count,  function (err, results) {
                     // Label.searchLabel(page, count, searchInfo, function (err, results) {
                         if (err) {
                             return next(err);
@@ -105,8 +96,6 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                             res.send(results);
                         }
                     });
-                }
-            });
 
 
         } else if (setting && req.query.label_id) {
@@ -181,11 +170,30 @@ router.put('/', isSecure, isAuthenticate,function (req, res, next) {
         }
     });
 });
+//TODO: 레이블 설정 routes
+router.put('/', isSecure, function(req, res, next) {
+    res.send('label');
+});
 
-// router.put('/', isSecure, function(req, res, next) {
-//     res.send('label');
-//
-// router.delete('/', isSecure, function(req, res, next) {
-//     res.send('label');
-// });
+//TODO: 레이블 탈퇴 routes
+router.delete('/members', isAuthenticate, function(req, res, next) {
+    // var id = parseInt(req.user.id);
+    // var label_id = parseInt(req.query.label_id);
+
+    var id = parseInt(req.query.id);
+
+    Label.deleteMember(id, function (err, result) {
+    // Label.deleteMember(id, label_id, function (err, result) {
+       if (err) {
+           return next (err);
+       }
+       else {
+           message : '레이블에서 탈퇴되었습니다.',
+           res.send(result);
+       }
+    });
+
+
+});
+
     module.exports = router;

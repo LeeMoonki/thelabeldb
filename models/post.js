@@ -3,7 +3,10 @@ var async = require('async');
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
+
+
 var dbPool = require('../models/common').dbPool;
+
 
 // dummy data
 
@@ -137,25 +140,25 @@ function homePost(id, page, rowCount, meet, callback) {
             }
 
             home.page = page;
-                home.count = rowCount;
-                home.meet = meet;
+            home.count = rowCount;
+            home.meet = meet;
 
-                var meetData = {};
-                var meetArray = [];
-                for (var i = 0; i < meetList.length; i++) {
-                    // meetData.id = meetList[i].post_id;
-                    // meetData.user_id = meetList[i].user_id;
-                    // meetData.nickname = meetList[i].nickname;
-                    // meetData.filetype = meetList[i].filetype;
-                    // meetData.file_path = meetList[i].file_path;
-                    // meetData.date = meetList[i].ctime;
-                    // meetData.numlike = meetList[i].numlike;
+            var meetData = {};
+            var meetArray = [];
+            for (var i = 0; i < meetList.length; i++) {
+                // meetData.id = meetList[i].post_id;
+                // meetData.user_id = meetList[i].user_id;
+                // meetData.nickname = meetList[i].nickname;
+                // meetData.filetype = meetList[i].filetype;
+                // meetData.file_path = meetList[i].file_path;
+                // meetData.date = meetList[i].ctime;
+                // meetData.numlike = meetList[i].numlike;
 
-                    meetArray.push(meetList[i]);
+                meetArray.push(meetList[i]);
 
-                    // meetArray.push(meetData);
+                // meetArray.push(meetData);
 
-                }
+            }
 
             var normalData = {};
             var normal = [];
@@ -206,25 +209,25 @@ function homePost(id, page, rowCount, meet, callback) {
 
 function postLabelInfo(userId, callback) {
     var sql_select_labels = 'select label_id ' +
-                            'from label_member ' +
-                            'where user_id = ?';
-    
+        'from label_member ' +
+        'where user_id = ?';
+
     var label_ids = [];
-    dbPool.getConnection(function(err, dbConn){
+    dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
         } else {
-            dbConn.query(sql_select_labels, [userId], function(err, results){
+            dbConn.query(sql_select_labels, [userId], function (err, results) {
                 dbConn.release();
                 if (err) {
                     return callback(err);
                 } else {
-                    async.each(results, function(item, done){
-                        
+                    async.each(results, function (item, done) {
+
                         label_ids.push(item.label_id);
                         done(null);
-                        
-                    }, function(err){
+
+                    }, function (err) {
                         if (err) {
                             return callback(err);
                         } else {
@@ -237,9 +240,40 @@ function postLabelInfo(userId, callback) {
     });
 }
 
+function postUpload(post, callback) {
+
+    var sql_insert_post = 'INSERT INTO `thelabeldb`.`post` (`user_id`, `text`, `opento`, `label_id`, `filetitle`, `filepath`, `filetype`) ' +
+        'VALUES (?, ?, ?, ?, ?, ?, ?)';
+
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.beginTransaction(function (err) {
+            if (err) {
+                return callback(err);
+                dbConn.release();
+            }
+            dbConn.query(sql_insert_post, [post.user_id, post.text, post.opento, post.label_id, post.filetitle, post.filepath, post.filetype], function (err, result) {
+                if (err) {
+                    return dbConn.rollback(function(){
+                        dbConn.release();
+                        callback(err);
+                    });
+                }
+                dbConn.commit(function(){
+                    dbConn.release();
+                    callback (null, result);
+                });
+            });
+        })
+    });
+}
+
 
 module.exports.dummyShowPosts = dummyShowPosts;
 module.exports.dummyUploadPost = dummyUploadPost;
 
 module.exports.homePost = homePost;
 module.exports.postLabelInfo = postLabelInfo;
+module.exports.postUpload = postUpload;
