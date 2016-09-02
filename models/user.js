@@ -217,7 +217,6 @@ function userPage(id, page, rowCount, callback) {
       yourpage.page = page;
       yourpage.count = rowCount;
 
-      console.log(member[0]);
       var labelCount = {};
       var filename = path.basename(member[0].imagepath);
       labelCount.id = member[0].id;

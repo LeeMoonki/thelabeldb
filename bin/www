@@ -15,6 +15,13 @@ var path = require('path');
  * Get port from environment and store in Express.
  */
 
+process.on('uncaughtException', function (err) {
+    if (err) {
+        console.log(err);
+    }
+});
+
+
 var port = normalizePort(process.env.PORT || '8080');
 app.set('port', port);
 

@@ -131,28 +131,26 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
 router.get('/', isSecure, isAuthenticate, function (req, res, next) {
     
     var search = parseBoolean(req.query.search) || false;
-    var setting = parseBoolean(req.query.setting) || false;
+    var labelPage = parseBoolean(req.query.labelPage) || false;
+    
 
-    if (search && setting) {
+    if (search && labelPage) {
         res.send({
             error: {
                 message: '페이지를 불러오지 못했습니다'
             }
         });
     } else {
-        // 레이블 페이지
-        if (!search && !setting && req.query.label_id) {
-            //레이블 메인페이지
-            var page = parseInt(req.query.page) || 1;
-            var count = parseInt(req.query.count) || 10;
-            var id = parseInt(req.query.label_id);
+        if (labelPage) {
 
-            Label.labelMain(id, page, count, function (err, result) {
+            // 레이블 페이지; 가입한 레이블 목록
+            Label.labelPage(req.user.id, function (err, list) {
                 if (err) {
                     return next(err);
                 }
-                res.send(result);
+                res.send(list);
             });
+            
         } else if (search) {
             // 레이블 찾기 구현
             var page = parseInt(req.query.page) || 1;
@@ -177,54 +175,96 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                 }
             });
 
-        } else if (setting && req.query.label_id) {
+        } else {
+            // 전체 레이블 목록
+
             
-            var id = parseInt(req.query.label_id);
-            
-            Label.showSettingLabelPage(id, function (err, label) {
+        }
+    }
+});
+
+
+router.get('/:label_id', isSecure, isAuthenticate, function(req, res, next){
+    
+    var label_id = req.params.label_id;
+    var members = parseBoolean(req.query.members) || false;
+    var setting = parseBoolean(req.query.setting) || false;
+    var del = parseBoolean(req.query.del) || false;
+
+    if ((members && setting) || (members && del) || (setting && del)) {
+        res.send({
+            error: {
+                message: '페이지를 불러오지 못했습니다'
+            }
+        });
+    } else {
+        if (setting) {
+            // 레이블 설정 페이지
+            Label.showSettingLabelPage(label_id, function (err, label) {
                 if (err) {
                     return next(err);
                 } else {
                     res.send({label: label});
                 }
             });
-        }
-        else {
-            var id = parseInt(req.user.id);
-
-            Label.labelPage(id, function (err, list) {
+        } else if (members) {
+            // 레이블 구성멤버
+            Label.labelMember(label_id, function (err, result) {
                 if (err) {
                     return next(err);
                 }
-                res.send(list);
+                res.send(result);
+            });
+        } else if (del) {
+            // 레이블 탈퇴 GET
+
+        } else {
+
+            //레이블 메인페이지
+            var page = parseInt(req.query.page) || 1;
+            var count = parseInt(req.query.count) || 10;
+
+            Label.labelMain(label_id, page, count, function (err, result) {
+                if (err) {
+                    return next(err);
+                }
+                res.send(result);
             });
         }
     }
 });
 
 
+
 //레이블 구성멤버
-router.get('/members', isSecure, isAuthenticate,function (req, res, next) {
-
-    var label_id = parseInt(req.query.label_id);
-
-    if (!label_id) {
-        res.send('레이블 멤버 출력 실패');
-    } else {
-        Label.labelMember(label_id, function (err, result) {
-            if (err) {
-                return next(err);
-            }
-            res.send(result);
-        });
-    }
-    
-
-});
+// router.get('/members/:label_id', isSecure, isAuthenticate, function (req, res, next) {
+//
+//     var label_id = parseInt(req.params.label_id);
+//
+//     if (!label_id) {
+//         res.send('레이블 멤버 출력 실패');
+//     } else {
+//         Label.labelMember(label_id, function (err, result) {
+//             if (err) {
+//                 return next(err);
+//             }
+//             res.send(result);
+//         });
+//     }
+//
+//
+// });
 
 
 //레이블 설정
-router.put('/', isSecure, isAuthenticate,function (req, res, next) {
+router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
+
+    // 레이블 권한위임을 위한 변수
+    var members = parseBoolean(req.query.members) || false;
+
+    // 레이블 수정시에 필요한 레이블 아이디
+    var label_id = parseInt(req.params.label_id);
+
     var settingInfo = {};
 
     settingInfo.text = req.body.text || nuga.text;
@@ -256,4 +296,6 @@ router.put('/', isSecure, isAuthenticate,function (req, res, next) {
 router.delete('/', isSecure, function(req, res, next) {
     res.send('label');
 });
-    module.exports = router;
+
+
+module.exports = router;
