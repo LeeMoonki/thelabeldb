@@ -207,38 +207,6 @@ function homePost(id, page, rowCount, meet, callback) {
     });
 }
 
-function postLabelInfo(userId, callback) {
-    var sql_select_labels = 'select l.id label_id, l.name label_name ' +
-                            'from label l join label_member m on(l.id = m.label_id) ' +
-                            'where m.user_id = ?';
-
-    var label = [];
-    dbPool.getConnection(function (err, dbConn) {
-        if (err) {
-            return callback(err);
-        } else {
-            dbConn.query(sql_select_labels, [userId], function (err, results) {
-                dbConn.release();
-                if (err) {
-                    return callback(err);
-                } else {
-                    async.each(results, function (item, done) {
-
-                        label.push(item);
-                        done(null);
-
-                    }, function (err) {
-                        if (err) {
-                            return callback(err);
-                        } else {
-                            callback(null, label);
-                        }
-                    });
-                }
-            });
-        }
-    });
-}
 
 function postUpload(post, callback) {
 
