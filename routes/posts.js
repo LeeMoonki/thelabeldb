@@ -13,40 +13,23 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
     var page = parseInt(req.query.page) || 1;
     var count = parseInt(req.query.count) || 10;
     var meet = parseInt(req.query.meet) || 2;
-    
-    // 업로드 할 때 레이블 항목을 보여주기 위한 변수
-    var setting = parseBoolean(req.query.setting) || false;
-    
-    if (setting) {
-        
-        Post.postLabelInfo(req.user.id, function(err, results){
-            if (err) {
-                return next(err);
-            } else {
-                res.send({
-                    labels: results
-                });
-            }
-        });
-        
-    } else {
 
-        User.findUser(req.user.id, function (err, result) {
-            if (err) {
-                return next(err);
-            } else {
-                var position_id = result.position_id;
-                Post.homePost(position_id, page, count, meet, function (err, results) {
-                    if (err) {
-                        return next(err);
-                    } else {
-                        res.send(results);
-                    }
-                });
+    User.findUser(req.user.id, function (err, result) {
+        if (err) {
+            return next(err);
+        } else {
+            var position_id = result.position_id;
+            Post.homePost(position_id, page, count, meet, function (err, results) {
+                if (err) {
+                    return next(err);
+                } else {
+                    res.send(results);
+                }
+            });
 
-            }
-        });
-    }
+        }
+    });
+
 });
 
 router.post('/', isAuthenticate, isSecure, function (req, res, next) {
