@@ -20,11 +20,11 @@ var hostAddress = require('../models/common').hostAddress;
 function createLabel(info, callback) {
 
     var sql_insert_label = 'INSERT INTO `thelabeldb`.`label` (`name`, `genre_id`, `text`, ' +
-      '`imagepath`, `authority_user_id`) ' +
+                                       '`imagepath`, `authority_user_id`) ' +
     'VALUES (?, ?, ?, ?, ?)';
 
     var sql_insert_label_need = 'INSERT INTO `thelabeldb`.`label_need` (`label_id`, `position_id`) ' +
-    'VALUES (?, ?)';
+                                'VALUES (?, ?)';
 
     var labelInsertId = 0;
     var labelNeedInsertId = [];
@@ -165,7 +165,7 @@ function labelMain(labelId, page, count, callback) {
     // member block
     var sql_select_member_info = 'select user_id, nickname user_nickname, p.name user_possition, imagepath user_imagepath ' +
                                  'from user u join label_member m on(u.id = m.user_id) ' +
-                                 'join position p on(u.position_id = p.id) ' +
+                                             'join position p on(u.position_id = p.id) ' +
                                  'where label_id = ?';
 
     // data block
@@ -382,8 +382,8 @@ function getLabelSearchInfo(labelId, callback) {
 
 function getLabelSearchInfoArr(labelIds, callback){
     var sql_find_ids = 'select l.genre_id genre_id, n.position_id position_id ' +
-      'from label l join label_need n on(l.id = n.label_id) ' +
-      'where l.id = ?';
+                       'from label l join label_need n on(l.id = n.label_id) ' +
+                       'where l.id = ?';
 
     var infos = [];
     dbPool.getConnection(function(err, dbConn){
@@ -433,28 +433,28 @@ function searchLabel(label_ids, page, count, info, callback){
 
 
     var sql_search_both = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
-      'g.name label_genre, p.name label_need_position ' +
-    'from label l join label_need n on(l.id = n.label_id) ' +
-    'join genre g on(l.genre_id = g.id) ' +
-    'join position p on(n.position_id = p.id) ' +
-    'where l.genre_id = ? and n.position_id = ? ' +
-    'limit ?';
+                                 'g.name label_genre, p.name label_need_position ' +
+                          'from label l join label_need n on(l.id = n.label_id) ' +
+                                       'join genre g on(l.genre_id = g.id) ' +
+                                       'join position p on(n.position_id = p.id) ' +
+                          'where l.genre_id = ? and n.position_id = ? ' +
+                          'limit ?';
 
     var sql_search_genre = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
-      'g.name label_genre, p.name label_need_position ' +
-      'from label l join label_need n on(l.id = n.label_id) ' +
-      'join genre g on(l.genre_id = g.id) ' +
-      'join position p on(n.position_id = p.id) ' +
-      'where l.genre_id = ? ' +
-      'limit ?';
+                                  'g.name label_genre, p.name label_need_position ' +
+                           'from label l join label_need n on(l.id = n.label_id) ' +
+                                        'join genre g on(l.genre_id = g.id) ' +
+                                        'join position p on(n.position_id = p.id) ' +
+                           'where l.genre_id = ? ' +
+                           'limit ?';
 
     var sql_search_position = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
-      'g.name label_genre, p.name label_need_position ' +
-      'from label l join label_need n on(l.id = n.label_id) ' +
-      'join genre g on(l.genre_id = g.id) ' +
-      'join position p on(n.position_id = p.id) ' +
-      'where n.position_id = ? ' +
-      'limit ?';
+                                     'g.name label_genre, p.name label_need_position ' +
+                              'from label l join label_need n on(l.id = n.label_id) ' +
+                                           'join genre g on(l.genre_id = g.id) ' +
+                                           'join position p on(n.position_id = p.id) ' +
+                              'where n.position_id = ? ' +
+                              'limit ?';
 
     // 이미 검색된 사용자를 검색 결과에서 지우기 위해
     var alreadySearchedIndex = label_ids;
@@ -609,12 +609,12 @@ function findAlreadyIndex(indexArr, index, callback) {
     callback(flag);
 }
 
-//TODO: 레이블 설정 models
+//레이블 설정 models
 function labelSet() {
 
 }
 
-//TODO: 레이블 탈퇴 models
+//레이블 탈퇴 models
 function deleteMember(id, callback) {
 // function deleteMember(user_id, label_id, callback) {
     // var sql_delete = 'DELETE FROM `thelabeldb`.`label_member` ' +

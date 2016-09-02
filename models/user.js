@@ -97,9 +97,9 @@ function verifyPassword(typedPassword, storedPassword, callback) {
 // using in deserialize of auth 
 function findUser(userId, callback) {
   var sql_search_by_userId = 'select id, email, nickname, gender, text, ' +
-    'imagepath, position_id, genre_id, city_id, town_id ' +
-    'from user ' +
-    'where id = ?';
+                                    'imagepath, position_id, genre_id, city_id, town_id ' +
+                             'from user ' +
+                             'where id = ?';
 
   dbPool.getConnection(function(err, dbConn){
     if (err) {
@@ -133,10 +133,11 @@ function findUser(userId, callback) {
 
 // used in users's get route 
 function showMe(userId, page, count, callback){
+  // userId 를 받아서 해당 사용자의 정보를 전달한다
 
   var sql_user_info = 'select u.id id, nickname, imagepath image_path, g.name genre ' +
-    'from user u join genre g on (u.genre_id = g.id) ' +
-    'where u.id = ?';
+                      'from user u join genre g on (u.genre_id = g.id) ' +
+                      'where u.id = ?';
   var sql_posts = 'select id, filetype, filepath, ctime, numlike from post where user_id = ? limit ?, ?';
 
   dbPool.getConnection(function(err, dbConn){
@@ -153,6 +154,7 @@ function showMe(userId, page, count, callback){
     });
 
     function showMeGetPosts(callback){
+      // post 중 userId를 갖는 사용자가 올린 게시글
       dbConn.query(sql_posts, [userId, (page - 1) * count, count], function(err, results){
         if (err) {
           return callback(err);
@@ -163,6 +165,7 @@ function showMe(userId, page, count, callback){
     }
 
     function showMeGetUser(posts, callback){
+      // userId를 갖는 사용자의 정보
       dbConn.query(sql_user_info, [userId], function(err, result){
         if (err) {
           return callback(err);
@@ -186,14 +189,15 @@ function showMe(userId, page, count, callback){
 
 
 function userPage(id, page, rowCount, callback) {
+  // id 라는 사용자 id를 갖는 사용자의 정보를 전달
   var sql_member = 'select u.id id, u.nickname nickname, u.imagepath imagepath, u.genre_id genre, lm.label_id label_id ' +
-      'from user u left join label_member lm on (lm.user_id = u.id) ' +
-      'where u.id = ?';
+                   'from user u left join label_member lm on (lm.user_id = u.id) ' +
+                   'where u.id = ?';
 
   var sql_post = 'select p.id, p.filetype, p.filepath, p.ctime, p.numlike ' +
-      'from user u join post p on (p.user_id = u.id) ' +
-      'where u.id = ? ' +
-      'limit ?, ?';
+                 'from user u join post p on (p.user_id = u.id) ' +
+                 'where u.id = ? ' +
+                 'limit ?, ?';
 
   var yourpage = {};
 
@@ -266,6 +270,7 @@ function userPage(id, page, rowCount, callback) {
 
 
 function showProfilePage(userId, callback){
+  // 사용자 정보 설정 화면에 기존의 정보를 전달
   var sql_search_by_userId = 'select u.id id, nickname, gender, text, imagepath, p.name position, ' +
                                     'g.name genre, c.name city, t.name town ' +
                              'from user u join position p on(u.position_id = p.id) ' +
@@ -305,6 +310,7 @@ function showProfilePage(userId, callback){
 
 
 function registerUser(info, callback){
+  // 회원가
 
   var sql_register_user = 'INSERT INTO `thelabeldb`.`user` (`email`, `password`, `nickname`, `gender`, `text`, `imagepath`, ' +
                                                            '`position_id`, `genre_id`, `city_id`, `town_id`) ' +
@@ -406,20 +412,20 @@ function searchUsersByUser(userId, page, count, info, callback){
   var totalResults = []; // 검색 결과를 저장
   
   var sql_first_filter = 'select u.id user_id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
-  'from user u join position p on(u.position_id = p.id) ' +
-  'join genre g on(u.genre_id = g.id) ' +
-  'join city c on(u.city_id = c.id) ' +
-  'join town t on(u.town_id = t.id) ' +
-  'where u.position_id = ? and u.genre_id = ? and u.city_id = ? and u.town_id = ? ' +
-  'limit ?';
+                         'from user u join position p on(u.position_id = p.id) ' +
+                                     'join genre g on(u.genre_id = g.id) ' +
+                                     'join city c on(u.city_id = c.id) ' +
+                                     'join town t on(u.town_id = t.id) ' +
+                         'where u.position_id = ? and u.genre_id = ? and u.city_id = ? and u.town_id = ? ' +
+                         'limit ?';
 
   var sql_second_filter = 'select u.id user_id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
-    'from user u join position p on(u.position_id = p.id) ' +
-    'join genre g on(u.genre_id = g.id) ' +
-    'join city c on(u.city_id = c.id) ' +
-    'join town t on(u.town_id = t.id) ' +
-    'where u.position_id = ? and u.genre_id = ? ' +
-    'limit ?';
+                          'from user u join position p on(u.position_id = p.id) ' +
+                                      'join genre g on(u.genre_id = g.id) ' +
+                                      'join city c on(u.city_id = c.id) ' +
+                                      'join town t on(u.town_id = t.id) ' +
+                          'where u.position_id = ? and u.genre_id = ? ' +
+                          'limit ?';
 
 
   
@@ -545,20 +551,20 @@ function searchUsersByUser(userId, page, count, info, callback){
 function searchUsersByLabel(page, count, info, callback) {
 
   var sql_search_genre = 'select u.id user_id, nickname, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
-  'from user u join position p on(u.position_id = p.id) ' +
-  'join genre g on(u.genre_id = g.id) ' +
-  'join city c on(u.city_id = c.id) ' +
-  'join town t on(u.town_id = t.id) ' +
-  'where u.genre_id = ? ' +
-  'limit ?';
+                         'from user u join position p on(u.position_id = p.id) ' +
+                                     'join genre g on(u.genre_id = g.id) ' +
+                                     'join city c on(u.city_id = c.id) ' +
+                                     'join town t on(u.town_id = t.id) ' +
+                         'where u.genre_id = ? ' +
+                         'limit ?';
 
   var sql_search_position = 'select u.id user_id, nickname, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
-    'from user u join position p on(u.position_id = p.id) ' +
-    'join genre g on(u.genre_id = g.id) ' +
-    'join city c on(u.city_id = c.id) ' +
-    'join town t on(u.town_id = t.id) ' +
-    'where u.position_id = ? ' +
-    'limit ?';
+                            'from user u join position p on(u.position_id = p.id) ' +
+                                        'join genre g on(u.genre_id = g.id) ' +
+                                        'join city c on(u.city_id = c.id) ' +
+                                        'join town t on(u.town_id = t.id) ' +
+                            'where u.position_id = ? ' +
+                            'limit ?';
 
   // 이미 검색된 사용자를 검색 결과에서 지우기 위해
   var alreadySearchedIndex = [];

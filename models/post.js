@@ -209,8 +209,8 @@ function homePost(id, page, rowCount, meet, callback) {
 
 function postLabelInfo(userId, callback) {
     var sql_select_labels = 'select l.id label_id, l.name label_name ' +
-        'from label l join label_member m on(l.id = m.label_id) ' +
-        'where m.user_id = ?';
+                            'from label l join label_member m on(l.id = m.label_id) ' +
+                            'where m.user_id = ?';
 
     var label = [];
     dbPool.getConnection(function (err, dbConn) {
@@ -243,7 +243,7 @@ function postLabelInfo(userId, callback) {
 function postUpload(post, callback) {
 
     var sql_insert_post = 'INSERT INTO `thelabeldb`.`post` (`user_id`, `text`, `opento`, `label_id`, `filetitle`, `filepath`, `filetype`) ' +
-        'VALUES (?, ?, ?, ?, ?, ?, ?)';
+                          'VALUES (?, ?, ?, ?, ?, ?, ?)';
 
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
