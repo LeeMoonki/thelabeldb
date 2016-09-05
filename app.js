@@ -40,7 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 사진 url 
 app.use('/labelProfiles', express.static(path.join(__dirname, 'uploads/images/labelProfiles')));
 app.use('/userProfiles', express.static(path.join(__dirname, 'uploads/images/userProfiles')));
-app.use('/postPhotos', express.static(path.join(__dirname, 'uploads/images/postPhotos')));
+app.use('/postFiles', express.static(path.join(__dirname, 'uploads/postFiles')));
 
 
 app.use(session({

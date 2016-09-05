@@ -6,6 +6,7 @@ var fs = require('fs');
 
 
 var dbPool = require('../models/common').dbPool;
+var hostAddress = require('../models/common').hostAddress;
 
 
 // dummy data
@@ -208,6 +209,169 @@ function homePost(id, page, rowCount, meet, callback) {
 }
 
 
+function showHomePosts(info, callback){
+
+    var meetPosts = [];
+    var generalPosts = [];
+
+    var sql_select_meet_posts = 'select p.id id, u.id user_id, nickname, filetype, filepath file_path, ' +
+                                       'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
+                                       'numlike ' +
+                                'from user u join post p on(u.id = p.user_id) ' +
+                                'where u.position_id = ? and p.opento = 0 and u.id not in (?) ' +
+                                'order by p.id desc ' +
+                                'limit ?';
+
+    var sql_select_general_posts = 'select p.id id, u.id user_id, nickname, filetype, filepath file_path, ' +
+                                          'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
+                                          'numlike ' +
+                                   'from user u join post p on(u.id = p.user_id) ' +
+                                   'where p.opento = 0 and u.id not in (?) ' +
+                                   'order by p.id desc ' +
+                                   'limit ?,?';
+
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+
+            async.waterfall([makeMeetPosts, makeGeneralPosts], function(err){
+                if (err) {
+                    dbConn.release();
+                    return callback(err);
+                } else {
+                    dbConn.release();
+                    var shootResult = {};
+
+                    shootResult.page = info.page;
+                    shootResult.count = info.count;
+                    shootResult.meet = info.meet;
+                    shootResult.meetdata = meetPosts;
+                    shootResult.data = generalPosts;
+
+                    callback(null, shootResult);
+                }
+            });
+
+
+            function makeMeetPosts(callback) {
+                dbConn.query(sql_select_meet_posts, [info.position_id, info.user_id, info.meet], function(err, results){
+                    if (err) {
+                        callback(err);
+                    } else {
+                        async.each(results, function(row, done){
+                            var tmpObj = {};
+                            var filename = path.basename(row.file_path);
+                            tmpObj.id = row.id;
+                            tmpObj.user_id = row.user_id;
+                            tmpObj.nickname = row.nickname;
+                            tmpObj.filetype = row.filetype;
+                            tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                            tmpObj.date = row.date;
+                            tmpObj.numlike = row.numlike;
+                            meetPosts.push(tmpObj);
+                            done(null);
+                        }, function(err){
+                            // done
+                            if (err) {
+                                // done(err) 발생하지 않는다
+                            } else {
+                                callback(null);
+                            }
+                        });
+                    }
+                });
+            }
+
+            function makeGeneralPosts(callback) {
+                dbConn.query(sql_select_general_posts, [info.user_id, (info.page - 1) * info.count, info.count]
+                  , function(err, results){
+                    if (err) {
+                        callback(err);
+                    } else {
+                        async.each(results, function(row, done){
+                            var tmpObj = {};
+                            var filename = path.basename(row.file_path);
+                            tmpObj.id = row.id;
+                            tmpObj.user_id = row.user_id;
+                            tmpObj.nickname = row.nickname;
+                            tmpObj.filetype = row.filetype;
+                            tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                            tmpObj.date = row.date;
+                            tmpObj.numlike = row.numlike;
+                            generalPosts.push(tmpObj);
+                            done(null);
+                        }, function(err){
+                            // done
+                            if (err) {
+                                // done(err) 발생하지 않는다
+                            } else {
+                                callback(null);
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    });
+}
+
+function getAPostInfo(postId, callback) {
+    
+    var sql_select_a_post = 'select text, opento from post where id = ? ';
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            dbConn.query(sql_select_a_post, [postId], function(err, results){
+                dbConn.release();
+                if (err) {
+                    return callback(err);
+                } else {
+                    callback(null, results[0]);
+                }
+            });
+        }
+    });
+}
+
+function updatePost(info, callback) {
+    
+    var sql_update_post = 'UPDATE `thelabeldb`.`post` SET `text`=?, `opento`=? WHERE `id`=? ';
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+
+            dbConn.beginTransaction(function(err){
+                if (err) {
+                    dbConn.release();
+                    return callback(err);
+                } else {
+                    dbConn.query(sql_update_post, [info.text, info.opento, info.post_id]
+                      ,function(err, result){
+
+                          if (err) {
+                              return dbConn.rollback(function(){
+                                  dbConn.release();
+                                  callback(err);
+                              });
+                          } else {
+                              dbConn.commit(function(){
+                                  dbConn.release();
+                                  callback(null);
+                              });
+                          }
+                      });
+                }
+            });
+        }
+    });
+}
+
 function postUpload(post, callback) {
 
     var sql_insert_post = 'INSERT INTO `thelabeldb`.`post` (`user_id`, `text`, `opento`, `label_id`, `filetitle`, `filepath`, `filetype`) ' +
@@ -222,7 +386,8 @@ function postUpload(post, callback) {
                 return callback(err);
                 dbConn.release();
             }
-            dbConn.query(sql_insert_post, [post.user_id, post.text, post.opento, post.label_id, post.filetitle, post.filepath, post.filetype], function (err, result) {
+            dbConn.query(sql_insert_post, [post.user_id, post.text, post.opento, post.label_id
+                , post.filetitle, post.filepath, post.filetype], function (err, result) {
                 if (err) {
                     return dbConn.rollback(function(){
                         dbConn.release();
@@ -231,7 +396,7 @@ function postUpload(post, callback) {
                 }
                 dbConn.commit(function(){
                     dbConn.release();
-                    callback (null, result);
+                    callback (null, result.insertId);
                 });
             });
         })
@@ -242,5 +407,8 @@ module.exports.dummyShowPosts = dummyShowPosts;
 module.exports.dummyUploadPost = dummyUploadPost;
 
 module.exports.homePost = homePost;
-module.exports.postLabelInfo = postLabelInfo;
 module.exports.postUpload = postUpload;
+
+module.exports.getAPostInfo = getAPostInfo;
+module.exports.updatePost = updatePost;
+module.exports.showHomePosts = showHomePosts;

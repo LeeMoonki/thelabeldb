@@ -268,10 +268,12 @@ function userPage(id, page, rowCount, callback) {
 
 
 
-function showProfilePage(userId, callback){
+function showProfilePage(userId, type, callback){
   // 사용자 정보 설정 화면에 기존의 정보를 전달
+  // type 0 : id 대신 이름을 제공
+  // type 1 : id를 제공
   var sql_search_by_userId = 'select u.id id, nickname, gender, text, imagepath, p.name position, ' +
-                                    'g.name genre, c.name city, t.name town ' +
+                                    'g.name genre, c.name city, t.name town, p.id pid, g.id gid, c.id cid, t.id tid ' +
                              'from user u join position p on(u.position_id = p.id) ' +
                                          'join genre g on(u.genre_id = g.id) ' +
                                          'join city c on(u.city_id = c.id) ' +
@@ -295,10 +297,18 @@ function showProfilePage(userId, callback){
           user.gender = result[0].gender;
           user.text = result[0].text;
           user.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
-          user.position = result[0].position;
-          user.genre = result[0].genre;
-          user.city = result[0].city;
-          user.town = result[0].town;
+          if (type === 0) {
+            user.position = result[0].position;
+            user.genre = result[0].genre;
+            user.city = result[0].city;
+            user.town = result[0].town;
+          } else {
+            user.dbImagePath = result[0].imagepath;
+            user.position_id = result[0].pid;
+            user.genre_id = result[0].gid;
+            user.city_id = result[0].cid;
+            user.town_id = result[0].tid;
+          }
           callback(null, user);
         }
       });
@@ -306,7 +316,45 @@ function showProfilePage(userId, callback){
   });
 }
 
+function emailDupCheck(email, callback){
 
+  var sql_count_email = 'select count(id) count from user where email=? ';
+
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+      dbConn.query(sql_count_email, [email], function(err, result){
+        dbConn.release();
+        if (err) {
+          return callback(err);
+        } else {
+          callback(null, result[0].count);
+        }
+      });
+    }
+  });
+
+}
+
+function nicknameDupCheck(nickname, callback){
+  var sql_count_nickname = 'select count(id) count from user where nickname=? ';
+
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+      dbConn.query(sql_count_nickname, [nickname], function(err, result){
+        dbConn.release();
+        if (err) {
+          return callback(err);
+        } else {
+          callback(null, result[0].count);
+        }
+      });
+    }
+  });
+}
 
 function registerUser(info, callback){
   // 회원가
@@ -323,6 +371,7 @@ function registerUser(info, callback){
       
       dbConn.beginTransaction(function(err){
         if (err) {
+          dbConn.release();
           return callback(err);
         } else {
           dbConn.query(sql_register_user, [info.email, info.password, info.nickname, info.gender
@@ -347,20 +396,101 @@ function registerUser(info, callback){
   });
 }
 
-function dummyUpdateUser(user, callback){
+function updateUser(info, callback){
 
-  callback(null, true);
+  var sql_update_user = 'UPDATE `thelabeldb`.`user` ' +
+                        'SET `nickname`=?, `gender`=?, `text`=?, `imagepath`=?, ' +
+                            '`position_id`=?, `genre_id`=?, `city_id`=?, `town_id`=? ' +
+                        'WHERE `id`=?';
 
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+
+      dbConn.beginTransaction(function(err){
+        if (err) {
+          dbConn.release();
+          return callback(err);
+        } else {
+          dbConn.query(sql_update_user
+            , [info.nickname, info.gender, info.text, info.imagepath
+            , info.position_id, info.genre_id, info.city_id, info.town_id
+            , info.user_id]
+            ,function(err, result){
+
+              if (err) {
+                return dbConn.rollback(function(){
+                  dbConn.release();
+                  callback(err);
+                });
+              } else {
+                dbConn.commit(function(){
+                  dbConn.release();
+                  callback(null, result.changedRows);
+                });
+              }
+            });
+        }
+      });
+    }
+  });
 }
 
-function dummyUpdatePassword(userId, password, newPassword, callback){
-  // userId 를 통해 기존 password를 찾아 받은 password와 비교해야 한다
-  if (dummyUser.dummy_password !== password) {
-    callback(new Error('기존 비밀번호를 다르게 입력했습니다'), false);
-  } else {
-    dummyUser.dummy_password = newPassword;
-    callback(null, true);
-  }
+function updatePassword(passInfo, callback){
+  // passInfo 를 통해 받은 정보로 비밀번호를 변경한다
+  
+  var sql_update_password = 'UPDATE `thelabeldb`.`user` SET `password`=sha2(?, 512) WHERE `id`=? ';
+
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+
+      dbConn.beginTransaction(function(err){
+        if (err) {
+          dbConn.release();
+          return callback(err);
+        } else {
+          dbConn.query(sql_update_password, [passInfo.newPass, passInfo.user_id], function(err, result){
+              if (err) {
+                return dbConn.rollback(function(){
+                  dbConn.release();
+                  callback(err);
+                });
+              } else {
+                dbConn.commit(function(){
+                  dbConn.release();
+                  callback(null, result.changedRows);
+                });
+              }
+          });
+        }
+      });
+    }
+  });
+}
+
+function checkPassword(passInfo, callback) {
+  // passInfo 를 통해 받은 정보로 비밀번호 일치여부를 전달한다
+  var sql_select_match = 'select count(id) count from user ' +
+                         'where id = ? and password = sha2(?, 512)';
+
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+      dbConn.query(sql_select_match, [passInfo.user_id, passInfo.oldPass], function(err, results){
+        dbConn.release();
+        if (err) {
+          return callback(err);
+        } else {
+          callback(null, results[0].count);
+        }
+      });
+    }
+  });
+
 }
 
 
@@ -711,8 +841,6 @@ function searchUsersByLabel(page, count, info, callback) {
   });
 }
 
-
-
 function findAlreadyIndex(indexArr, index, callback) {
   var length = indexArr.length;
   var flag = false;
@@ -735,10 +863,13 @@ module.exports.findUser = findUser;
 // models showing JSON data for dummy test
 module.exports.showMe = showMe;
 module.exports.userPage = userPage;
+module.exports.emailDupCheck = emailDupCheck;
+module.exports.nicknameDupCheck = nicknameDupCheck;
 module.exports.registerUser = registerUser;
 module.exports.showProfilePage = showProfilePage;
-module.exports.dummyUpdateUser = dummyUpdateUser;
-module.exports.dummyUpdatePassword = dummyUpdatePassword;
+module.exports.updateUser = updateUser;
+module.exports.updatePassword = updatePassword;
+module.exports.checkPassword = checkPassword;
 module.exports.searchUsersByUser = searchUsersByUser;
 module.exports.searchUsersByLabel = searchUsersByLabel;
 module.exports.getBelongLabel = getBelongLabel;

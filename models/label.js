@@ -16,6 +16,26 @@ var dbPool = require('../models/common').dbPool;
 var hostAddress = require('../models/common').hostAddress;
 
 
+function nameDupCheck(name, callback) {
+    
+    var sql_count_name = 'select count(id) count from label where name=? ';
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            dbConn.query(sql_count_name, [name], function(err, result){
+                dbConn.release();
+                if (err) {
+                    return callback(err);
+                } else {
+                    callback(null, result[0].count);
+                }
+            });
+        }
+    });
+    
+}
 
 function createLabel(info, callback) {
 
@@ -26,8 +46,12 @@ function createLabel(info, callback) {
     var sql_insert_label_need = 'INSERT INTO `thelabeldb`.`label_need` (`label_id`, `position_id`) ' +
                                 'VALUES (?, ?)';
 
+    var sql_insert_label_member = 'INSERT INTO `thelabeldb`.`label_member` (`user_id`, `label_id`) ' +
+                                  'VALUES (?, ?)';
+    
     var labelInsertId = 0;
     var labelNeedInsertId = [];
+    var labelMemberInsertId = 0;
 
     dbPool.getConnection(function(err, dbConn){
         if (err) {
@@ -35,21 +59,23 @@ function createLabel(info, callback) {
         } else {
             dbConn.beginTransaction(function(err){
                 if (err) {
+                    dbConn.release();
                     return callback(err);
                 } else {
-                    async.waterfall([insertLabel, insertLabelNeed], function(err){
+                    async.waterfall([insertLabel, insertLabelNeed, insertLabelMember], function(err){
                         if (err) {
                             return dbConn.rollback(function(){
                                 dbConn.release();
-                                callback(err);
+                                callback(err, 0);
                             });
                         } else {
                             dbConn.commit(function(){
                                 dbConn.release();
+                                // 생성 결과가 필요할 경우를 위한 데이터 입력
                                 var shootResult = {};
                                 shootResult.label_id = labelInsertId;
                                 shootResult.need_ids = labelNeedInsertId;
-                                callback(null, shootResult);
+                                callback(null, 1);
                             });
                         }
                     });
@@ -63,6 +89,7 @@ function createLabel(info, callback) {
                 if (err) {
                     callback(err);
                 } else {
+                    // 생성한 label_id 를 기반으로 need_position_id 와 label_member를 insert한다
                     labelInsertId = result.insertId;
                     callback(null, result.insertId);
                 }
@@ -90,27 +117,230 @@ function createLabel(info, callback) {
             });
         }
 
+        function insertLabelMember(callback) {
+            if (err) {
+                callback(err);
+            } else {
+                dbConn.query(sql_insert_label_member, [info.authority_user_id, labelInsertId], function(err, result){
+                    if (err) {
+                        callback(err);
+                    } else {
+                        labelMemberInsertId = result.insertId;
+                        callback(null);
+                    }
+                });
+            }
+        }
+
     });
 }
 
+function joinLabel(info, callback) {
+    // info 정보를 통해 레이블에 가입한다
+    var sql_insert_member = 'INSERT INTO `thelabeldb`.`label_member` (`user_id`, `label_id`) VALUES (?, ?) ';
 
+    // label_member 에 저장된 id를 저장해둔다
+    var insertId = 0;
+    
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
 
-function updateLabel(info, callback){
-    var label = info;
-    callback(null, label);
+            dbConn.beginTransaction(function(err){
+                if (err) {
+                    dbConn.release();
+                    return callback(err);
+                } else {
+                    dbConn.query(sql_insert_member, [info.user_id, info.label_id], function(err, result){
+                        if (err) {
+                            return dbConn.rollback(function(){
+                                dbConn.release();
+                                callback(err);
+                            });
+                        } else {
+                            dbConn.commit(function(){
+                                dbConn.release();
+                                insertId = result.insertId;
+                                callback(null, result.insertId);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    });
 }
 
-function showSettingLabelPage(labelId, callback){
+function authorize(userId, labelId, callback) {
 
-    var sql_select_setting_info = 'select l.name label_name, text, imagepath image_path, g.name need_genre, p.name need_position ' +
+    var sql_update_authority = 'UPDATE `thelabeldb`.`label` SET `authority_user_id`=? WHERE `id`=? ';
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+
+            dbConn.beginTransaction(function(err){
+                if (err) {
+                    dbConn.release();
+                    return callback(err);
+                } else {
+                    dbConn.query(sql_update_authority, [userId, labelId], function(err, result){
+                        if (err) {
+                            return dbConn.rollback(function(){
+                                dbConn.release();
+                                callback(err);
+                            });
+                        } else {
+                            dbConn.commit(function(){
+                                dbConn.release();
+                                callback(null);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    });
+
+}
+
+function updateLabel(info, callback){
+    
+    var sql_update_label = 'UPDATE `thelabeldb`.`label` ' +
+                           'SET `genre_id`=?, `text`=?, `imagepath`=? ' +
+                           'WHERE `id`=?';
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+
+            dbConn.beginTransaction(function(err){
+                if (err) {
+                    dbConn.release();
+                    return callback(err);
+                } else {
+                    dbConn.query(sql_update_label
+                      , [info.genre_id, info.text, info.imagepath, info.label_id]
+                      ,function(err, result){
+
+                          if (err) {
+                              return dbConn.rollback(function(){
+                                  dbConn.release();
+                                  callback(err);
+                              });
+                          } else {
+                              dbConn.commit(function(){
+                                  dbConn.release();
+                                  callback(null, result.changedRows);
+                              });
+                          }
+                      });
+                }
+            });
+        }
+    });
+}
+
+function updateLabelNeedPosition(oldPosition, newPosition, label_id, callback) {
+
+    var sql_delete_need = 'DELETE FROM `thelabeldb`.`label_need` WHERE `id`=? ';
+    var sql_update_need = 'UPDATE `thelabeldb`.`label_need` SET `position_id`=? WHERE `id`=? ';
+    var sql_create_need = 'INSERT INTO `thelabeldb`.`label_need` (`label_id`, `position_id`) VALUES (?, ?) ';
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+
+            dbConn.beginTransaction(function(err){
+                if (err) {
+                    dbConn.release();
+                    return callback(err);
+                } else {
+                    async.waterfall([deleteNeed, createNeed], function(err){
+                        if (err) {
+                            return dbConn.rollback(function(){
+                                dbConn.release();
+                                callback(err);
+                            });
+                        } else {
+                            dbConn.commit(function(){
+                                dbConn.release();
+                                callback(null);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        
+        function deleteNeed(callback) {
+            async.each(oldPosition, function(row, done){
+                dbConn.query(sql_delete_need, [row.need_id], function(err, result){
+                    if (err) {
+                        done(err);
+                    } else {
+                        done(null);
+                    }
+                });
+            }, function(err){
+                // done
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null);
+                }
+            });
+        }
+
+        function createNeed(callback) {
+            async.each(newPosition, function(item, done){
+                dbConn.query(sql_create_need, [label_id, item], function(err, result){
+                    if (err) {
+                        done(err);
+                    } else {
+                        done(null);
+                    }
+                });
+            }, function(err){
+                // done
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null);
+                }
+            });
+        }
+
+        function updateNeed(positionId, needId, callback) {
+            dbConn.query(sql_update_need, [positionId, needId], function(err, result){
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null);
+                }
+            });
+        }
+        
+    });
+}
+
+function showSettingLabelPage(labelId, type, callback){
+
+    // type 0 : 프로토콜 정의서 대로 자료를 제공
+    // type 1 : 수정을 위한 데이터를 제공 (label_need 의 id 를 제공)
+
+
+    var sql_select_setting_info = 'select l.name label_name, l.text text, l.imagepath image_path, ' +
+                                         'g.id genre_id, g.name genre, p.id position_id, p.name position, n.id nid ' +
                                   'from label l join genre g on(l.genre_id = g.id) ' +
                                                'join label_need n on(l.id = n.label_id) ' +
                                                'join position p on(n.position_id = p.id) ' +
                                   'where l.id = ?';
 
-    var sql_select_need_info = 'select p.name pname ' +
-                               'from label_need n join position p on(n.position_id = p.id) ' +
-                               'where label_id = ?';
 
     dbPool.getConnection(function(err, dbConn){
         if (err) {
@@ -125,23 +355,30 @@ function showSettingLabelPage(labelId, callback){
                     var filename = path.basename(results[0].image_path);
                     label.label_name = results[0].label_name;
                     label.text = results[0].text;
+                    if (type === 1) {
+                        label.dbImagePath = results[0].image_path;
+                    }
                     label.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
-                    label.need_genre = results[0].need_genre;
-                    dbConn.query(sql_select_need_info, [labelId], function(err, needResults){
+                    label.genre_id = results[0].genre_id;
+                    label.genre = results[0].genre;
+                    // async.each
+                    var tmpArr = [];
+                    async.each(results, function(row, done){
+                        var tmpObj = {};
+                        if (type === 1) {
+                            tmpObj.need_id = row.nid;
+                        }
+                        tmpObj.id = row.position_id;
+                        tmpObj.name = row.position;
+                        tmpArr.push(tmpObj);
+                        done(null);
+                    }, function(err){
+                        // done
                         if (err) {
-                            return callback(err);
+                            // done(err) 발생하지 않음
                         } else {
-                            if (needResults[0] === undefined) {
-                                label.need_positio = {};
-                                callback(null, label);
-                            } else {
-                                var temp = [];
-                                for (var i = 0; i < needResults.length; i++) {
-                                    temp.push(needResults[i].pname);
-                                }
-                                label.need_position = temp;
-                                callback(null, label);
-                            }
+                            label.need_position = tmpArr;
+                            callback(null, label);
                         }
                     });
                 }
@@ -609,11 +846,6 @@ function findAlreadyIndex(indexArr, index, callback) {
     callback(flag);
 }
 
-//레이블 설정 models
-function labelSet() {
-
-}
-
 //레이블 탈퇴 models
 function deleteMember(id, callback) {
 // function deleteMember(user_id, label_id, callback) {
@@ -672,17 +904,166 @@ function deleteMember(id, callback) {
     });
 }
 
-module.exports.createLabel = createLabel;
 
+
+//레이블 탈퇴 GET 권한 유저
+function get_deleteMember(label_id, user_id, callback) {
+
+    var sql_delete = 'SELECT l.id, l.authority_user_id, lm.user_id ' +
+      'FROM label l join label_member lm on (lm.label_id = l.id) ' +
+      'where label_id = ?';
+
+    var sql_me = 'SELECT l.id, l.authority_user_id, lm.user_id ' +
+      'FROM label l join label_member lm on (lm.label_id = l.id) ' +
+      'where label_id = ? and user_id = ?';
+
+    var totalMember = [];
+    var myProfile = [];
+
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback(err);
+        } else {
+            dbConn.query(sql_delete, [label_id, user_id], function (err, result) {
+                if (err) {
+                    return callback(err);
+                } else {
+                    console.log(myProfile);
+                    async.each(result, function (item, done) {
+                        totalMember.push(item.user_id);
+                        done(null);
+                    }, function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
+                        else {
+                            findAlreadyIndex(totalMember, user_id, function (flag) {
+                                if (flag) {                     // 레이블의 멤버라면
+                                    if (totalMember.authority_user_id === user_id) {
+                                        callback(null, totalMember); // 레이블 멤버 전원 출력
+                                    }
+                                }
+                                else {
+                                    callback(null, {message: '레이블에 관한 권한이 없습니다.'})
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+            async.waterfall([selectDelete, meDelete], function (err) {
+                dbConn.release();
+                if (err) {
+                    return callback(err);
+                }
+                else {
+                    var label_member = {};
+
+                    label_member.data = totalMember;
+                    label_member.me = myProfile;
+
+                    if (label_member.data.authority_user_id === label_member.user_id) {
+                        callback(null, label_member.data);
+                    } else if (label_member.data.authority_user_id !== label_member.user_id) {
+                        callback(null, label_member.me);
+                    }
+                }
+            });
+
+            function selectDelete(callback) {
+                dbConn.query(sql_delete, [label_id], function (err, results) {
+                    if (err) {
+                        return callback(err);
+                    } else {
+                        totalMember = results;
+                        callback(null);
+                    }
+                });
+            }
+
+            function meDelete(callback) {
+                dbConn.query(sql_me, [label_id, user_id], function (err, results) {
+                    if (err) {
+                        return callback(err);
+                    } else {
+                        myProfile = results;
+                        callback(null);
+                    }
+                });
+            }
+        }
+    });
+}
+
+// function get_deleteMember(label_id, callback) {
+//     var sql = 'SELECT l.id, l.authority_user_id, lm.user_id ' +
+//         'FROM label l join label_member lm on (lm.label_id = l.id) ' +
+//         'where label_id = ?';
+//
+//     dbPool.getConnection(function (err, dbConn) {
+//        if (err) {
+//            return callback (err);
+//        } else {
+//            dbConn.query(sql, [label_id], function (err, results) {
+//               dbConn.release();
+//               if (err) {
+//                   return callback (err);
+//               } else {
+//                   callback (null, results);
+//               }
+//            });
+//        }
+//     });
+// }
+
+//레이블 탈퇴 GET 권한없는 유저
+function get_myprofile(label_id, user_id, callback) {
+
+    var sql = 'SELECT l.id, l.authority_user_id, lm.user_id ' +
+      'FROM label l join label_member lm on (lm.label_id = l.id) ' +
+      'where label_id = ? and user_id = ?';
+
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback (err);
+        } else {
+            dbConn.query(sql, [label_id, user_id], function (err, results) {
+                dbConn.release();
+                if (err) {
+                    return callback (err);
+                }
+                else {
+                    callback(null, results);
+                }
+            });
+        }
+    });
+}
+
+
+
+
+
+module.exports.nameDupCheck = nameDupCheck;
+module.exports.createLabel = createLabel;
+module.exports.joinLabel = joinLabel;
+
+module.exports.authorize = authorize;
 module.exports.showSettingLabelPage = showSettingLabelPage;
 module.exports.updateLabel = updateLabel;
+module.exports.updateLabelNeedPosition = updateLabelNeedPosition;
 
 module.exports.labelMain = labelMain;
 module.exports.labelPage = labelPage;
 module.exports.labelMember = labelMember;
-module.exports.labelSet = labelSet;
 module.exports.deleteMember = deleteMember;
 
 module.exports.searchLabel = searchLabel;
 module.exports.getLabelSearchInfo = getLabelSearchInfo;
 module.exports.getLabelSearchInfoArr = getLabelSearchInfoArr;
+
+
+
+module.exports.get_deleteMember = get_deleteMember;
+module.exports.get_myprofile = get_myprofile;

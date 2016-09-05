@@ -3,6 +3,7 @@ var router = express.Router();
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var User = require('../models/user');
+var isSecure = require('./common').isSecure;
 
 passport.use(new LocalStrategy({usernameField: 'email', passwordField: 'password'}, function(email, password, done) {
     User.findByEmail(email, function(err, user) {
@@ -39,7 +40,7 @@ passport.deserializeUser(function(id, done) {
     });
 });
 
-router.post('/local/login', function(req, res, next) {
+router.post('/local/login', isSecure, function(req, res, next) {
     passport.authenticate('local', function(err, user) {
         if (err) {
             return next(err);
@@ -68,7 +69,7 @@ router.post('/local/login', function(req, res, next) {
 
 router.get('/local/logout', function(req, res, next) {
     req.logout();
-    res.send({ message: 'local logout' });
+    res.send({ message: '로그아웃이 정상적으로 처리되었습니다' });
 });
 
 

@@ -7,7 +7,7 @@ function isAuthenticate(req, res, next) {
     if (!req.user) {
         // 회원가입 체크
         if (dup) {
-            if (setting || search || req.query.id) {
+            if (setting || search) {
                 // 중복 검사 정보 외에 다른 정보를 로그인 하지 않고 조회하려 할 경우
                 return res.status(401).send({
                     message: 'login required'
@@ -35,21 +35,23 @@ function isAuthenticate(req, res, next) {
     } else {
         // 수정 체크
         if (dup) {
-            if (setting || search || req.query.id) {
+            if (setting || search) {
                 // 중복 검사 정보 외에 다른 정보를 중복검사와 함께 조회하려 할 경우
                 return res.status(401).send({
-                    message: 'login required'
+                    message: 'you can get only one information'
                 });
             } else {
+                var nickname = req.query.nickname;
+                var label_name = req.query.label_name;
                 if (req.query.email) {
                     // 이메일 중복검사를 하려고 할 경우 
                     return res.status(401).send({
                         message: 'you cant modify email'
                     });
-                } else if (!req.query.nickname) {
+                } else if (!nickname && !label_name) {
                     // 중복 검사 정보를 넣지 않고 중복검사하려 할 경우
                     return res.status(401).send({
-                        message: 'need email or nickname information'
+                        message: 'need name information'
                     });
                 } else {
                     next();
