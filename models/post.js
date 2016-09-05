@@ -267,7 +267,11 @@ function showHomePosts(info, callback){
                             tmpObj.user_id = row.user_id;
                             tmpObj.nickname = row.nickname;
                             tmpObj.filetype = row.filetype;
-                            tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                            if (parseInt(row.filetype) === 2) {
+                                tmpObj.file_path = row.file_path;
+                            } else {
+                                tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                            }
                             tmpObj.date = row.date;
                             tmpObj.numlike = row.numlike;
                             meetPosts.push(tmpObj);
@@ -297,7 +301,11 @@ function showHomePosts(info, callback){
                             tmpObj.user_id = row.user_id;
                             tmpObj.nickname = row.nickname;
                             tmpObj.filetype = row.filetype;
-                            tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                            if (parseInt(row.filetype) === 2) {
+                                tmpObj.file_path = row.file_path;
+                            } else {
+                                tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                            }
                             tmpObj.date = row.date;
                             tmpObj.numlike = row.numlike;
                             generalPosts.push(tmpObj);

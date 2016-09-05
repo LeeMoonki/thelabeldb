@@ -62,7 +62,7 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
             return next(err);
         } else {
             
-            if (!fields.filetype || !files.file || !fields.opento) {
+            if (!fields.filetype || (!files.file && !fields.file) || !fields.opento) {
                 return next(new Error('필수 정보를 입력하십시오'));
             } else {
 
@@ -70,9 +70,14 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
 
                 post.user_id = parseInt(req.user.id);
                 
-                post.filetype = fields.filetype;
-                post.filepath = files.file.path;
-                post.opento = fields.opento;
+                post.filetype = parseInt(fields.filetype);
+                if (post.filetype === 2) {
+                    post.filepath = fields.file;
+                } else {
+                    post.filepath = files.file.path;
+                }
+
+                post.opento = parseInt(fields.opento);
 
                 post.filetitle = fields.filetitle || '제목없음';
                 post.text = fields.text;
@@ -83,8 +88,8 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
                     if (err) {
                         return next(err);
                     }
+                    // result 에는 새로 업로드 된 게시물 id가 들어있다
                     res.send({message: '업로드 완료'});
-                    console.log(result);
                 });
             }
         }

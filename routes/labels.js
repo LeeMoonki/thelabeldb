@@ -238,8 +238,9 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
             }
         } else {
             // 전체 레이블 목록
-
-            
+            res.send({
+                message: 'url 주소 확인'
+            });
         }
     }
 });

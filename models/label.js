@@ -392,7 +392,7 @@ function showSettingLabelPage(labelId, type, callback){
 
 function labelMain(labelId, page, count, callback) {
     // result block
-    var sql_select_label_info = 'select l.id id, l.name name, imagepath, g.name genre ' +
+    var sql_select_label_info = 'select l.id id, l.name name, imagepath, g.name genre, l.authority_user_id authority ' +
                                 'from label l join genre g on(l.genre_id = g.id) ' +
                                 'where l.id = ?';
     var sql_select_label_need = 'select name ' +
@@ -400,13 +400,15 @@ function labelMain(labelId, page, count, callback) {
                                 'where label_id = ?';
 
     // member block
-    var sql_select_member_info = 'select user_id, nickname user_nickname, p.name user_possition, imagepath user_imagepath ' +
+    var sql_select_member_info = 'select user_id id, nickname, p.name possition, imagepath ' +
                                  'from user u join label_member m on(u.id = m.user_id) ' +
                                              'join position p on(u.position_id = p.id) ' +
                                  'where label_id = ?';
 
     // data block
-    var sql_select_posts = 'select p.id id, user_id, nickname, filetype, filepath file_path, p.ctime date, numlike ' +
+    var sql_select_posts = 'select p.id id, user_id, nickname, filetype, filepath file_path, ' +
+                                  'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
+                                  'numlike ' +
                            'from post p join user u on(p.user_id = u.id) ' +
                            'where p.label_id = ? ' +
                            'limit ?, ?';
@@ -414,9 +416,6 @@ function labelMain(labelId, page, count, callback) {
     var result = {};
     var members = [];
     var data = [];
-
-    var memberResult = [];
-    var postResult = [];
 
     dbPool.getConnection(function(err, dbConn){
         if (err) {
@@ -434,12 +433,6 @@ function labelMain(labelId, page, count, callback) {
                     user.count = count;
 
                     user.result = result;
-                    for (var i = 0; i < memberResult.length; i++) {
-                        members.push(memberResult[i]);
-                    }
-                    for (var j = 0; j < postResult.length; j++) {
-                        data.push(postResult[j]);
-                    }
                     user.member = members;
                     user.data = data;
                     callback(null, user);
@@ -457,6 +450,7 @@ function labelMain(labelId, page, count, callback) {
                     result.label_name = results[0].name;
                     result.label_image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
                     result.label_genre = results[0].genre;
+                    result.label_authority = results[0].authority;
                     dbConn.query(sql_select_label_need, [labelId], function(err, needResults){
                         if (err) {
                             callback(new Error('Error sql_select_label_need'));
@@ -478,8 +472,24 @@ function labelMain(labelId, page, count, callback) {
                 if (err) {
                     callback(new Error('Error sql_select_member_info'));
                 } else {
-                    memberResult = results;
-                    callback(null);
+
+                    async.each(results, function(row, done){
+                        var tmpObj = {};
+                        var filename = path.basename(row.imagepath);
+                        tmpObj.id = row.id;
+                        tmpObj.nickname = row.nickname;
+                        tmpObj.position = row.position;
+                        tmpObj.imagepath = url.resolve(hostAddress, '/postFiles/' + filename);
+                        members.push(tmpObj);
+                        done(null);
+                    }, function(err){
+                        // done
+                        if (err) {
+                            // done(err) 발생하지 않는다
+                        } else {
+                            callback(null);
+                        }
+                    });
                 }
             });
         }
@@ -490,8 +500,27 @@ function labelMain(labelId, page, count, callback) {
                 if (err) {
                     callback(new Error('Error sql_select_posts'));
                 } else {
-                    postResult = results;
-                    callback(null);
+
+                    async.each(results, function(row, done){
+                        var tmpObj = {};
+                        var filename = path.basename(row.file_path);
+                        tmpObj.id = row.id;
+                        tmpObj.user_id = row.user_id;
+                        tmpObj.nickname = row.nickname;
+                        tmpObj.filetype = row.filetype;
+                        tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                        tmpObj.date = row.date;
+                        tmpObj.numlike = row.numlike;
+                        data.push(tmpObj);
+                        done(null);
+                    }, function(err){
+                        // done
+                        if (err) {
+                            // done(err) 발생하지 않는다
+                        } else {
+                            callback(null);
+                        }
+                    });
                 }
             });
         }
@@ -570,9 +599,9 @@ function labelMember(label_id, callback) {
                 async.each(results, function(row, done){
                     var tmp = {};
                     var filename = path.basename(row.user_image_path);
-                    tmp.user_id = row.user_id;
-                    tmp.user_name = row.user_name;
-                    tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                    tmp.id = row.user_id;
+                    tmp.nickname = row.user_name;
+                    tmp.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
                     member.push(tmp);
                     done(null);
                 }, function(err){
@@ -580,7 +609,7 @@ function labelMember(label_id, callback) {
                     if (err) {
                         // done(err) 발생하지 않음
                     } else {
-                        label_member.data = member;
+                        label_member.user = member;
                         callback(null, label_member);
                     }
                 });

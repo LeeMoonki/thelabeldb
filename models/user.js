@@ -138,7 +138,13 @@ function showMe(userId, page, count, callback){
   var sql_user_info = 'select u.id id, nickname, imagepath image_path, g.name genre ' +
                       'from user u join genre g on (u.genre_id = g.id) ' +
                       'where u.id = ?';
-  var sql_posts = 'select id, filetype, filepath, ctime, numlike from post where user_id = ? limit ?, ?';
+  var sql_posts = 'select id, filetype, filepath, ' +
+                         'date_format(convert_tz(ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
+                         'numlike ' +
+                  'from post ' +
+                  'where user_id = ? ' +
+                  'order by id desc ' +
+                  'limit ?, ?';
 
   dbPool.getConnection(function(err, dbConn){
     if (err) {
@@ -194,10 +200,13 @@ function userPage(id, page, rowCount, callback) {
                    'from user u left join label_member lm on (lm.user_id = u.id) ' +
                    'where u.id = ?';
 
-  var sql_post = 'select p.id, p.filetype, p.filepath, p.ctime, p.numlike ' +
-                 'from user u join post p on (p.user_id = u.id) ' +
-                 'where u.id = ? ' +
-                 'limit ?, ?';
+  var sql_post = 'select p.id id, filetype, filepath file_path, ' +
+                        'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
+                        'numlike ' +
+                        'from post p ' +
+                 'where p.opento = 0 and p.user_id = ? ' +
+                 'order by p.id desc ' +
+                 'limit ?,?';
 
   var yourpage = {};
 
@@ -228,7 +237,13 @@ function userPage(id, page, rowCount, callback) {
       for (var i = 0; i < member.length; i++) {
         label.push(member[i].label_id)
       }
-      labelCount.label_id = label;
+      if (label[0] === null) {
+        console.log(label);
+        labelCount.label_id = [];
+      } else {
+        labelCount.label_id = label;
+      }
+
       labelCount.post_count = post.length;
 
       yourpage.result = labelCount;
@@ -246,21 +261,50 @@ function userPage(id, page, rowCount, callback) {
         }
         else {
           member = result;
-          callback(null, true);
-        }
-      });
-    }
-    function postF(flag, callback){
-      dbConn.query(sql_post, [id, (page - 1) * rowCount, rowCount], function (err, result) {
-        if (err) {
-          return callback(err);
-        }
-        else {
-          post = result;
           callback(null);
         }
       });
     }
+
+    function postF(callback) {
+      dbConn.query(sql_post, [id, (page - 1) * rowCount, rowCount]
+        , function(err, results){
+          if (err) {
+            callback(err);
+          } else {
+            async.each(results, function(row, done){
+              var tmpObj = {};
+              var filename = path.basename(row.file_path);
+              tmpObj.id = row.id;
+              tmpObj.filetype = row.filetype;
+              tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+              tmpObj.date = row.date;
+              tmpObj.numlike = row.numlike;
+              post.push(tmpObj);
+              done(null);
+            }, function(err){
+              // done
+              if (err) {
+                // done(err) 발생하지 않는다
+              } else {
+                callback(null);
+              }
+            });
+          }
+        });
+    }
+
+    // function postF(flag, callback){
+    //   dbConn.query(sql_post, [id, (page - 1) * rowCount, rowCount], function (err, result) {
+    //     if (err) {
+    //       return callback(err);
+    //     }
+    //     else {
+    //       post = result;
+    //       callback(null);
+    //     }
+    //   });
+    // }
 
   });
 

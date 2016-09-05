@@ -209,7 +209,6 @@ router.post('/', isSecure, function(req, res, next){
         registerInfo.nickname = fields.nickname;
         registerInfo.gender = parseInt(fields.gender);
 
-        // todo : 이미지 파일을 받아오는 과정 작성
         registerInfo.text = fields.text || '';
 
         registerInfo.position_id = parseInt(fields.position_id) || 1;

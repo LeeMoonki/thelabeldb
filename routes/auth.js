@@ -1,9 +1,14 @@
 var express = require('express');
+var path = require('path');
+var url = require('url');
+
 var router = express.Router();
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var User = require('../models/user');
 var isSecure = require('./common').isSecure;
+var hostAddress = require('../models/common').hostAddress;
+
 
 passport.use(new LocalStrategy({usernameField: 'email', passwordField: 'password'}, function(email, password, done) {
     User.findByEmail(email, function(err, user) {
@@ -59,8 +64,14 @@ router.post('/local/login', isSecure, function(req, res, next) {
     })(req, res, next);
 }, function(req, res, next) {
     var user = {};
+    var filename = path.basename(req.user.imagepath);
     user.email = req.user.email;
     user.nickname = req.user.nickname;
+    user.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
+    user.position_id = req.user.position_id;
+    user.genre_id = req.user.genre_id;
+    user.city_id = req.user.city_id;
+    user.town_id = req.user.town_id;
     res.send({
         message: '로그인이 정상적으로 처리되었습니다',
         user: user
