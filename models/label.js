@@ -875,176 +875,29 @@ function findAlreadyIndex(indexArr, index, callback) {
     callback(flag);
 }
 
-//레이블 탈퇴 models
-function deleteMember(id, callback) {
-// function deleteMember(user_id, label_id, callback) {
-    // var sql_delete = 'DELETE FROM `thelabeldb`.`label_member` ' +
-    //     'WHERE user_id= ? and label_id= ?';
-
-    var sql_delete = 'DELETE FROM `thelabeldb`.`message WHERE id= ?';
-
-    var sql_authority_user = 'select authority_user_id from label where id =?';
-
-    dbPool.getConnection(function (err, dbConn) {
-        if (err) {
-            return callback(err);
-        }
-        dbConn.beginTransaction(function (err) {
-            if (err) {
-                dbConn.release();
-                return callback(err);
-            }
-
-            async.waterfall([memberDelete, authorityUser], function (err) {
-                if (err) {
-                    return dbConn.rollback(function () {
-                        dbConn.release();
-                        callback(err);
-                    });
-                }
-                dbConn.commit(function () {
-                    dbConn.release();
-                    callback(null);
-                })
-            });
-        });
-
-        function memberDelete(callback) {
-            dbConn.query(sql_delete, [], function (err, result) {
-                if (err) {
-                    return callback (err);
-                }
-                else {
-
-                }
-            });
-        }
-
-        function authorityUser(callback) {
-            dbConn.query(sql_authority_user, [], function (err, result) {
-                if (err) {
-                    return callback (err);
-                }
-                else {
-
-                }
-            });
-        }
-    });
-}
-
 
 
 //레이블 탈퇴 GET 권한 유저
-function get_deleteMember(label_id, user_id, callback) {
-
-    var sql_delete = 'SELECT l.id, l.authority_user_id, lm.user_id ' +
+function get_deleteMember(label_id, callback) {
+    var sql = 'SELECT l.id, l.authority_user_id, lm.user_id ' +
       'FROM label l join label_member lm on (lm.label_id = l.id) ' +
       'where label_id = ?';
 
-    var sql_me = 'SELECT l.id, l.authority_user_id, lm.user_id ' +
-      'FROM label l join label_member lm on (lm.label_id = l.id) ' +
-      'where label_id = ? and user_id = ?';
-
-    var totalMember = [];
-    var myProfile = [];
-
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
-            return callback(err);
+            return callback (err);
         } else {
-            dbConn.query(sql_delete, [label_id, user_id], function (err, result) {
-                if (err) {
-                    return callback(err);
-                } else {
-                    console.log(myProfile);
-                    async.each(result, function (item, done) {
-                        totalMember.push(item.user_id);
-                        done(null);
-                    }, function (err) {
-                        if (err) {
-                            return callback(err);
-                        }
-                        else {
-                            findAlreadyIndex(totalMember, user_id, function (flag) {
-                                if (flag) {                     // 레이블의 멤버라면
-                                    if (totalMember.authority_user_id === user_id) {
-                                        callback(null, totalMember); // 레이블 멤버 전원 출력
-                                    }
-                                }
-                                else {
-                                    callback(null, {message: '레이블에 관한 권한이 없습니다.'})
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-
-            async.waterfall([selectDelete, meDelete], function (err) {
+            dbConn.query(sql, [label_id], function (err, results) {
                 dbConn.release();
                 if (err) {
-                    return callback(err);
-                }
-                else {
-                    var label_member = {};
-
-                    label_member.data = totalMember;
-                    label_member.me = myProfile;
-
-                    if (label_member.data.authority_user_id === label_member.user_id) {
-                        callback(null, label_member.data);
-                    } else if (label_member.data.authority_user_id !== label_member.user_id) {
-                        callback(null, label_member.me);
-                    }
+                    return callback (err);
+                } else {
+                    callback (null, results);
                 }
             });
-
-            function selectDelete(callback) {
-                dbConn.query(sql_delete, [label_id], function (err, results) {
-                    if (err) {
-                        return callback(err);
-                    } else {
-                        totalMember = results;
-                        callback(null);
-                    }
-                });
-            }
-
-            function meDelete(callback) {
-                dbConn.query(sql_me, [label_id, user_id], function (err, results) {
-                    if (err) {
-                        return callback(err);
-                    } else {
-                        myProfile = results;
-                        callback(null);
-                    }
-                });
-            }
         }
     });
 }
-
-// function get_deleteMember(label_id, callback) {
-//     var sql = 'SELECT l.id, l.authority_user_id, lm.user_id ' +
-//         'FROM label l join label_member lm on (lm.label_id = l.id) ' +
-//         'where label_id = ?';
-//
-//     dbPool.getConnection(function (err, dbConn) {
-//        if (err) {
-//            return callback (err);
-//        } else {
-//            dbConn.query(sql, [label_id], function (err, results) {
-//               dbConn.release();
-//               if (err) {
-//                   return callback (err);
-//               } else {
-//                   callback (null, results);
-//               }
-//            });
-//        }
-//     });
-// }
 
 //레이블 탈퇴 GET 권한없는 유저
 function get_myprofile(label_id, user_id, callback) {
@@ -1070,8 +923,60 @@ function get_myprofile(label_id, user_id, callback) {
     });
 }
 
+function deleteMember(user_id, label_id, callback) {
 
+    var sql_delete = 'DELETE FROM `thelabeldb`.`label_member` ' +
+      'WHERE id= ?';
 
+    var sql_findId = 'select id from label_member ' +
+      'where user_id = ? and label_id = ?';
+
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.beginTransaction(function (err) {
+            if (err) {
+                dbConn.release();
+                return callback(err);
+            }
+            async.waterfall([findMemberId, memberDelete], function (err) {
+                if (err) {
+                    return dbConn.rollback(function () {
+                        dbConn.release();
+                        callback(err);
+                    });
+                }
+                dbConn.commit(function () {
+                    dbConn.release();
+                    callback(null);
+                });
+            });
+        });
+
+        function findMemberId(callback) {
+            dbConn.query(sql_findId, [user_id, label_id], function (err, result) {
+                if (err) {
+                    return callback(err);
+                }
+                else {
+                    callback(null, result[0].id);
+                }
+            });
+        }
+
+        function memberDelete(member_id, callback) {
+            dbConn.query(sql_delete, [member_id], function (err, result) {
+                if (err) {
+                    return callback(err);
+                }
+                else {
+                    callback(null);
+                }
+            });
+        }
+    });
+}
 
 
 module.exports.nameDupCheck = nameDupCheck;

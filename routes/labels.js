@@ -279,7 +279,7 @@ router.get('/:label_id', isSecure, isAuthenticate, function(req, res, next){
             });
         } else if (del) {
             // 레이블 탈퇴 GET
-            Label.get_deleteMember(label_id, user_id, function (err, result) {
+            Label.get_deleteMember(label_id, function (err, result) {
                 if (err) {
                     return next (err);
                 } else {
@@ -485,8 +485,27 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
 // router.put('/', isSecure, function(req, res, next) {
 //     res.send('label');
 //
-router.delete('/', isSecure, function(req, res, next) {
-    res.send('label');
+router.delete('/:label_id', isSecure, isAuthenticate, function (req, res, next) {
+
+    var user_id = parseInt(req.body.user_id);
+    var label_id = parseInt(req.params.label_id);
+    var members = parseBoolean(req.query.members) || false;
+
+    if (members) {
+        Label.deleteMember(user_id, label_id, function (err, result) {
+            if (err) {
+                return next(err);
+            } else {
+                res.send({
+                    message: '레이블에서 탈퇴되었습니다.'
+                });
+            }
+        })
+    } else {
+        res.send({
+            message: 'members 값을 넣으십시오'
+        });
+    }
 });
 
 
