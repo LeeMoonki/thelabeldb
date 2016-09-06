@@ -163,20 +163,32 @@ router.get('/me', isSecure, isAuthenticate, function(req, res, next){
 router.get('/:id', isSecure, isAuthenticate, function(req, res, next){
   
   var id = parseInt(req.params.id);
-  
-  // 타계정 페이지 시작
+  var message = parseBoolean(req.query.message) || false;
 
-  var page = parseInt(req.query.page) || 1;
-  var count = parseInt(req.query.count) || 5;
+  if (message) {
+    User.shortUserInfo(id, function(err, result){
+      if (err) {
+        return next(err);
+      } else {
+        res.send(result);
+      }
+    });
+  } else {
 
-  User.userPage(id, page, count, function (err, result) {
-    if (err) {
-      return next(err);
-    }
-    res.send(result);
-  });
+    // 타계정 페이지 시작
 
-  // 타계정 페이지 끝
+    var page = parseInt(req.query.page) || 1;
+    var count = parseInt(req.query.count) || 5;
+
+    User.userPage(id, page, count, function (err, result) {
+      if (err) {
+        return next(err);
+      }
+      res.send(result);
+    });
+
+    // 타계정 페이지 끝
+  }
   
 });
 

@@ -124,6 +124,10 @@ router.delete('/', isSecure, isAuthenticate, function(req, res, next){
 
   } else {
 
+    res.send({
+      
+    })
+
   }
 
 });

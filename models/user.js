@@ -192,8 +192,6 @@ function showMe(userId, page, count, callback){
   });
 }
 
-
-
 function userPage(id, page, rowCount, callback) {
   // id 라는 사용자 id를 갖는 사용자의 정보를 전달
   var sql_member = 'select u.id id, u.nickname nickname, u.imagepath imagepath, u.genre_id genre, lm.label_id label_id ' +
@@ -310,7 +308,33 @@ function userPage(id, page, rowCount, callback) {
 
 }
 
-
+function shortUserInfo(userId, callback) {
+  
+  var sql_select_short_info = 'select nickname, imagepath from user where id = ? ';
+  
+  dbPool.getConnection(function(err, dbConn){
+    if (err) {
+      return callback(err);
+    } else {
+      dbConn.query(sql_select_short_info, [userId], function(err, results){
+        dbConn.release();
+        if (err) {
+          return callback(err);
+        } else {
+          var shootObj = {};
+          var tmpObj = {};
+          var filename = path.basename(results[0].imagepath);
+          tmpObj.nickname = results[0].nickname;
+          tmpObj.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
+          shootObj.user = tmpObj;
+          callback(null, shootObj);
+        }
+      });
+    }
+  });
+  
+  
+}
 
 function showProfilePage(userId, type, callback){
   // 사용자 정보 설정 화면에 기존의 정보를 전달
@@ -917,4 +941,5 @@ module.exports.checkPassword = checkPassword;
 module.exports.searchUsersByUser = searchUsersByUser;
 module.exports.searchUsersByLabel = searchUsersByLabel;
 module.exports.getBelongLabel = getBelongLabel;
+module.exports.shortUserInfo = shortUserInfo;
 module.exports.dummyLabel = dummyUser;
