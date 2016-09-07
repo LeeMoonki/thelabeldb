@@ -5,13 +5,18 @@ var router = express.Router();
 
 var User = require('../models/user');
 var Label = require('../models/label');
+var logger = require('./common').logger;
 var parseBoolean = require('./common').parseBoolean;
 var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
 
 
+
 router.get('/', isSecure, isAuthenticate, function(req, res, next) {
-  
+
+  // log 생성
+  logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+  logger.log('debug', 'query: %j', req.query, {});
   
   var search = parseBoolean(req.query.search) || false;
 
@@ -75,7 +80,9 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
   } else {
 
     // 모든 사용자 정보
-    
+    res.send({
+      message: '모든 사용자 정보는 준비되지 않았습니다'
+    });
     
     // 모든 사용자 정보 
   }
@@ -86,6 +93,10 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
 
 router.get('/me', isSecure, isAuthenticate, function(req, res, next){
 
+  // log 생성
+  logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+  logger.log('debug', 'query: %j', req.query, {});
+  
   var setting = parseBoolean(req.query.setting) || false; // req.qury 를 통해 Boolean 값을 넘기면 String이 아닌 Boolean으로 넘어온다
   var dup = parseBoolean(req.query.dup) || false;
 
@@ -161,6 +172,10 @@ router.get('/me', isSecure, isAuthenticate, function(req, res, next){
 });
 
 router.get('/:id', isSecure, isAuthenticate, function(req, res, next){
+
+  // log 생성
+  logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+  logger.log('debug', 'query: %j', req.query, {});
   
   var id = parseInt(req.params.id);
   var message = parseBoolean(req.query.message) || false;
@@ -210,10 +225,14 @@ router.post('/', isSecure, function(req, res, next){
             message: '회원 가입을 실패했습니다'
           }
         });
-      }
-      else {
+      } else {
+        // log 생성
+        logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+        logger.log('debug', 'formidable fields : %j', fields, {});
+        logger.log('debug', 'formidable files : %j', files, {});
+        
+        var intervalCheckNumber = 0; // 값 구간에 문제가 생길 때 1씩 증가시킨다
         var registerInfo = {};
-
 
 
         registerInfo.email = fields.email;
@@ -223,46 +242,104 @@ router.post('/', isSecure, function(req, res, next){
 
         registerInfo.text = fields.text || '';
 
-        registerInfo.position_id = parseInt(fields.position_id) || 1;
-        registerInfo.genre_id = parseInt(fields.genre_id) || 1;
-        registerInfo.city_id = parseInt(fields.city_id) || 1;
-        registerInfo.town_id = parseInt(fields.town_id) || 1;
 
-        if (files.image !== undefined) {
-          registerInfo.imagepath = files.image.path;
+
+        // -----------------------------------   position, genre, city, town 값이 적절한지 판단 시작
+        registerInfo.position_id = parseInt(fields.position_id);
+        registerInfo.genre_id = parseInt(fields.genre_id);
+        registerInfo.city_id = parseInt(fields.city_id);
+        registerInfo.town_id = parseInt(fields.town_id);
+
+        if (!registerInfo.position_id) {
+          registerInfo.position_id = 1;
+        } else if (registerInfo.position_id > 0 && registerInfo.position_id < 9) {
+
         } else {
-          registerInfo.imagepath = path.join(form.uploadDir, '/facebookprofile.jpg');
+          intervalCheckNumber = intervalCheckNumber + 1;
         }
 
-        User.registerUser(registerInfo, function(err, result){
-          if (err) {
-            return next(err);
+        if (!registerInfo.genre_id && intervalCheckNumber === 0) {
+          registerInfo.genre_id = 1;
+        } else if (registerInfo.genre_id > 0 && registerInfo.genre_id < 12 && intervalCheckNumber === 0) {
+
+        } else {
+          intervalCheckNumber = intervalCheckNumber + 1;
+        }
+
+        if (!registerInfo.city_id && intervalCheckNumber === 0) {
+          registerInfo.city_id = 1;
+        } else if (registerInfo.city_id > 0 && registerInfo.city_id < 19 && intervalCheckNumber === 0) {
+
+        } else {
+          intervalCheckNumber = intervalCheckNumber + 1;
+        }
+
+        if (!registerInfo.town_id && intervalCheckNumber === 0) {
+          registerInfo.town_id = 1;
+        } else if (registerInfo.town_id > 0 && registerInfo.town_id < 258 && intervalCheckNumber === 0) {
+
+        } else {
+          intervalCheckNumber = intervalCheckNumber + 1;
+        }
+
+        // -----------------------------------   position, genre, city, town 값이 적절한지 판단 끝
+
+        // registerInfo.position_id = parseInt(fields.position_id) || 1;
+        // registerInfo.genre_id = parseInt(fields.genre_id) || 1;
+        // registerInfo.city_id = parseInt(fields.city_id) || 1;
+        // registerInfo.town_id = parseInt(fields.town_id) || 1;
+
+        if (intervalCheckNumber === 0) {
+          // 지금까지 정보입력에 문제가 없었다면
+          if (files.image !== undefined) {
+            registerInfo.imagepath = files.image.path;
+          } else {
+            registerInfo.imagepath = path.join(form.uploadDir, '/facebookprofile.jpg');
           }
-          else {
-            if (result === 0) {
-              res.send({
-                message: 'email이 중복됩니다. 다른 email을 통해 회원가입을 하십시오'
-              });
-            } else if (result) {
-              res.send({
-                message: '회원 가입이 정상적으로 처리되었습니다',
-                id: result
-              });
-            } else {
-              res.send({
-                error: {
-                  message: '회원 가입을 실패했습니다'
-                }
-              });
+
+          User.registerUser(registerInfo, function (err, result) {
+            if (err) {
+              return next(err);
             }
-          }
-        });
+            else {
+              if (result === 0) {
+                res.send({
+                  error: {
+                    message: 'email 혹은 nickname 중복입니다.'
+                  }
+                });
+              } else if (result) {
+                res.send({
+                  message: '회원 가입이 정상적으로 처리되었습니다',
+                  id: result
+                });
+              } else {
+                res.send({
+                  error: {
+                    message: '회원 가입을 실패했습니다'
+                  }
+                });
+              }
+            }
+          });
+        } else {
+          // 만약에 입력한 정보에 문제가 있었다면
+          res.send({
+            error: {
+              message: 'position, genre, city, town 중 잘못된 정보가 존재합니다'
+            }
+          });
+        }
       }
     });
 });
 
 router.put('/me', isSecure, isAuthenticate, function(req, res, next){
 
+  // log 생성
+  logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+  logger.log('debug', 'query: %j', req.query, {});
+  
   // 내 정보 설정할 때 필요한 변수
   var pass = parseBoolean(req.query.pass) || false;
   var id = req.user.id;
@@ -279,6 +356,9 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
         }
       });
     } else {
+      // log 생성
+      logger.log('debug', 'body: %j', req.body, {});
+      
       var passInfo = {};
       passInfo.user_id = id;
       passInfo.oldPass = req.body.password;
@@ -334,6 +414,10 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
           if (err) {
             return next(err);
           } else {
+            // log 생성
+            logger.log('debug', 'formidable fields : %j', fields, {});
+            logger.log('debug', 'formidable files : %j', files, {});
+            
 
             settingInfo.user_id = id;
             settingInfo.nickname = fields.nickname || results.nickname;

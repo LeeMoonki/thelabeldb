@@ -135,6 +135,60 @@ function createLabel(info, callback) {
     });
 }
 
+function checkCanJoin(userId, labelId, callback) {
+    // 해당 레이블에 가입가능 여부 체크 
+
+    var sql_select_count_label = 'select count(user_id) count from label_member where user_id = ? ';
+    var sql_select_join_label = 'select label_id from label_member where user_id = ?';
+
+    dbPool.getConnection(function (err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            dbConn.query(sql_select_count_label, [userId], function(err, results){
+                dbConn.release();
+                if (err) {
+                    return callback(err);
+                } else {
+                    if (results[0].count > 2) {
+                        // 만약 가입한 label의 개수가 3개 이상이라면
+                        callback(null, 1);
+                    } else {
+                        var flag = false;
+                        dbConn.query(sql_select_join_label, [userId], function(err, results){
+                            if (err) {
+                                return callback(err);
+                            } else {
+                                async.each(results, function(item, done){
+                                    if (item.label_id === labelId) {
+                                        // 만약 가입한 label_id 의 목록에 가입하려는 labelId 가 존재한다면
+                                        flag= true;
+                                    }
+                                    done(null);
+                                }, function(err){
+                                    // done
+                                    if (err) {
+                                        // done(err) 발생하지 않음
+                                    } else {
+                                        if (flag) {
+                                            // 가입한 label의 개수가 3개 미만이지만 이미 가입한 label에 가입하려는 경우
+                                            callback(null, 2);
+                                        } else {
+                                            // 가입한 label의 개수가 3개 미만이이고 새로운 label에 가입하려는 경우
+                                            callback(null, 0);
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    });
+
+}
+
 function joinLabel(info, callback) {
     // info 정보를 통해 레이블에 가입한다
     var sql_insert_member = 'INSERT INTO `thelabeldb`.`label_member` (`user_id`, `label_id`) VALUES (?, ?) ';
@@ -988,6 +1042,7 @@ function deleteMember(user_id, label_id, callback) {
 
 module.exports.nameDupCheck = nameDupCheck;
 module.exports.createLabel = createLabel;
+module.exports.checkCanJoin = checkCanJoin;
 module.exports.joinLabel = joinLabel;
 
 module.exports.authorize = authorize;

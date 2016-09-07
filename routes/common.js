@@ -1,6 +1,63 @@
+var winston = require('winston');
+var DailyRotateFile = require('winston-daily-rotate-file');
+var path = require('path');
+var moment = require('moment-timezone');
+var timeZone = "Asia/Seoul";
+
+var logger = new winston.Logger({
+    // console 로 내보내는 transport 하나
+    transports: [
+        new winston.transports.Console({
+            level: 'debug',
+            silent: false,
+            colorize: true,
+            prettyPrint: true,
+            timestamp: false
+        }),
+        new winston.transports.DailyRotateFile({
+            level: 'debug',
+            silent: false,
+            colorize: false,
+            prettyPrint: true,
+            timestamp: function() {
+                return moment().tz(timeZone).format();
+            },
+            dirname: path.join(__dirname, '../logs'),
+            filename: 'debug_logs_',
+            datePattern: 'yyyy-MM-ddTHH.log',
+            maxsize: 1024 * 1024,
+            json: false
+        })
+    ],
+    exceptionHandlers: [
+        new winston.transports.DailyRotateFile({
+            level: "debug",
+            silent: false,
+            colorize: false,
+            prettyPrint: true,
+            timestamp: function() {
+                return moment().tz(timeZone).format();
+            },
+            dirname: path.join(__dirname, '../logs'),
+            filename: 'exception_logs_',
+            datePattern: 'yyyy-MM-ddTHH.log',
+            maxsize: 1024,
+            json: false,
+            handleExceptions: true,
+            humanReadableUnhandledException: true
+        })
+    ],
+    exitOnError: false
+});
+
 
 
 function isAuthenticate(req, res, next) {
+
+    // log 생성
+    logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'query: %j', req.query, {});
+    
     var dup = parseBoolean(req.query.dup) || false;
     var setting = parseBoolean(req.query.setting) || false;
     var search = parseBoolean(req.query.search) || false;
@@ -81,6 +138,8 @@ function parseBoolean(requestQuery){
     }
 }
 
+
 module.exports.isAuthenticate = isAuthenticate;
 module.exports.isSecure = isSecure;
 module.exports.parseBoolean = parseBoolean;
+module.exports.logger = logger;

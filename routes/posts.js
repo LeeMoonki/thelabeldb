@@ -5,6 +5,7 @@ var router = express.Router();
 
 var User = require('../models/user');
 
+var logger = require('./common').logger;
 var parseBoolean = require('./common').parseBoolean;
 var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
@@ -12,6 +13,10 @@ var Post = require('../models/post');
 
 router.get('/', isAuthenticate, isSecure, function (req, res, next) {
 
+    // log 생성
+    logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'query: %j', req.query, {});
+    
     var page = parseInt(req.query.page) || 1;
     var count = parseInt(req.query.count) || 10;
     var meet = parseInt(req.query.meet) || 2;
@@ -32,27 +37,13 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
             res.send(results);
         }
     });
-    
-    //
-    // User.findUser(req.user.id, function (err, result) {
-    //     if (err) {
-    //         return next(err);
-    //     } else {
-    //         var position_id = result.position_id;
-    //         Post.homePost(position_id, page, count, meet, function (err, results) {
-    //             if (err) {
-    //                 return next(err);
-    //             } else {
-    //                 res.send(results);
-    //             }
-    //         });
-    //
-    //     }
-    // });
-
 });
 
 router.post('/', isAuthenticate, isSecure, function (req, res, next) {
+
+    // log 생성
+    logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    
     var form = new formidable.IncomingForm();
     form.uploadDir = path.join(__dirname, '../uploads/postFiles');
     form.keepExtensions = true;
@@ -61,6 +52,10 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
         if (err) {
             return next(err);
         } else {
+
+            // log 생성
+            logger.log('debug', 'formidable fields : %j', fields, {});
+            logger.log('debug', 'formidable files : %j', files, {});
             
             if (!fields.filetype || (!files.file && !fields.file) || !fields.opento) {
                 return next(new Error('필수 정보를 입력하십시오'));
@@ -102,6 +97,9 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
 
 router.put('/:post_id', isAuthenticate, isSecure, function(req, res, next){
 
+    // log 생성
+    logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    
     var post_id = parseInt(req.params.post_id);
 
     var settingInfo = {};

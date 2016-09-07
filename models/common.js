@@ -1,11 +1,33 @@
 var mysql = require('mysql');
 var dbPoolConfig = require('../config/dbPoolConfig');
-
+var logger = require('../routes/common').logger;
 var dbPool = mysql.createPool(dbPoolConfig);
+
+dbPool.logStatus = function() {
+  logger.log('debug', 'dbpool : current free %d conns/ %d conns in a database pool',
+    dbPool._freeConnections.length,
+    dbPool._allConnections.length
+  );
+};
+
+dbPool.on('connection', function(connection) {
+  logger.log('debug', 'connection event : free %d conns/ %d conns in a database pool',
+    dbPool._freeConnections.length,
+    dbPool._allConnections.length
+  );
+});
+
+dbPool.on("enqueue", function() {
+  logger.log('debug', 'enque event : total %d waiting conns in a queue',
+    dbPool._connectionQueue.length
+  );
+});
+
 
 var hostAddress = 'https://127.0.0.1:4433';
 //var hostAddress = 'https://localhost:4433';
-//var hostAddress = 'https://ec2-52-78-137-47.ap-northeast-2.compute.amazonaws.com:4433';
+//var hostAddress = 'http://ec2-52-78-137-47.ap-northeast-2.compute.amazonaws.com';
+
 
 
 
@@ -50,11 +72,6 @@ function readRangeHeader(range, totalLength) {
 
   return result;
 }
-
-
-
-
-
 
 
 
