@@ -534,7 +534,7 @@ function labelMain(labelId, page, count, callback) {
                         tmpObj.id = row.id;
                         tmpObj.nickname = row.nickname;
                         tmpObj.position = row.position;
-                        tmpObj.imagepath = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                        tmpObj.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
                         members.push(tmpObj);
                         done(null);
                     }, function(err){
