@@ -161,7 +161,7 @@ router.post('/:label_id', isSecure, isAuthenticate, function(req, res, next){
     }
 });
 
-router.get('/', isSecure, isAuthenticate, function (req, res, next) {
+router.get('/', isAuthenticate, function (req, res, next) {
     
     var search = parseBoolean(req.query.search) || false;
     var labelPage = parseBoolean(req.query.labelPage) || false;
@@ -245,7 +245,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
     }
 });
 
-router.get('/:label_id', isSecure, isAuthenticate, function(req, res, next){
+router.get('/:label_id', isAuthenticate, function(req, res, next){
 
     var user_id = req.user.id;
     var label_id = parseInt(req.params.label_id);

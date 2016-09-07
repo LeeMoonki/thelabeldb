@@ -10,7 +10,7 @@ var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
 var Post = require('../models/post');
 
-router.get('/', isAuthenticate, isSecure, function (req, res, next) {
+router.get('/', isAuthenticate, function (req, res, next) {
 
     var page = parseInt(req.query.page) || 1;
     var count = parseInt(req.query.count) || 10;
