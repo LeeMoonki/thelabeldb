@@ -10,7 +10,7 @@ var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
 
 
-router.get('/', isAuthenticate, function(req, res, next) {
+router.get('/', isSecure, isAuthenticate, function(req, res, next) {
   
   
   var search = parseBoolean(req.query.search) || false;
@@ -84,7 +84,7 @@ router.get('/', isAuthenticate, function(req, res, next) {
 });
 
 
-router.get('/me', isAuthenticate, function(req, res, next){
+router.get('/me', isSecure, isAuthenticate, function(req, res, next){
 
   var setting = parseBoolean(req.query.setting) || false; // req.qury 를 통해 Boolean 값을 넘기면 String이 아닌 Boolean으로 넘어온다
   var dup = parseBoolean(req.query.dup) || false;
@@ -160,7 +160,7 @@ router.get('/me', isAuthenticate, function(req, res, next){
 
 });
 
-router.get('/:id', isAuthenticate, function(req, res, next){
+router.get('/:id', isSecure, isAuthenticate, function(req, res, next){
   
   var id = parseInt(req.params.id);
   var message = parseBoolean(req.query.message) || false;
