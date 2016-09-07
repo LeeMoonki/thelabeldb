@@ -165,7 +165,31 @@ function showMe(userId, page, count, callback){
         if (err) {
           return callback(err);
         } else {
-          callback(null, results);
+          var postsArr = [];
+          async.each(results, function(row, done){
+            var tmpObj = {};
+            var filename = path.basename(row.filepath);
+            tmpObj.id = row.id;
+            tmpObj.filetype = row.filetype;
+            if (parseInt(row.filetype) === 2) {
+              tmpObj.file_path = row.filepath;
+            } else if (parseInt(row.filetype) === 0) {
+              tmpObj.file_path = url.resolve(hostAddress, '/avs/' + filename);
+            } else {
+              tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+            }
+            tmpObj.date = row.date;
+            tmpObj.numlike = row.numlike;
+            postsArr.push(tmpObj);
+            done(null);
+          }, function(err){
+            // done
+            if (err) {
+              // done(err) 발생하지 않는다
+            } else {
+              callback(null, postsArr);
+            }
+          });
         }
       });
     }
@@ -275,7 +299,13 @@ function userPage(id, page, rowCount, callback) {
               var filename = path.basename(row.file_path);
               tmpObj.id = row.id;
               tmpObj.filetype = row.filetype;
-              tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+              if (parseInt(row.filetype) === 2) {
+                tmpObj.file_path = row.filepath;
+              } else if (parseInt(row.filetype) === 0) {
+                tmpObj.file_path = url.resolve(hostAddress, '/avs/' + filename);
+              } else {
+                tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+              }
               tmpObj.date = row.date;
               tmpObj.numlike = row.numlike;
               post.push(tmpObj);
@@ -425,43 +455,59 @@ function nicknameDupCheck(nickname, callback){
 }
 
 function registerUser(info, callback){
-  // 회원가
+  // 회원가입
 
-  var sql_register_user = 'INSERT INTO `thelabeldb`.`user` (`email`, `password`, `nickname`, `gender`, `text`, `imagepath`, ' +
-                                                           '`position_id`, `genre_id`, `city_id`, `town_id`) ' +
-                          'VALUES (?, sha2(?, 512), ?, ?, ?, ?, ?, ?, ?, ?)';
-
-  
-  dbPool.getConnection(function(err, dbConn){
+  emailDupCheck(info.email, function(err, count){
     if (err) {
       return callback(err);
     } else {
-      
-      dbConn.beginTransaction(function(err){
-        if (err) {
-          dbConn.release();
-          return callback(err);
-        } else {
-          dbConn.query(sql_register_user, [info.email, info.password, info.nickname, info.gender
-              , info.text, info.imagepath, info.position_id, info.genre_id, info.city_id, info.town_id]
-            ,function(err, result){
-              
+
+      if (count === 0) {
+        // 중복되는 이메일이 없을 때
+        var sql_register_user = 'INSERT INTO `thelabeldb`.`user` (`email`, `password`, `nickname`, `gender`, `text`, `imagepath`, ' +
+          '`position_id`, `genre_id`, `city_id`, `town_id`) ' +
+          'VALUES (?, sha2(?, 512), ?, ?, ?, ?, ?, ?, ?, ?)';
+
+
+        dbPool.getConnection(function(err, dbConn){
+          if (err) {
+            return callback(err);
+          } else {
+
+            dbConn.beginTransaction(function(err){
               if (err) {
-                return dbConn.rollback(function(){
-                  dbConn.release();
-                  callback(err);
-                });
+                dbConn.release();
+                return callback(err);
               } else {
-                dbConn.commit(function(){
-                  dbConn.release();
-                  callback(null, result.insertId);
-                });
+                dbConn.query(sql_register_user, [info.email, info.password, info.nickname, info.gender
+                    , info.text, info.imagepath, info.position_id, info.genre_id, info.city_id, info.town_id]
+                  ,function(err, result){
+
+                    if (err) {
+                      return dbConn.rollback(function(){
+                        dbConn.release();
+                        callback(err);
+                      });
+                    } else {
+                      dbConn.commit(function(){
+                        dbConn.release();
+                        callback(null, result.insertId);
+                      });
+                    }
+                  });
               }
             });
-        }
-      });
+          }
+        });
+      } else {
+        // 중복되는 이메일이 있을 때
+        callback(null, 0);
+      }
+
     }
   });
+
+
 }
 
 function updateUser(info, callback){

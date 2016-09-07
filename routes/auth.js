@@ -65,6 +65,7 @@ router.post('/local/login', isSecure, function(req, res, next) {
 }, function(req, res, next) {
     var user = {};
     var filename = path.basename(req.user.imagepath);
+    user.id = req.user.id;
     user.email = req.user.email;
     user.nickname = req.user.nickname;
     user.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);

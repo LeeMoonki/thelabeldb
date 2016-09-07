@@ -411,6 +411,7 @@ function labelMain(labelId, page, count, callback) {
                                   'numlike ' +
                            'from post p join user u on(p.user_id = u.id) ' +
                            'where p.label_id = ? ' +
+                           'order by p.id desc ' +
                            'limit ?, ?';
 
     var result = {};
@@ -508,7 +509,13 @@ function labelMain(labelId, page, count, callback) {
                         tmpObj.user_id = row.user_id;
                         tmpObj.nickname = row.nickname;
                         tmpObj.filetype = row.filetype;
-                        tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                        if (parseInt(row.filetype) === 2) {
+                            tmpObj.file_path = row.file_path;
+                        } else if (parseInt(row.filetype) === 0) {
+                            tmpObj.file_path = url.resolve(hostAddress, '/avs/' + filename);
+                        } else {
+                            tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                        }
                         tmpObj.date = row.date;
                         tmpObj.numlike = row.numlike;
                         data.push(tmpObj);

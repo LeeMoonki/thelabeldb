@@ -15,6 +15,7 @@ var messages = require('./routes/messages');
 var likes = require('./routes/likes');
 var auth = require('./routes/auth');
 var alarms = require('./routes/alarms');
+var avs = require('./routes/avs');
 
 
 var redis = require('redis');
@@ -68,6 +69,7 @@ app.use('/messages', messages);
 app.use('/likes', likes);
 app.use('/auth', auth);
 app.use('/alarms', alarms);
+app.use('/avs', avs);
 
 
 // catch 404 and forward to error handler

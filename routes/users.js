@@ -239,7 +239,11 @@ router.post('/', isSecure, function(req, res, next){
             return next(err);
           }
           else {
-            if (result) {
+            if (result === 0) {
+              res.send({
+                message: 'email이 중복됩니다. 다른 email을 통해 회원가입을 하십시오'
+              });
+            } else if (result) {
               res.send({
                 message: '회원 가입이 정상적으로 처리되었습니다',
                 id: result

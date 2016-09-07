@@ -64,6 +64,10 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
             
             if (!fields.filetype || (!files.file && !fields.file) || !fields.opento) {
                 return next(new Error('필수 정보를 입력하십시오'));
+            } else if (fields.filetype < 0 || fields.filetype > 2) {
+                return next(new Error('filetype은 0, 1, 2 중에 하나의 값을 넣어야 합니다'));
+            } else if (fields.opento < 0 || fields.opento > 2) {
+                return next(new Error('opento는 0, 1, 2 중에 하나의 값을 넣어야 합니다'));
             } else {
 
                 var post = {};

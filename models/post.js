@@ -3,10 +3,12 @@ var async = require('async');
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
+var mime = require('mime');
 
 
 var dbPool = require('../models/common').dbPool;
 var hostAddress = require('../models/common').hostAddress;
+var readRangeHeader = require('../models/common').readRangeHeader;
 
 
 // dummy data
@@ -269,6 +271,8 @@ function showHomePosts(info, callback){
                             tmpObj.filetype = row.filetype;
                             if (parseInt(row.filetype) === 2) {
                                 tmpObj.file_path = row.file_path;
+                            } else if (parseInt(row.filetype) === 0) {
+                                tmpObj.file_path = url.resolve(hostAddress, '/avs/' + filename);
                             } else {
                                 tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
                             }
@@ -303,6 +307,8 @@ function showHomePosts(info, callback){
                             tmpObj.filetype = row.filetype;
                             if (parseInt(row.filetype) === 2) {
                                 tmpObj.file_path = row.file_path;
+                            } else if (parseInt(row.filetype) === 0) {
+                                tmpObj.file_path = url.resolve(hostAddress, '/avs/' + filename);
                             } else {
                                 tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
                             }
