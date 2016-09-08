@@ -6,6 +6,7 @@ var router = express.Router();
 var User = require('../models/user');
 var Label = require('../models/label');
 var logger = require('./common').logger;
+var unlinkFile = require('./common').unlinkFile;
 var parseBoolean = require('./common').parseBoolean;
 var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
@@ -220,9 +221,15 @@ router.post('/', isSecure, function(req, res, next){
       if (err) {
         return next(err);
       } else if (!fields.email || !fields.nickname || !fields.password || !fields.gender || req.user) {
-        res.send({
-          error: {
-            message: '회원 가입을 실패했습니다'
+        unlinkFile(files.image.path, function(err, code){
+          if (err) {
+            return next(err);
+          } else {
+            res.send({
+              error: {
+                message: '회원 가입을 실패했습니다'
+              }
+            });
           }
         });
       } else {
@@ -303,9 +310,15 @@ router.post('/', isSecure, function(req, res, next){
             }
             else {
               if (result === 0) {
-                res.send({
-                  error: {
-                    message: 'email 혹은 nickname 중복입니다.'
+                unlinkFile(files.image.path, function(err, code){
+                  if (err) {
+                    return next(err);
+                  } else {
+                    res.send({
+                      error: {
+                        message: 'email 혹은 nickname 중복입니다.'
+                      }
+                    });
                   }
                 });
               } else if (result) {
@@ -314,9 +327,15 @@ router.post('/', isSecure, function(req, res, next){
                   id: result
                 });
               } else {
-                res.send({
-                  error: {
-                    message: '회원 가입을 실패했습니다'
+                unlinkFile(files.image.path, function(err, code){
+                  if (err) {
+                    return next(err);
+                  } else {
+                    res.send({
+                      error: {
+                        message: '회원 가입을 실패했습니다'
+                      }
+                    });
                   }
                 });
               }
@@ -324,9 +343,16 @@ router.post('/', isSecure, function(req, res, next){
           });
         } else {
           // 만약에 입력한 정보에 문제가 있었다면
-          res.send({
-            error: {
-              message: 'position, genre, city, town 중 잘못된 정보가 존재합니다'
+          
+          unlinkFile(files.image.path, function(err, code){
+            if (err) {
+              return next(err);
+            } else {
+              res.send({
+                error: {
+                  message: 'position, genre, city, town 중 잘못된 정보가 존재합니다'
+                }
+              });
             }
           });
         }
@@ -438,9 +464,15 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
             User.updateUser(settingInfo, function(err, result){
               // result 에는 update 된 row의 개수가 들어있다
               if (err) {
-                res.send({
-                  message: '수정 실패',
-                  resultCode: 0
+                unlinkFile(files.image.path, function(err, code){
+                  if (err) {
+                    return next(err);
+                  } else {
+                    res.send({
+                      message: '수정 실패',
+                      resultCode: 0
+                    });
+                  }
                 });
                 return next(err);
               } else {

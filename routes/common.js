@@ -1,6 +1,7 @@
 var winston = require('winston');
 var DailyRotateFile = require('winston-daily-rotate-file');
 var path = require('path');
+var fs = require('fs');
 var moment = require('moment-timezone');
 var timeZone = "Asia/Seoul";
 
@@ -139,7 +140,26 @@ function parseBoolean(requestQuery){
 }
 
 
+function unlinkFile(filepath, callback) {
+    fs.exists(filepath, function(exists){
+        if (exists) {
+            fs.unlink(filepath, function(err){
+                if (err) {
+                    return callback(new Error('fs.unlink error occurred'));
+                } else {
+                    callback(null, 0);
+                }
+            });
+        } else {
+            // fs.exists else
+            callback(null, 1);
+        }
+    });
+}
+
+
 module.exports.isAuthenticate = isAuthenticate;
 module.exports.isSecure = isSecure;
 module.exports.parseBoolean = parseBoolean;
 module.exports.logger = logger;
+module.exports.unlinkFile = unlinkFile;

@@ -7,6 +7,7 @@ var Label = require('../models/label');
 var User = require('../models/user');
 
 var logger = require('./common').logger;
+var unlinkFile = require('./common').unlinkFile;
 var parseBoolean = require('./common').parseBoolean;
 var isSecure = require('./common').isSecure;
 var isAuthenticate = require('./common').isAuthenticate;
@@ -66,10 +67,16 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
         if (err) {
             return next(err);
         } else if (!formFields.label_name || !formFields.genre_id) {
-            res.send({
-                error: {
-                    message: 'label_name과 genre_id는 필수정보입니다.',
-                    resultCode: 0
+            unlinkFile(files.image.path, function(err, code){
+                if (err) {
+                    return next(err);
+                } else {
+                    res.send({
+                        error: {
+                            message: 'label_name과 genre_id는 필수정보입니다.',
+                            resultCode: 1
+                        }
+                    });
                 }
             });
         }
@@ -116,21 +123,45 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
 
             Label.createLabel(createInfo, function(err, result){
                 if (err) {
-                    return next(err);
+                    unlinkFile(files.image.path, function(unlinkerr, code){
+                        if (unlinkerr) {
+                            return next(unlinkerr);
+                        } else {
+                            return next(err);
+                        }
+                    });
                 }
                 else {
-                    if (result !== 0) {
+                    if (result === 0) {
                         res.send({
                             message: '레이블 생성에 성공했습니다',
-                            resultCode: result
+                            resultCode: 0
                         });
-                    } else {
-                        res.send({
-                            error: {
-                                message: '레이블 생성에 실패했습니다',
-                                resultCode: result
+                    } else if (result === 1) {
+                        unlinkFile(files.image.path, function(err, code){
+                            if (err) {
+                                return next(err);
+                            } else {
+                                res.send({
+                                    message: '이미 존재하는 레이블 이름입니다',
+                                    resultCode: 2
+                                });
                             }
                         });
+                    } else {
+                        unlinkFile(files.image.path, function(err, code){
+                            if (err) {
+                                return next(err);
+                            } else {
+                                res.send({
+                                    error: {
+                                        message: '레이블 생성에 실패했습니다',
+                                        resultCode: 3
+                                    }
+                                });
+                            }
+                        });
+
                     }
                 }
             });
@@ -531,11 +562,13 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
                         Label.updateLabel(settingInfo, function(err, result){
                             // result 에는 update 된 row의 개수가 들어있다
                             if (err) {
-                                res.send({
-                                    message: '레이블 수정에 실패했습니다',
-                                    resultCode: 0
+                                unlinkFile(files.image.path, function(unlinkerr, code){
+                                    if (unlinkerr) {
+                                        return next(unlinkerr);
+                                    } else {
+                                        return next(err);
+                                    }
                                 });
-                                return next(err);
                             } else {
                                 // 그다음 need_position 에대한 수정을 진행
                                 // 먼저 need_position 이 수정 대상인지 살피고 수정 대상이면 tmpArr 에 수정 값들을 넣는다
