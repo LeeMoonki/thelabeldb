@@ -231,6 +231,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
     
     var search = parseBoolean(req.query.search) || false;
     var dup = parseBoolean(req.query.dup) || false;
+    var nameSearch = parseBoolean(req.query.nameSearch) || false;
 
     // var labelPage = parseBoolean(req.query.labelPage) || false;
 
@@ -258,6 +259,64 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
             }
         });
 
+    } else if (nameSearch) {
+
+        var sort = req.query.sort || 'genre';
+
+        var page = parseInt(req.query.page) || 1;
+        var count = parseInt(req.query.count) || 10;
+        var text = req.query.text;
+        var content = '%' + text + '%';
+
+        if (sort === 'genre') {
+            Label.search_genre(content, page, count, function (err, result) {
+                if (err) {
+                    return next(err);
+                } else {
+                    if (text === '') {
+                        res.send({
+                            message : '검색어를 입력하시오.'
+                        });
+                    } else if (result.result.length === 0) {
+                        res.send('검색 결과가 없습니다.');
+                    } else {
+                        res.send(result);
+                    }
+                }
+            });
+        } else if (sort === 'position') {
+            Label.search_position(content, page, count, function (err, result) {
+                if (err) {
+                    return next(err);
+                } else {
+                    if (text === '') {
+                        res.send({
+                            message : '검색어를 입력하시오.'
+                        });
+                    } else if (result.result.length === 0) {
+                        res.send('검색 결과가 없습니다.');
+                    } else {
+                        res.send(result);
+                    }
+                }
+            });
+        } else if (sort === '') {
+            Label.search_genre(content, page, count, function (err, result) {
+                if (err) {
+                    return next(err);
+                } else {
+                    if (text === '') {
+                        res.send({
+                            message : '검색어를 입력하시오.'
+                        });
+                    } else if (result.result.length === 0) {
+                        res.send('검색 결과가 없습니다.');
+                    } else {
+                        res.send(result);
+                    }
+                }
+            });
+        }
     } else if (dup) {
         if (req.query.label_name) {
             // 레이블 이름 중복 체크

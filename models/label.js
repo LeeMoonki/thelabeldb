@@ -651,9 +651,13 @@ function labelPage(userId, callback) {
 }
 
 function labelMember(label_id, callback) {
-    var sql = 'select u.id user_id, u.nickname user_name, u.imagepath user_image_path ' +
+    var sql = 'select u.id user_id, u.nickname user_name, u.imagepath user_image_path, p.name position, ' +
+                     'c.name city, t.name town ' +
               'from label l join label_member m on(l.id = m.label_id) ' +
                            'join user u on (m.user_id = u.id) ' +
+                           'join position p on (u.position_id = p.id) ' +
+                           'join city c on (u.city_id = c.id) ' +
+                           'join town t on (u.town_id = t.id) ' +
               'where l.id = ?';
 
     var label_member = {};
@@ -676,6 +680,9 @@ function labelMember(label_id, callback) {
                     tmp.id = row.user_id;
                     tmp.nickname = row.user_name;
                     tmp.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
+                    tmp.position = row.position;
+                    tmp.city = row.city;
+                    tmp.town = row.town;
                     member.push(tmp);
                     done(null);
                 }, function(err){
@@ -949,6 +956,64 @@ function findAlreadyIndex(indexArr, index, callback) {
     callback(flag);
 }
 
+function search_genre(content, page, count, callback) {
+    var sql_search = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
+      'g.name label_genre, p.name label_need_position ' +
+      'from label l join label_need n on(l.id = n.label_id) ' +
+      'join genre g on(l.genre_id = g.id) ' +
+      'join position p on(n.position_id = p.id) ' +
+      'where l.name like ? ' +
+      'order by l.genre_id ' +
+      'limit ?, ?';
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.query(sql_search, [content, (page - 1) * count, count], function (err, results) {
+            if (err) {
+                return callback(err)
+            }
+            var label = {};
+
+            label.page = page;
+            label.count = count;
+
+            label.result = results;
+            callback(null, label);
+        });
+    });
+}
+
+function search_position(content, page, count, callback) {
+    var sql_search = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
+      'g.name label_genre, p.name label_need_position ' +
+      'from label l join label_need n on(l.id = n.label_id) ' +
+      'join genre g on(l.genre_id = g.id) ' +
+      'join position p on(n.position_id = p.id) ' +
+      'where l.name like ? ' +
+      'order by n.position_id desc ' +
+      'limit ?, ?';
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback(err);
+        }
+        dbConn.query(sql_search, [content, (page - 1) * count, count], function (err, results) {
+            if (err) {
+                return callback(err)
+            }
+            var label = {};
+
+            label.page = page;
+            label.count = count;
+
+            label.result = results;
+            callback(null, label);
+        });
+    });
+}
+
+
+
 
 
 //레이블 탈퇴 GET 권한 유저
@@ -1072,7 +1137,8 @@ module.exports.searchLabel = searchLabel;
 module.exports.getLabelSearchInfo = getLabelSearchInfo;
 module.exports.getLabelSearchInfoArr = getLabelSearchInfoArr;
 
-
+module.exports.search_genre = search_genre;
+module.exports.search_position = search_position;
 
 module.exports.get_deleteMember = get_deleteMember;
 module.exports.get_myprofile = get_myprofile;

@@ -20,6 +20,7 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
   logger.log('debug', 'query: %j', req.query, {});
   
   var search = parseBoolean(req.query.search) || false;
+  var nameSearch = parseBoolean(req.query.nameSearch) || false;
 
   if (search) {
 
@@ -78,6 +79,81 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
     });
 
     // 사용자 검색 페이지 끝
+  } else if (nameSearch) {
+
+    var sort = req.query.sort || 'genre';
+
+    var page = parseInt(req.query.page) || 1;
+    var count = parseInt(req.query.count) || 10;
+    var text = req.query.text;
+
+    var content = '%' + text + '%';
+
+    if (sort === 'genre') {
+      User.search_genre(content, page, count, function (err, result) {
+        if (err) {
+          return next(err);
+        } else {
+          if (text === '') {
+            res.send({
+              message : '검색어를 입력하시오.'
+            });
+          } else if (result.result.length === 0) {
+            res.send('검색 결과가 없습니다.');
+          } else {
+            res.send(result);
+          }
+        }
+      });
+    } else if (sort === 'position') {
+      User.search_position(content, page, count, function (err, result) {
+        if (err) {
+          return next(err);
+        } else {
+          if (text === '') {
+            res.send({
+              message : '검색어를 입력하시오.'
+            });
+          } else if (result.result.length === 0) {
+            res.send('검색 결과가 없습니다.');
+          }else {
+            res.send(result);
+          }
+        }
+      });
+    } else if (sort === 'city') {
+      User.search_city(content, page, count, function (err, result) {
+        if (err) {
+          return next(err);
+        } else {
+          if (text === '') {
+            res.send({
+              message : '검색어를 입력하시오.'
+            });
+          } else if (result.result.length === 0) {
+            res.send('검색 결과가 없습니다.');
+          }else {
+            res.send(result);
+          }
+        }
+      });
+    } else if (sort === '') {
+      User.search_genre(content, page, count, function (err, result) {
+        if (err) {
+          return next(err);
+        } else {
+          if (text === '') {
+            res.send({
+              message : '검색어를 입력하시오.'
+            });
+          } else if (result.result.length === 0) {
+            res.send('검색 결과가 없습니다.');
+          }else {
+            res.send(result);
+          }
+        }
+      });
+    }
   } else {
 
     // 모든 사용자 정보
@@ -100,6 +176,7 @@ router.get('/me', isSecure, isAuthenticate, function(req, res, next){
   
   var setting = parseBoolean(req.query.setting) || false; // req.qury 를 통해 Boolean 값을 넘기면 String이 아닌 Boolean으로 넘어온다
   var dup = parseBoolean(req.query.dup) || false;
+
 
   if (dup && req.query.email) {
     // email 중복체크

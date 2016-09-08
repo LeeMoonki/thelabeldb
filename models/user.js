@@ -961,6 +961,96 @@ function findAlreadyIndex(indexArr, index, callback) {
   callback(flag);
 }
 
+function search_genre(content, page, count, callback) {
+
+  var sql_search = 'select u.id user_id, nickname, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.nickname like ? ' +
+    'order by u.genre_id ' +
+    'limit ?, ?;';
+
+  dbPool.getConnection(function (err, dbConn) {
+    if (err) {
+      return callback(err);
+    }
+    dbConn.query(sql_search, [content, (page - 1) * count, count], function (err, results) {
+      if (err) {
+        return callback(err)
+      }
+      var user = {};
+
+      user.page = page;
+      user.count = count;
+
+      user.result = results;
+      callback(null, user);
+    });
+  });
+}
+
+function search_position(content, page, count, callback) {
+
+  var sql_search = 'select u.id user_id, nickname, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.nickname like ? ' +
+    'order by u.position_id desc ' +
+    'limit ?, ?;';
+
+  dbPool.getConnection(function (err, dbConn) {
+    if (err) {
+      return callback(err);
+    }
+    dbConn.query(sql_search, [content, (page - 1) * count, count], function (err, results) {
+      if (err) {
+        return callback(err)
+      }
+      var user = {};
+
+      user.page = page;
+      user.count = count;
+
+      user.result = results;
+      callback(null, user);
+    });
+  });
+}
+
+function search_city(content, page, count, callback) {
+
+  var sql_search = 'select u.id user_id, nickname, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.nickname like ? ' +
+    'order by u.city_id desc ' +
+    'limit ?, ?;';
+
+  dbPool.getConnection(function (err, dbConn) {
+    if (err) {
+      return callback(err);
+    }
+    dbConn.query(sql_search, [content, (page - 1) * count, count], function (err, results) {
+      if (err) {
+        return callback(err)
+      }
+      var user = {};
+
+      user.page = page;
+      user.count = count;
+
+      user.result = results;
+      callback(null, user);
+    });
+  });
+}
+
 // User 검색 끝
 
 
@@ -983,3 +1073,7 @@ module.exports.searchUsersByLabel = searchUsersByLabel;
 module.exports.getBelongLabel = getBelongLabel;
 module.exports.shortUserInfo = shortUserInfo;
 module.exports.dummyLabel = dummyUser;
+
+module.exports.search_genre = search_genre;
+module.exports.search_position = search_position;
+module.exports.search_city = search_city;
