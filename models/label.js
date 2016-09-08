@@ -500,7 +500,7 @@ function labelMain(labelId, page, count, callback) {
                     user.page = page;
                     user.count = count;
 
-                    user.result = result;
+                    user.label = result;
                     user.member = members;
                     user.data = data;
                     callback(null, user);
@@ -514,11 +514,11 @@ function labelMain(labelId, page, count, callback) {
                     callback(new Error('Error sql_select_label_info'));
                 } else {
                     var filename = path.basename(results[0].imagepath);
-                    result.label_id = results[0].id;
-                    result.label_name = results[0].name;
-                    result.label_image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
-                    result.label_genre = results[0].genre;
-                    result.label_authority = results[0].authority;
+                    result.id = results[0].id;
+                    result.name = results[0].name;
+                    result.imagepath = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                    result.genre = results[0].genre;
+                    result.authority = results[0].authority;
                     dbConn.query(sql_select_label_need, [labelId], function(err, needResults){
                         if (err) {
                             callback(new Error('Error sql_select_label_need'));
@@ -527,7 +527,7 @@ function labelMain(labelId, page, count, callback) {
                             for (var i = 0; i < needResults.length; i++) {
                                 need.push(needResults[i].name);
                             }
-                            result.label_need_position = need;
+                            result.needposition = need;
                             callback(null);
                         }
                     });
@@ -630,9 +630,9 @@ function labelPage(userId, callback) {
                       var tmp = {};
                       var filename = path.basename(row.image_path);
                       tmp.id = row.id;
-                      tmp.label_name = row.label_name;
-                      tmp.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
-                      tmp.authorization = row.authorization;
+                      tmp.name = row.label_name;
+                      tmp.imagepath = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                      tmp.authority = row.authorization;
                       label_page.push(tmp);
                       done(null);
                   }, function(err){
@@ -640,7 +640,7 @@ function labelPage(userId, callback) {
                       if (err) {
                           // done(err) 발생하지 않음
                       } else {
-                          label_list.data = label_page;
+                          label_list.label = label_page;
                           callback(null, label_list);
                       }
                   });
