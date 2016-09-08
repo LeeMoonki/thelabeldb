@@ -37,6 +37,27 @@ function nameDupCheck(name, callback) {
     
 }
 
+function numOfJoinCheck(userId, callback) {
+
+    var sql_select_count_join = 'select count(id) count from label_member where user_id = ? ';
+
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            dbConn.query(sql_select_count_join, [userId], function(err, results){
+                dbConn.release();
+                if (err) {
+                    return callback(err);
+                } else {
+                    callback(null, results[0].count);
+                }
+            });
+        }
+    });
+
+}
+
 function createLabel(info, callback) {
     
     nameDupCheck(info.label_name, function(err, count){
@@ -45,101 +66,114 @@ function createLabel(info, callback) {
         } else {
             if (count === 0) {
                 // 중복되는 레이블 이름이 없을 때
-
-                var sql_insert_label = 'INSERT INTO `thelabeldb`.`label` (`name`, `genre_id`, `text`, ' +
-                  '`imagepath`, `authority_user_id`) ' +
-                  'VALUES (?, ?, ?, ?, ?)';
-
-                var sql_insert_label_need = 'INSERT INTO `thelabeldb`.`label_need` (`label_id`, `position_id`) ' +
-                  'VALUES (?, ?)';
-
-                var sql_insert_label_member = 'INSERT INTO `thelabeldb`.`label_member` (`user_id`, `label_id`) ' +
-                  'VALUES (?, ?)';
-
-                var labelInsertId = 0;
-                var labelNeedInsertId = [];
-                var labelMemberInsertId = 0;
-
-                dbPool.getConnection(function(err, dbConn){
+                numOfJoinCheck(info.authority_user_id, function(err, count){
                     if (err) {
                         return callback(err);
                     } else {
-                        dbConn.beginTransaction(function(err){
-                            if (err) {
-                                dbConn.release();
-                                return callback(err);
-                            } else {
-                                async.waterfall([insertLabel, insertLabelNeed, insertLabelMember], function(err){
-                                    if (err) {
-                                        return dbConn.rollback(function(){
+                        if (count < 3) {
+                            // 중복되는 레이블 이름이 없고 만들려는 유저가 가입한 레이블의 수가 3보다 작을 때
+
+                            var sql_insert_label = 'INSERT INTO `thelabeldb`.`label` (`name`, `genre_id`, `text`, ' +
+                              '`imagepath`, `authority_user_id`) ' +
+                              'VALUES (?, ?, ?, ?, ?)';
+
+                            var sql_insert_label_need = 'INSERT INTO `thelabeldb`.`label_need` (`label_id`, `position_id`) ' +
+                              'VALUES (?, ?)';
+
+                            var sql_insert_label_member = 'INSERT INTO `thelabeldb`.`label_member` (`user_id`, `label_id`) ' +
+                              'VALUES (?, ?)';
+
+                            var labelInsertId = 0;
+                            var labelNeedInsertId = [];
+                            var labelMemberInsertId = 0;
+
+                            dbPool.getConnection(function(err, dbConn){
+                                if (err) {
+                                    return callback(err);
+                                } else {
+                                    dbConn.beginTransaction(function(err){
+                                        if (err) {
                                             dbConn.release();
-                                            callback(err, 2);
+                                            return callback(err);
+                                        } else {
+                                            async.waterfall([insertLabel, insertLabelNeed, insertLabelMember], function(err){
+                                                if (err) {
+                                                    return dbConn.rollback(function(){
+                                                        dbConn.release();
+                                                        callback(err, 3);
+                                                    });
+                                                } else {
+                                                    dbConn.commit(function(){
+                                                        dbConn.release();
+                                                        // 생성 결과가 필요할 경우를 위한 데이터 입력
+                                                        var shootResult = {};
+                                                        shootResult.label_id = labelInsertId;
+                                                        shootResult.need_ids = labelNeedInsertId;
+                                                        callback(null, 0);
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+
+                                function insertLabel(callback) {
+                                    dbConn.query(sql_insert_label, [info.label_name, info.genre_id, info.text,
+                                        info.imagepath, info.authority_user_id], function(err, result){
+                                        if (err) {
+                                            callback(err);
+                                        } else {
+                                            // 생성한 label_id 를 기반으로 need_position_id 와 label_member를 insert한다
+                                            labelInsertId = result.insertId;
+                                            callback(null, result.insertId);
+                                        }
+                                    });
+                                }
+
+                                function insertLabelNeed(label_id, callback) {
+                                    // position_id 가 복수개일 수 있으므로 async.each를 사용한다
+                                    async.each(info.position_id, function(item, done){
+                                        dbConn.query(sql_insert_label_need, [label_id, item], function(err, result){
+                                            if (err) {
+                                                done(err);
+                                            } else {
+                                                labelNeedInsertId.push(result.insertId);
+                                                done(null);
+                                            }
                                         });
+                                    }, function(err){
+                                        // done
+                                        if (err) {
+                                            callback(err);
+                                        } else {
+                                            callback(null);
+                                        }
+                                    });
+                                }
+
+                                function insertLabelMember(callback) {
+                                    if (err) {
+                                        callback(err);
                                     } else {
-                                        dbConn.commit(function(){
-                                            dbConn.release();
-                                            // 생성 결과가 필요할 경우를 위한 데이터 입력
-                                            var shootResult = {};
-                                            shootResult.label_id = labelInsertId;
-                                            shootResult.need_ids = labelNeedInsertId;
-                                            callback(null, 0);
+                                        dbConn.query(sql_insert_label_member, [info.authority_user_id, labelInsertId], function(err, result){
+                                            if (err) {
+                                                callback(err);
+                                            } else {
+                                                labelMemberInsertId = result.insertId;
+                                                callback(null);
+                                            }
                                         });
                                     }
-                                });
-                            }
-                        });
-                    }
-
-                    function insertLabel(callback) {
-                        dbConn.query(sql_insert_label, [info.label_name, info.genre_id, info.text,
-                            info.imagepath, info.authority_user_id], function(err, result){
-                            if (err) {
-                                callback(err);
-                            } else {
-                                // 생성한 label_id 를 기반으로 need_position_id 와 label_member를 insert한다
-                                labelInsertId = result.insertId;
-                                callback(null, result.insertId);
-                            }
-                        });
-                    }
-
-                    function insertLabelNeed(label_id, callback) {
-                        // position_id 가 복수개일 수 있으므로 async.each를 사용한다
-                        async.each(info.position_id, function(item, done){
-                            dbConn.query(sql_insert_label_need, [label_id, item], function(err, result){
-                                if (err) {
-                                    done(err);
-                                } else {
-                                    labelNeedInsertId.push(result.insertId);
-                                    done(null);
                                 }
-                            });
-                        }, function(err){
-                            // done
-                            if (err) {
-                                callback(err);
-                            } else {
-                                callback(null);
-                            }
-                        });
-                    }
 
-                    function insertLabelMember(callback) {
-                        if (err) {
-                            callback(err);
+                            });
                         } else {
-                            dbConn.query(sql_insert_label_member, [info.authority_user_id, labelInsertId], function(err, result){
-                                if (err) {
-                                    callback(err);
-                                } else {
-                                    labelMemberInsertId = result.insertId;
-                                    callback(null);
-                                }
-                            });
+                            // 중복되는 레이블 이름은 없지만 만들려는 유저가 가입한 레이블의 수가 3이상일 때
+                            callback(null, 2);
                         }
                     }
-
                 });
+                
             } else {
                 // 중복되는 레이블 이름이 있을 때
                 callback(null, 1);

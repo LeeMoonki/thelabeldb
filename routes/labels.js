@@ -148,6 +148,17 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
                                 });
                             }
                         });
+                    } else if (result === 2) {
+                        unlinkFile(files.image.path, function(err, code){
+                            if (err) {
+                                return next(err);
+                            } else {
+                                res.send({
+                                    message: '이미 가입한 레이블의 수가 3이상입니다',
+                                    resultCode: 3
+                                });
+                            }
+                        });
                     } else {
                         unlinkFile(files.image.path, function(err, code){
                             if (err) {
@@ -156,7 +167,7 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
                                 res.send({
                                     error: {
                                         message: '레이블 생성에 실패했습니다',
-                                        resultCode: 3
+                                        resultCode: 4
                                     }
                                 });
                             }
@@ -349,82 +360,6 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
             message: 'url 주소 확인'
         });
     }
-
-    // isAuthenticate 에서 dep && search 는 걸러서 들어오므로 다음 두 개만 체크한다
-    // if ((search && labelPage) || (labelPage && dup)) {
-    //     res.send({
-    //         error: {
-    //             message: '페이지를 불러오지 못했습니다'
-    //         }
-    //     });
-    // } else {
-    //     if (labelPage) {
-    //
-    //         // 레이블 페이지; 가입한 레이블 목록
-    //         Label.labelPage(req.user.id, function (err, list) {
-    //             if (err) {
-    //                 return next(err);
-    //             }
-    //             res.send(list);
-    //         });
-    //
-    //     } else if (search) {
-    //         // 레이블 찾기 구현
-    //         var page = parseInt(req.query.page) || 1;
-    //         var count = parseInt(req.query.count) || 10;
-    //
-    //         info = {};
-    //
-    //         info.genre_id = req.query.genre_id || req.user.genre_id;
-    //         info.position_id = req.query.position_id || req.user.position_id;
-    //
-    //         User.getBelongLabel(req.user.id, function(err, label_ids){
-    //             if (err) {
-    //                 return next(err);
-    //             } else {
-    //                 Label.searchLabel(label_ids, page, count, info, function(err, results){
-    //                     if (err) {
-    //                         return next(err);
-    //                     } else {
-    //                         res.send(results);
-    //                     }
-    //                 });
-    //             }
-    //         });
-    //
-    //     } else if (dup) {
-    //         if (req.query.label_name) {
-    //             // 레이블 이름 중복 체크
-    //             var label_name = req.query.label_name;
-    //             Label.nameDupCheck(label_name, function(err, result){
-    //                 if (err) {
-    //                     return next(err);
-    //                 } else {
-    //                     if (result === 0) {
-    //                         res.send({
-    //                             match: 0
-    //                         });
-    //                     } else {
-    //                         res.send({
-    //                             match: 1
-    //                         });
-    //                     }
-    //                 }
-    //             });
-    //         } else {
-    //             res.send({
-    //                 error: {
-    //                     message: '중복체크 실패'
-    //                 }
-    //             });
-    //         }
-    //     } else {
-    //         // 전체 레이블 목록
-    //         res.send({
-    //             message: 'url 주소 확인'
-    //         });
-    //     }
-    // }
 });
 
 
