@@ -467,7 +467,7 @@ function labelMain(labelId, page, count, callback) {
                                 'where label_id = ?';
 
     // member block
-    var sql_select_member_info = 'select user_id id, nickname, p.name possition, imagepath ' +
+    var sql_select_member_info = 'select user_id id, nickname, p.name position, imagepath ' +
                                  'from user u join label_member m on(u.id = m.user_id) ' +
                                              'join position p on(u.position_id = p.id) ' +
                                  'where label_id = ?';
