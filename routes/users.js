@@ -298,17 +298,25 @@ router.post('/', isSecure, function(req, res, next){
       if (err) {
         return next(err);
       } else if (!fields.email || !fields.nickname || !fields.password || !fields.gender || req.user) {
-        unlinkFile(files.image.path, function(err, code){
-          if (err) {
-            return next(err);
-          } else {
-            res.send({
-              error: {
-                message: '회원 가입을 실패했습니다'
-              }
-            });
-          }
-        });
+        if (files.image) {
+          unlinkFile(files.image.path, function(err, code){
+            if (err) {
+              return next(err);
+            } else {
+              res.send({
+                error: {
+                  message: '회원 가입을 실패했습니다'
+                }
+              });
+            }
+          });
+        } else {
+          res.send({
+            error: {
+              message: '회원 가입을 실패했습니다'
+            }
+          });
+        }
       } else {
         // log 생성
         logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
@@ -448,7 +456,6 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
   var id = req.user.id;
 
   if (pass) {
-    // todo : 안드로이드가 새로운 비밀번호와 다시 입력한 새로운 비밀번호가 같은지 체크해서 보내도록 한다
     // 비밀번호 설정
     // 현재 비밀번호, 새로운 비밀번호를 입력하지 않은 경우 에러생성
     if (!req.body.password || !req.body.new_password) {

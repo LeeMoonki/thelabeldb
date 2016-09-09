@@ -43,6 +43,24 @@ app.use('/labelProfiles', express.static(path.join(__dirname, 'uploads/images/la
 app.use('/userProfiles', express.static(path.join(__dirname, 'uploads/images/userProfiles')));
 app.use('/postFiles', express.static(path.join(__dirname, 'uploads/postFiles')));
 
+/*
+cookieParser 하고 scret 의 secret key의 값이 같아야 한다
+
+secret key 는 uuid 로 만들었다
+
+app.use(cookieParser(process.env.SECRET_KEY));
+secret: process.env.SECRET_KEY,
+
+saveUninitialized: false
+ 밑에
+ cookie: {
+    path: '/',
+    httpOnly: true,
+    secure: true, // http 에서는 cookie가 가지 않는다 default : false
+    // 이걸 true로 해놓는다
+    maxAge: 1000 * 60 * 60 * 24 * 30 } // 1000 밀리세컨드 60 초 60 분 24 시간 30 일
+
+ */
 
 app.use(session({
   secret: '4e4adcc0-f2bf-40ac-ba32-cd373cc0981a',
