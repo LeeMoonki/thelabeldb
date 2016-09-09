@@ -762,6 +762,27 @@ function getLabelSearchInfo(labelId, callback) {
 }
 
 function getLabelSearchInfoArr(labelIds, callback){
+    
+    /*
+    result example :
+    [ {
+        genre_id : 3,
+        position_id : [ 
+                        2,
+                        3,
+                        5
+                      ]
+      },
+      {
+        genre_id : 6,
+        position_id : [
+                        1
+                      ]
+      }
+    ]
+     */
+    
+    
     var sql_find_ids = 'select l.genre_id genre_id, n.position_id position_id ' +
                        'from label l join label_need n on(l.id = n.label_id) ' +
                        'where l.id = ?';
@@ -1001,11 +1022,11 @@ function search_sortGenre(content, page, count, callback) {
       'order by l.genre_id ' +
       'limit ?, ?';
     dbPool.getConnection(function (err, dbConn) {
-        dbConn.release();
         if (err) {
             return callback(err);
         }
         dbConn.query(sql_search, [content, (page - 1) * count, count], function (err, results) {
+            dbConn.release();
             if (err) {
                 return callback(err)
             }

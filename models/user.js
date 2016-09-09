@@ -997,11 +997,11 @@ function search_sortPosition(content, page, count, callback) {
         'limit ?, ?;';
 
     dbPool.getConnection(function (err, dbConn) {
-        dbConn.release();
         if (err) {
             return callback(err);
         }
         dbConn.query(sql_search, [content, (page - 1) * count, count], function (err, results) {
+          dbConn.release();
             if (err) {
                 return callback(err)
             }
