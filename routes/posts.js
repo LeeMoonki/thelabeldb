@@ -59,35 +59,55 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
             logger.log('debug', 'formidable files : %j', files, {});
             
             if (!fields.filetype || (!files.file && !fields.file) || !fields.opento) {
-                unlinkFile(files.file.path, function(err, code){
-                    if (err) {
-                        return next(err);
-                    } else {
-                        res.send({
-                            message: '필수 정보를 입력하십시오'
-                        });
-                    }
-                });
+                if (files.file) {
+                    unlinkFile(files.file.path, function(err, code){
+                        if (err) {
+                            return next(err);
+                        } else {
+                            res.send({
+                                message: '필수 정보를 입력하십시오'
+                            });
+                        }
+                    });
+                } else {
+                    res.send({
+                        message: '필수 정보를 입력하십시오'
+                    });
+                }
+                
             } else if (fields.filetype < 0 || fields.filetype > 2) {
-                unlinkFile(files.file.path, function(err, code){
-                    if (err) {
-                        return next(err);
-                    } else {
-                        res.send({
-                            message: 'filetype은 0, 1, 2 중에 하나의 값을 넣어야 합니다'
-                        });
-                    }
-                });
+                if (files.file) {
+                    unlinkFile(files.file.path, function(err, code){
+                        if (err) {
+                            return next(err);
+                        } else {
+                            res.send({
+                                message: 'filetype은 0, 1, 2 중에 하나의 값을 넣어야 합니다'
+                            });
+                        }
+                    });
+                } else {
+                    res.send({
+                        message: 'filetype은 0, 1, 2 중에 하나의 값을 넣어야 합니다'
+                    });
+                }
+                
             } else if (fields.opento < 0 || fields.opento > 2) {
-                unlinkFile(files.file.path, function(err, code){
-                    if (err) {
-                        return next(err);
-                    } else {
-                        res.send({
-                            message: 'opento는 0, 1, 2 중에 하나의 값을 넣어야 합니다'
-                        });
-                    }
-                });
+                if (files.file) {
+                    unlinkFile(files.file.path, function(err, code){
+                        if (err) {
+                            return next(err);
+                        } else {
+                            res.send({
+                                message: 'opento는 0, 1, 2 중에 하나의 값을 넣어야 합니다'
+                            });
+                        }
+                    });
+                } else {
+                    res.send({
+                        message: 'opento는 0, 1, 2 중에 하나의 값을 넣어야 합니다'
+                    });
+                }
             } else {
 
                 var post = {};

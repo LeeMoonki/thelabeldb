@@ -67,18 +67,27 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
         if (err) {
             return next(err);
         } else if (!formFields.label_name || !formFields.genre_id) {
-            unlinkFile(files.image.path, function(err, code){
-                if (err) {
-                    return next(err);
-                } else {
-                    res.send({
-                        error: {
-                            message: 'label_name과 genre_id는 필수정보입니다.',
-                            resultCode: 1
-                        }
-                    });
-                }
-            });
+            if (files.image) {
+                unlinkFile(files.image.path, function(err, code){
+                    if (err) {
+                        return next(err);
+                    } else {
+                        res.send({
+                            error: {
+                                message: 'label_name과 genre_id는 필수정보입니다.',
+                                resultCode: 1
+                            }
+                        });
+                    }
+                });
+            } else {
+                res.send({
+                    error: {
+                        message: 'label_name과 genre_id는 필수정보입니다.',
+                        resultCode: 1
+                    }
+                });
+            }
         }
         else {
             // log 생성
@@ -123,13 +132,17 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
 
             Label.createLabel(createInfo, function(err, result){
                 if (err) {
-                    unlinkFile(files.image.path, function(unlinkerr, code){
-                        if (unlinkerr) {
-                            return next(unlinkerr);
-                        } else {
-                            return next(err);
-                        }
-                    });
+                    if (files.image) {
+                        unlinkFile(files.image.path, function(unlinkerr, code){
+                            if (unlinkerr) {
+                                return next(unlinkerr);
+                            } else {
+                                return next(err);
+                            }
+                        });
+                    } else {
+                        return next(err);
+                    }
                 }
                 else {
                     if (result === 0) {
@@ -138,41 +151,63 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
                             resultCode: 0
                         });
                     } else if (result === 1) {
-                        unlinkFile(files.image.path, function(err, code){
-                            if (err) {
-                                return next(err);
-                            } else {
-                                res.send({
-                                    message: '이미 존재하는 레이블 이름입니다',
-                                    resultCode: 2
-                                });
-                            }
-                        });
+                        if (files.image) {
+                            unlinkFile(files.image.path, function(err, code){
+                                if (err) {
+                                    return next(err);
+                                } else {
+                                    res.send({
+                                        message: '이미 존재하는 레이블 이름입니다',
+                                        resultCode: 2
+                                    });
+                                }
+                            });
+                        } else {
+                            res.send({
+                                message: '이미 존재하는 레이블 이름입니다',
+                                resultCode: 2
+                            });
+                        }
                     } else if (result === 2) {
-                        unlinkFile(files.image.path, function(err, code){
-                            if (err) {
-                                return next(err);
-                            } else {
-                                res.send({
-                                    message: '이미 가입한 레이블의 수가 3이상입니다',
-                                    resultCode: 3
-                                });
-                            }
-                        });
+                        if (files.image) {
+                            unlinkFile(files.image.path, function(err, code){
+                                if (err) {
+                                    return next(err);
+                                } else {
+                                    res.send({
+                                        message: '이미 가입한 레이블의 수가 3이상입니다',
+                                        resultCode: 3
+                                    });
+                                }
+                            });
+                        } else {
+                            res.send({
+                                message: '이미 가입한 레이블의 수가 3이상입니다',
+                                resultCode: 3
+                            });
+                        }
                     } else {
-                        unlinkFile(files.image.path, function(err, code){
-                            if (err) {
-                                return next(err);
-                            } else {
-                                res.send({
-                                    error: {
-                                        message: '레이블 생성에 실패했습니다',
-                                        resultCode: 4
-                                    }
-                                });
-                            }
-                        });
-
+                        if (files.image) {
+                            unlinkFile(files.image.path, function(err, code){
+                                if (err) {
+                                    return next(err);
+                                } else {
+                                    res.send({
+                                        error: {
+                                            message: '레이블 생성에 실패했습니다',
+                                            resultCode: 4
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            res.send({
+                                error: {
+                                    message: '레이블 생성에 실패했습니다',
+                                    resultCode: 4
+                                }
+                            });
+                        }
                     }
                 }
             });
@@ -556,13 +591,17 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
                         Label.updateLabel(settingInfo, function(err, result){
                             // result 에는 update 된 row의 개수가 들어있다
                             if (err) {
-                                unlinkFile(files.image.path, function(unlinkerr, code){
-                                    if (unlinkerr) {
-                                        return next(unlinkerr);
-                                    } else {
-                                        return next(err);
-                                    }
-                                });
+                                if (files.image) {
+                                    unlinkFile(files.image.path, function(unlinkerr, code){
+                                        if (unlinkerr) {
+                                            return next(unlinkerr);
+                                        } else {
+                                            return next(err);
+                                        }
+                                    });
+                                } else {
+                                    return next(err);
+                                }
                             } else {
                                 // 그다음 need_position 에대한 수정을 진행
                                 // 먼저 need_position 이 수정 대상인지 살피고 수정 대상이면 tmpArr 에 수정 값들을 넣는다

@@ -299,9 +299,9 @@ router.post('/', isSecure, function(req, res, next){
         return next(err);
       } else if (!fields.email || !fields.nickname || !fields.password || !fields.gender || req.user) {
         if (files.image) {
-          unlinkFile(files.image.path, function(err, code){
-            if (err) {
-              return next(err);
+          unlinkFile(files.image.path, function(unlinkerr, code){
+            if (unlinkerr) {
+              return next(unlinkerr);
             } else {
               res.send({
                 error: {
@@ -395,51 +395,74 @@ router.post('/', isSecure, function(req, res, next){
             }
             else {
               if (result === 0) {
-                unlinkFile(files.image.path, function(err, code){
-                  if (err) {
-                    return next(err);
-                  } else {
-                    res.send({
-                      error: {
-                        message: 'email 혹은 nickname 중복입니다.'
-                      }
-                    });
-                  }
-                });
+                if (files.image) {
+                  unlinkFile(files.image.path, function(err, code){
+                    if (err) {
+                      return next(err);
+                    } else {
+                      res.send({
+                        error: {
+                          message: 'email 혹은 nickname 중복입니다.'
+                        }
+                      });
+                    }
+                  });
+                } else {
+                  res.send({
+                    error: {
+                      message: 'email 혹은 nickname 중복입니다.'
+                    }
+                  });
+                }
               } else if (result) {
                 res.send({
                   message: '회원 가입이 정상적으로 처리되었습니다',
                   id: result
                 });
               } else {
-                unlinkFile(files.image.path, function(err, code){
-                  if (err) {
-                    return next(err);
-                  } else {
-                    res.send({
-                      error: {
-                        message: '회원 가입을 실패했습니다'
-                      }
-                    });
-                  }
-                });
+                if (files.image) {
+                  unlinkFile(files.image.path, function(err, code){
+                    if (err) {
+                      return next(err);
+                    } else {
+                      res.send({
+                        error: {
+                          message: '회원 가입을 실패했습니다'
+                        }
+                      });
+                    }
+                  });
+                } else {
+                  res.send({
+                    error: {
+                      message: '회원 가입을 실패했습니다'
+                    }
+                  });
+                }
               }
             }
           });
         } else {
           // 만약에 입력한 정보에 문제가 있었다면
-          
-          unlinkFile(files.image.path, function(err, code){
-            if (err) {
-              return next(err);
-            } else {
-              res.send({
-                error: {
-                  message: 'position, genre, city, town 중 잘못된 정보가 존재합니다'
-                }
-              });
-            }
-          });
+          if (files.image) {
+            unlinkFile(files.image.path, function(err, code){
+              if (err) {
+                return next(err);
+              } else {
+                res.send({
+                  error: {
+                    message: 'position, genre, city, town 중 잘못된 정보가 존재합니다'
+                  }
+                });
+              }
+            });
+          } else {
+            res.send({
+              error: {
+                message: 'position, genre, city, town 중 잘못된 정보가 존재합니다'
+              }
+            });
+          }
         }
       }
     });
@@ -548,17 +571,17 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
             User.updateUser(settingInfo, function(err, result){
               // result 에는 update 된 row의 개수가 들어있다
               if (err) {
-                unlinkFile(files.image.path, function(err, code){
-                  if (err) {
-                    return next(err);
-                  } else {
-                    res.send({
-                      message: '수정 실패',
-                      resultCode: 0
-                    });
-                  }
-                });
-                return next(err);
+                if (files.image) {
+                  unlinkFile(files.image.path, function(unlinkerr, code){
+                    if (unlinkerr) {
+                      return next(unlinkerr);
+                    } else {
+                      return next(err);
+                    }
+                  });
+                } else {
+                  return next(err);
+                }
               } else {
                 res.send({
                   message: '수정 성공',
@@ -567,7 +590,6 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
               }
             });
             // update end
-
           }
         });
       }
