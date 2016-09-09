@@ -108,15 +108,14 @@ function dummyUploadPost(postInfo, callback) {
     callback(null, true);
 }
 
-function homePost(id, page, rowCount, meet, callback) {
+function homePost(id ,position_id, page, rowCount, meet, callback) {  // 함수명 변경
 
     var meet_sql =
         'select p.id post_id, u.id user_id, u.nickname nickname, p.filetype filetype, p.filepath file_path, date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, p.numlike numlike ' +
-        'from post p join user u on (p.user_id = u.id) ' +
-        'where p.opento =0 and p.filetype = 0 and u.position_id = ? ' +
-        'order by p.id desc ' +
-        'limit ?;';
-
+    'from post p join user u on (p.user_id = u.id) ' +
+    'where p.opento =0 and p.filetype = 0 and u.position_id = ? and not user_id = ? ' +
+    'order by p.id desc ' +
+    'limit 2';
 
     var data_sql =
         'select p.id post_id, u.id user_id, u.nickname nickname, p.filetype filetype, p.filepath file_path, date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, p.numlike numlike ' +
@@ -128,81 +127,58 @@ function homePost(id, page, rowCount, meet, callback) {
     var home = {};
 
     var meetList = [];
-    var list = [];
-
+    var normalList = [];
 
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
         }
-
-        async.waterfall([a, b], function (err) {
+        async.waterfall([meetPost, normalPost], function (err) {
             dbConn.release();
             if (err) {
                 return callback(err);
             }
-
             home.page = page;
             home.count = rowCount;
             home.meet = meet;
 
-            var meetData = {};
             var meetArray = [];
-            for (var i = 0; i < meetList.length; i++) {
-                // meetData.id = meetList[i].post_id;
-                // meetData.user_id = meetList[i].user_id;
-                // meetData.nickname = meetList[i].nickname;
-                // meetData.filetype = meetList[i].filetype;
-                // meetData.file_path = meetList[i].file_path;
-                // meetData.date = meetList[i].ctime;
-                // meetData.numlike = meetList[i].numlike;
-
-                meetArray.push(meetList[i]);
-
-                // meetArray.push(meetData);
+            if (meetList.user_id !== id) {
+                for (var i = 0; i < meetList.length; i++) {
+                    meetArray.push(meetList[i]);
+            }
+            console.log(meetArray);
 
             }
 
-            var normalData = {};
             var normal = [];
-            for (var i = 0; i < list.length; i++) {
-                // normalData.id = list[i].position_id;
-                // normalData.user_id = list[i].user_id;
-                // normalData.nickname = list[i].nickname;
-                // normalData.filetype = list[i].filetype;
-                // normalData.file_path = list[i].file_path;
-                // normalData.date = list[i].post_ctime;
-                // normalData.numlike = list[i].post_numlike;
-
-                normal.push(list[i]);
-
-                // normal.push(normalData);
+            for (var i = 0; i < normalList.length; i++) {
+                normal.push(normalList[i]);
             }
             home.meetdata = meetArray;
             home.data = normal;
-
             callback(null, home);
         });
 
-        function a(callback) {
-            dbConn.query(meet_sql, [id, meet], function (err, result) {
+        function meetPost(callback) {
+            dbConn.query(meet_sql, [position_id, id], function (err, results) {
                 if (err) {
                     return callback(err);
                 }
                 else {
-                    meetList = result;
-                    callback(null, true);
+                    meetList = results;
+                    callback(null);
                 }
             });
         }
 
-        function b(flag, callback) {
+        function normalPost(callback) {
             dbConn.query(data_sql, [(page - 1) * rowCount, rowCount], function (err, results) {
                 if (err) {
                     return callback(err);
                 }
                 else {
-                    list = results;
+                    normalList = results;
                     callback(null);
                 }
             });
@@ -332,7 +308,7 @@ function showHomePosts(info, callback){
 }
 
 function getAPostInfo(postId, callback) {
-    
+
     var sql_select_a_post = 'select text, opento from post where id = ? ';
 
     dbPool.getConnection(function(err, dbConn){
@@ -352,7 +328,7 @@ function getAPostInfo(postId, callback) {
 }
 
 function updatePost(info, callback) {
-    
+
     var sql_update_post = 'UPDATE `thelabeldb`.`post` SET `text`=?, `opento`=? WHERE `id`=? ';
 
     dbPool.getConnection(function(err, dbConn){

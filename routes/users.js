@@ -79,6 +79,8 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
     });
 
     // 사용자 검색 페이지 끝
+
+    // 사람 찾기 텍스트검색
   } else if (nameSearch) {
 
     var sort = req.query.sort || 'genre';
@@ -90,7 +92,7 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
     var content = '%' + text + '%';
 
     if (sort === 'genre') {
-      User.search_genre(content, page, count, function (err, result) {
+      User.search_sortGenre(content, page, count, function (err, result) {
         if (err) {
           return next(err);
         } else {
@@ -106,7 +108,7 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
         }
       });
     } else if (sort === 'position') {
-      User.search_position(content, page, count, function (err, result) {
+      User.search_sortPosition(content, page, count, function (err, result) {
         if (err) {
           return next(err);
         } else {
@@ -122,7 +124,7 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
         }
       });
     } else if (sort === 'city') {
-      User.search_city(content, page, count, function (err, result) {
+      User.search_sortCity(content, page, count, function (err, result) {
         if (err) {
           return next(err);
         } else {
@@ -138,7 +140,7 @@ router.get('/', isSecure, isAuthenticate, function(req, res, next) {
         }
       });
     } else if (sort === '') {
-      User.search_genre(content, page, count, function (err, result) {
+      User.search_sortGenre(content, page, count, function (err, result) {
         if (err) {
           return next(err);
         } else {
@@ -479,6 +481,7 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
   var id = req.user.id;
 
   if (pass) {
+    // todo : 안드로이드가 새로운 비밀번호와 다시 입력한 새로운 비밀번호가 같은지 체크해서 보내도록 한다
     // 비밀번호 설정
     // 현재 비밀번호, 새로운 비밀번호를 입력하지 않은 경우 에러생성
     if (!req.body.password || !req.body.new_password) {
@@ -590,6 +593,7 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
               }
             });
             // update end
+
           }
         });
       }

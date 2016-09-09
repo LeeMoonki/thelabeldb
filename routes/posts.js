@@ -17,7 +17,7 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
     // log 생성
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     logger.log('debug', 'query: %j', req.query, {});
-    
+
     var page = parseInt(req.query.page) || 1;
     var count = parseInt(req.query.count) || 10;
     var meet = parseInt(req.query.meet) || 2;
@@ -44,7 +44,7 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
 
     // log 생성
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
-    
+
     var form = new formidable.IncomingForm();
     form.uploadDir = path.join(__dirname, '../uploads/postFiles');
     form.keepExtensions = true;
@@ -57,7 +57,7 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
             // log 생성
             logger.log('debug', 'formidable fields : %j', fields, {});
             logger.log('debug', 'formidable files : %j', files, {});
-            
+
             if (!fields.filetype || (!files.file && !fields.file) || !fields.opento) {
                 if (files.file) {
                     unlinkFile(files.file.path, function(err, code){
@@ -113,7 +113,7 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
                 var post = {};
 
                 post.user_id = parseInt(req.user.id);
-                
+
                 post.filetype = parseInt(fields.filetype);
                 if (post.filetype === 2) {
                     post.filepath = fields.file;
@@ -126,7 +126,7 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
                 post.filetitle = fields.filetitle || '제목없음';
                 post.text = fields.text;
                 post.label_id = parseInt(fields.label_id) || 0;
-                
+
 
                 Post.postUpload(post, function (err, result) {
                     if (err) {
@@ -144,7 +144,7 @@ router.put('/:post_id', isAuthenticate, isSecure, function(req, res, next){
 
     // log 생성
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
-    
+
     var post_id = parseInt(req.params.post_id);
 
     var settingInfo = {};

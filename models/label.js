@@ -34,7 +34,7 @@ function nameDupCheck(name, callback) {
             });
         }
     });
-    
+
 }
 
 function numOfJoinCheck(userId, callback) {
@@ -59,7 +59,7 @@ function numOfJoinCheck(userId, callback) {
 }
 
 function createLabel(info, callback) {
-    
+
     nameDupCheck(info.label_name, function(err, count){
         if (err) {
             return callback(err);
@@ -173,7 +173,7 @@ function createLabel(info, callback) {
                         }
                     }
                 });
-                
+
             } else {
                 // 중복되는 레이블 이름이 있을 때
                 callback(null, 1);
@@ -978,6 +978,7 @@ function searchLabel(label_ids, page, count, info, callback){
     });
 }
 
+
 function findAlreadyIndex(indexArr, index, callback) {
     var length = indexArr.length;
     var flag = false;
@@ -990,7 +991,7 @@ function findAlreadyIndex(indexArr, index, callback) {
     callback(flag);
 }
 
-function search_genre(content, page, count, callback) {
+function search_sortGenre(content, page, count, callback) {
     var sql_search = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
       'g.name label_genre, p.name label_need_position ' +
       'from label l join label_need n on(l.id = n.label_id) ' +
@@ -1000,6 +1001,7 @@ function search_genre(content, page, count, callback) {
       'order by l.genre_id ' +
       'limit ?, ?';
     dbPool.getConnection(function (err, dbConn) {
+        dbConn.release();
         if (err) {
             return callback(err);
         }
@@ -1018,7 +1020,7 @@ function search_genre(content, page, count, callback) {
     });
 }
 
-function search_position(content, page, count, callback) {
+function search_sortPosition(content, page, count, callback) {
     var sql_search = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
       'g.name label_genre, p.name label_need_position ' +
       'from label l join label_need n on(l.id = n.label_id) ' +
@@ -1032,6 +1034,7 @@ function search_position(content, page, count, callback) {
             return callback(err);
         }
         dbConn.query(sql_search, [content, (page - 1) * count, count], function (err, results) {
+            dbConn.release();
             if (err) {
                 return callback(err)
             }
@@ -1171,8 +1174,8 @@ module.exports.searchLabel = searchLabel;
 module.exports.getLabelSearchInfo = getLabelSearchInfo;
 module.exports.getLabelSearchInfoArr = getLabelSearchInfoArr;
 
-module.exports.search_genre = search_genre;
-module.exports.search_position = search_position;
+module.exports.search_sortGenre = search_sortGenre;
+module.exports.search_sortPosition = search_sortPosition;
 
 module.exports.get_deleteMember = get_deleteMember;
 module.exports.get_myprofile = get_myprofile;

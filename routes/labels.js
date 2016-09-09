@@ -32,7 +32,7 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
 
     var formFields = {};
 
-    form.on('field', function(name, value){
+    form.on('field', function (name, value) {
 
         function makeFormFields(prop, val) {
             if (!formFields[prop]) {
@@ -51,6 +51,7 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
                 }
             }
         }
+
         // 원래 []는 [0-9a-zA-Z] 문자 중 하나라는 뜻
         var re1 = /\[\]/;
         var re2 = /\[\d+\]/; // + 는 하나 이상
@@ -63,7 +64,7 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
 
     });
 
-    form.parse(req, function(err, fields, files) {
+    form.parse(req, function (err, fields, files) {
         if (err) {
             return next(err);
         } else if (!formFields.label_name || !formFields.genre_id) {
@@ -94,7 +95,7 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
             logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
             logger.log('debug', 'formidable fields : %j', fields, {});
             logger.log('debug', 'formidable files : %j', files, {});
-            
+
             var createInfo = {};
 
             createInfo.authority_user_id = req.user.id;
@@ -106,10 +107,10 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
             if (formFields.need_position_id !== undefined) {
                 // need_position_id 가 있다면 parseInt 해준다
                 var tempArr = [];
-                async.each(formFields.need_position_id, function(item, done){
+                async.each(formFields.need_position_id, function (item, done) {
                     tempArr.push(parseInt(item));
                     done(null);
-                }, function(err){
+                }, function (err) {
                     // done
                     if (err) {
                         // done(err) 발생하지 않는다
@@ -130,7 +131,7 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
                 createInfo.imagepath = path.join(form.uploadDir, '/theLabel.png');
             }
 
-            Label.createLabel(createInfo, function(err, result){
+            Label.createLabel(createInfo, function (err, result) {
                 if (err) {
                     if (files.image) {
                         unlinkFile(files.image.path, function(unlinkerr, code){
@@ -215,12 +216,12 @@ router.post('/', isSecure, isAuthenticate, function (req, res, next) {
     });
 });
 
-router.post('/:label_id', isSecure, isAuthenticate, function(req, res, next){
+router.post('/:label_id', isSecure, isAuthenticate, function (req, res, next) {
 
     // log 생성
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     logger.log('debug', 'query: %j', req.query, {});
-    
+
     // 레이블 가입을 위한 변수
     var join = parseBoolean(req.query.join) || false;
 
@@ -230,12 +231,12 @@ router.post('/:label_id', isSecure, isAuthenticate, function(req, res, next){
         joinInfo.label_id = parseInt(req.params.label_id);
         joinInfo.user_id = req.user.id;
 
-        Label.checkCanJoin(joinInfo.user_id, joinInfo.label_id, function(err, code){
+        Label.checkCanJoin(joinInfo.user_id, joinInfo.label_id, function (err, code) {
             if (err) {
                 return next(err);
             } else if (code === 0) {
                 // 가입 가능
-                Label.joinLabel(joinInfo, function(err, result){
+                Label.joinLabel(joinInfo, function (err, result) {
                     if (err) {
                         return next(err);
                     } else {
@@ -260,7 +261,6 @@ router.post('/:label_id', isSecure, isAuthenticate, function(req, res, next){
                 }
             }
         });
-
     } else {
         res.send({
             message: 'join 값을 확인하십시오',
@@ -274,10 +274,11 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
     // log 생성
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     logger.log('debug', 'query: %j', req.query, {});
-    
+
     var search = parseBoolean(req.query.search) || false;
     var dup = parseBoolean(req.query.dup) || false;
     var nameSearch = parseBoolean(req.query.nameSearch) || false;
+
 
     // var labelPage = parseBoolean(req.query.labelPage) || false;
 
@@ -291,11 +292,11 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
         info.genre_id = req.query.genre_id || req.user.genre_id;
         info.position_id = req.query.position_id || req.user.position_id;
 
-        User.getBelongLabel(req.user.id, function(err, label_ids){
+        User.getBelongLabel(req.user.id, function (err, label_ids) {
             if (err) {
                 return next(err);
             } else {
-                Label.searchLabel(label_ids, page, count, info, function(err, results){
+                Label.searchLabel(label_ids, page, count, info, function (err, results) {
                     if (err) {
                         return next(err);
                     } else {
@@ -315,7 +316,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
         var content = '%' + text + '%';
 
         if (sort === 'genre') {
-            Label.search_genre(content, page, count, function (err, result) {
+            Label.search_sortGenre(content, page, count, function (err, result) {
                 if (err) {
                     return next(err);
                 } else {
@@ -331,7 +332,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                 }
             });
         } else if (sort === 'position') {
-            Label.search_position(content, page, count, function (err, result) {
+            Label.search_sortPosition(content, page, count, function (err, result) {
                 if (err) {
                     return next(err);
                 } else {
@@ -347,7 +348,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                 }
             });
         } else if (sort === '') {
-            Label.search_genre(content, page, count, function (err, result) {
+            Label.search_sortGenre(content, page, count, function (err, result) {
                 if (err) {
                     return next(err);
                 } else {
@@ -367,7 +368,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
         if (req.query.label_name) {
             // 레이블 이름 중복 체크
             var label_name = req.query.label_name;
-            Label.nameDupCheck(label_name, function(err, result){
+            Label.nameDupCheck(label_name, function (err, result) {
                 if (err) {
                     return next(err);
                 } else {
@@ -398,7 +399,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
 });
 
 
-router.get('/me', isSecure, isAuthenticate, function(req, res, next){
+router.get('/me', isSecure, isAuthenticate, function (req, res, next) {
     // log 생성
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     // 레이블 페이지; 가입한 레이블 목록
@@ -410,13 +411,12 @@ router.get('/me', isSecure, isAuthenticate, function(req, res, next){
     });
 });
 
-
-router.get('/:label_id', isSecure, isAuthenticate, function(req, res, next){
+router.get('/:label_id', isSecure, isAuthenticate, function (req, res, next) {
 
     // log 생성
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     logger.log('debug', 'query: %j', req.query, {});
-    
+
     var user_id = req.user.id;
     var label_id = parseInt(req.params.label_id);
     var members = parseBoolean(req.query.members) || false;
@@ -451,17 +451,17 @@ router.get('/:label_id', isSecure, isAuthenticate, function(req, res, next){
             // 레이블 탈퇴 GET
             Label.get_deleteMember(label_id, function (err, result) {
                 if (err) {
-                    return next (err);
+                    return next(err);
                 } else {
-                    if (result[0].authority_user_id !== user_id ) {
+                    if (result[0].authority_user_id !== user_id) {
                         Label.get_myprofile(label_id, user_id, function (err, myprofile) {
                             if (err) {
-                                return next (err);
+                                return next(err);
                             }
-                            res.send({users : myprofile});
+                            res.send({users: myprofile});
                         });
                     } else {
-                        res.send({users : result});
+                        res.send({users: result});
                     }
                 }
             });
@@ -483,12 +483,12 @@ router.get('/:label_id', isSecure, isAuthenticate, function(req, res, next){
 
 
 //레이블 설정
-router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
+router.put('/:label_id', isSecure, isAuthenticate, function (req, res, next) {
 
     // log 생성
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     logger.log('debug', 'query: %j', req.query, {});
-    
+
     // 레이블 권한위임을 위한 변수
     var members = parseBoolean(req.query.members) || false;
 
@@ -499,14 +499,14 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
 
         // log 생성
         logger.log('debug', 'body: %j', req.body, {});
-        
+
         // 레이블 권한 변경
         var user_id = parseInt(req.body.user_id);
         if (!user_id) {
             // user_id 를 입력하지 않았을 때
             return next(new Error('user_id 가 필요합니다'));
         } else {
-            Label.authorize(user_id, label_id, function(err, result){
+            Label.authorize(user_id, label_id, function (err, result) {
                 if (err) {
                     return next(err);
                 } else {
@@ -522,7 +522,7 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
         // 레이블 수정
         var settingInfo = {};
 
-        Label.showSettingLabelPage(label_id, 1, function(err, results){
+        Label.showSettingLabelPage(label_id, 1, function (err, results) {
             if (err) {
                 return next(err);
             } else {
@@ -534,7 +534,7 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
 
                 var formFields = {};
 
-                form.on('field', function(name, value){
+                form.on('field', function (name, value) {
 
                     function makeFormFields(prop, val) {
                         if (!formFields[prop]) {
@@ -553,6 +553,7 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
                             }
                         }
                     }
+
                     // 원래 []는 [0-9a-zA-Z] 문자 중 하나라는 뜻
                     var re1 = /\[\]/;
                     var re2 = /\[\d+\]/; // + 는 하나 이상
@@ -565,7 +566,7 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
 
                 });
 
-                form.parse(req, function(err, fields, files) {
+                form.parse(req, function (err, fields, files) {
                     if (err) {
                         return next(err);
                     } else {
@@ -573,13 +574,13 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
                         // log 생성
                         logger.log('debug', 'formidable fields : %j', fields, {});
                         logger.log('debug', 'formidable files : %j', files, {});
-                        
+
                         settingInfo.label_id = label_id;
                         // 레이블 이름은 수정하지 않는다
                         // settingInfo.label_name = formFields.label_name || results.label_name;
                         settingInfo.text = formFields.text || results.text;
                         settingInfo.genre_id = parseInt(formFields.genre_id) || results.genre_id;
-                        
+
                         if (files.image !== undefined) {
                             settingInfo.imagepath = files.image.path;
                         } else {
@@ -588,7 +589,7 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
 
                         // update start
                         // need_position 을 제외한 수정부터 진행
-                        Label.updateLabel(settingInfo, function(err, result){
+                        Label.updateLabel(settingInfo, function (err, result) {
                             // result 에는 update 된 row의 개수가 들어있다
                             if (err) {
                                 if (files.image) {
@@ -608,10 +609,10 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
                                 if (formFields.need_position_id !== undefined) {
                                     // need_position_id 가 있다면 parseInt 해준다
                                     var tmpArr = [];
-                                    async.each(formFields.need_position_id, function(item, done){
+                                    async.each(formFields.need_position_id, function (item, done) {
                                         tmpArr.push(parseInt(item));
                                         done(null);
-                                    }, function(err){
+                                    }, function (err) {
                                         // done
                                         if (err) {
                                             // done(err) 발생하지 않는다
@@ -619,16 +620,16 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
                                             // tmpArr 에 need_position 값들이 들어갔다
                                             // showSettingLabelPage 에서도 need_position을 배열에 저장한다
                                             Label.updateLabelNeedPosition(results.need_position, tmpArr
-                                              , label_id, function(err, result){
-                                                  if (err) {
-                                                      return next(err);
-                                                  } else {
-                                                      res.send({
-                                                          message: '레이블 수정에 성공했습니다',
-                                                          resultCode: 1
-                                                      });
-                                                  }
-                                              });
+                                                , label_id, function (err, result) {
+                                                    if (err) {
+                                                        return next(err);
+                                                    } else {
+                                                        res.send({
+                                                            message: '레이블 수정에 성공했습니다',
+                                                            resultCode: 1
+                                                        });
+                                                    }
+                                                });
                                         }
                                     });
 
@@ -649,16 +650,13 @@ router.put('/:label_id', isSecure, isAuthenticate,function (req, res, next) {
     }
 });
 
-// router.put('/', isSecure, function(req, res, next) {
-//     res.send('label');
-//
 router.delete('/:label_id', isSecure, isAuthenticate, function (req, res, next) {
-    
+
     // log 생성
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     logger.log('debug', 'query: %j', req.query, {});
     logger.log('debug', 'body: %j', req.body, {});
-    
+
     var user_id = parseInt(req.body.user_id);
     var label_id = parseInt(req.params.label_id);
     var members = parseBoolean(req.query.members) || false;
