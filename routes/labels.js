@@ -315,6 +315,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
         var msg = {};
         msg.message = '검색 결과가 없습니다.';
 
+
         var sort = req.query.sort || 'genre';
 
         var page = parseInt(req.query.page) || 1;
