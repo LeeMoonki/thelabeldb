@@ -1,12 +1,16 @@
 var express = require('express');
 var router = express.Router();
 var gcm = require('node-gcm');
+var logger = require('./common').logger;
 
 var Message = require('../models/message');
 var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
 
 router.post('/', isAuthenticate, isSecure, function(req, res, next){
+  // log 생성
+  logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+  logger.log('debug', 'body: %j', req.body, {});
 
   if (!req.body.user_id || !req.body.message) {
     res.send({
@@ -54,6 +58,7 @@ router.post('/', isAuthenticate, isSecure, function(req, res, next){
         if (err) {
           return next(err);
         }
+        console.log(response);
         res.send(response);
       });
 
