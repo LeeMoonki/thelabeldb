@@ -287,7 +287,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
         var page = parseInt(req.query.page) || 1;
         var count = parseInt(req.query.count) || 10;
 
-        info = {};
+        var info = {};
 
         info.genre_id = req.query.genre_id || req.user.genre_id;
         info.position_id = req.query.position_id || req.user.position_id;
@@ -300,7 +300,11 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                     if (err) {
                         return next(err);
                     } else {
-                        res.send(results);
+                        var searchResult = {};
+                        searchResult.page = page;
+                        searchResult.count = count;
+                        searchResult.result = results;
+                        res.send(searchResult);
                     }
                 });
             }
