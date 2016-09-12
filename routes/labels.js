@@ -312,6 +312,9 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
 
     } else if (nameSearch) {
 
+        var msg = {};
+        msg.message = '검색 결과가 없습니다.';
+
         var sort = req.query.sort || 'genre';
 
         var page = parseInt(req.query.page) || 1;
@@ -329,7 +332,8 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                             message : '검색어를 입력하시오.'
                         });
                     } else if (result.result.length === 0) {
-                        res.send('검색 결과가 없습니다.');
+                        res.send({
+                            error : msg });
                     } else {
                         res.send(result);
                     }
@@ -345,7 +349,8 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                             message : '검색어를 입력하시오.'
                         });
                     } else if (result.result.length === 0) {
-                        res.send('검색 결과가 없습니다.');
+                        res.send({
+                            error : msg });
                     } else {
                         res.send(result);
                     }
@@ -361,7 +366,8 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                             message : '검색어를 입력하시오.'
                         });
                     } else if (result.result.length === 0) {
-                        res.send('검색 결과가 없습니다.');
+                        res.send({
+                            error : msg });
                     } else {
                         res.send(result);
                     }
