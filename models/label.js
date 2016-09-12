@@ -454,12 +454,12 @@ function showSettingLabelPage(labelId, type, callback){
                 } else {
                     var label = {};
                     var filename = path.basename(results[0].image_path);
-                    label.label_name = results[0].label_name;
+                    label.name = results[0].label_name;
                     label.text = results[0].text;
                     if (type === 1) {
                         label.dbImagePath = results[0].image_path;
                     }
-                    label.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                    label.imagepath = url.resolve(hostAddress, '/labelProfiles/' + filename);
                     label.genre_id = results[0].genre_id;
                     label.genre = results[0].genre;
                     // async.each
@@ -478,7 +478,7 @@ function showSettingLabelPage(labelId, type, callback){
                         if (err) {
                             // done(err) 발생하지 않음
                         } else {
-                            label.need_position = tmpArr;
+                            label.needposition = tmpArr;
                             callback(null, label);
                         }
                     });
@@ -1031,12 +1031,30 @@ function search_sortGenre(content, page, count, callback) {
                 return callback(err)
             }
             var label = {};
+            var labelResults = [];
 
             label.page = page;
             label.count = count;
 
-            label.result = results;
-            callback(null, label);
+            async.each(results, function(row, done){
+                var tmp = {};
+                var filename = path.basename(row.label_image_path);
+                tmp.label_id = row.label_id;
+                tmp.label_name = row.label_name;
+                tmp.label_image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                tmp.label_genre = row.label_genre;
+                tmp.label_need_position = row.label_need_position;
+                labelResults.push(tmp);
+                done(null);
+            }, function(err){
+                // done
+                if (err) {
+                    // done(err) 발생하지 않음
+                } else {
+                    label.result = labelResults;
+                    callback(null, label);
+                }
+            });
         });
     });
 }
@@ -1060,12 +1078,29 @@ function search_sortPosition(content, page, count, callback) {
                 return callback(err)
             }
             var label = {};
+            var labelResults = [];
 
             label.page = page;
             label.count = count;
-
-            label.result = results;
-            callback(null, label);
+            async.each(results, function(row, done){
+                var tmp = {};
+                var filename = path.basename(row.label_image_path);
+                tmp.label_id = row.label_id;
+                tmp.label_name = row.label_name;
+                tmp.label_image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                tmp.label_genre = row.label_genre;
+                tmp.label_need_position = row.label_need_position;
+                labelResults.push(tmp);
+                done(null);
+            }, function(err){
+                // done
+                if (err) {
+                    // done(err) 발생하지 않음
+                } else {
+                    label.result = labelResults;
+                    callback(null, label);
+                }
+            });
         });
     });
 }

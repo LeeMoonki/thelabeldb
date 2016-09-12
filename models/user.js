@@ -975,12 +975,32 @@ function search_sortGenre(content, page, count, callback) {
                 return callback(err)
             }
             var user = {};
+            var userResults = [];
 
             user.page = page;
             user.count = count;
 
-            user.result = results;
-            callback(null, user);
+            async.each(results, function(item, done){
+                var tmp = {};
+                var filename = path.basename(item.imagepath);
+                tmp.user_id = item.user_id;
+                tmp.user_nickname = item.nickname;
+                tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                tmp.user_position = item.position;
+                tmp.user_genre = item.genre;
+                tmp.user_city = item.city;
+                tmp.user_town = item.town;
+                userResults.push(tmp);
+                done(null)
+            }, function(err){
+                // done
+                if (err) {
+                    // done(err) 발생하지 않음
+                } else {
+                    user.result = userResults;
+                    callback(null, user);
+                }
+            });
         });
     });
 }
@@ -1006,12 +1026,32 @@ function search_sortPosition(content, page, count, callback) {
                 return callback(err)
             }
             var user = {};
+            var userResults = [];
 
             user.page = page;
             user.count = count;
 
-            user.result = results;
-            callback(null, user);
+            async.each(results, function(item, done){
+                var tmp = {};
+                var filename = path.basename(item.imagepath);
+                tmp.user_id = item.user_id;
+                tmp.user_nickname = item.nickname;
+                tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                tmp.user_position = item.position;
+                tmp.user_genre = item.genre;
+                tmp.user_city = item.city;
+                tmp.user_town = item.town;
+                userResults.push(tmp);
+                done(null)
+            }, function(err){
+                // done
+                if (err) {
+                    // done(err) 발생하지 않음
+                } else {
+                    user.result = userResults;
+                    callback(null, user);
+                }
+            });
         });
     });
 }
@@ -1037,21 +1077,38 @@ function search_sortCity(content, page, count, callback) {
                 return callback(err)
             }
             var user = {};
+            var userResults = [];
 
             user.page = page;
             user.count = count;
 
-            user.result = results;
-            callback(null, user);
+            async.each(results, function(item, done){
+                var tmp = {};
+                var filename = path.basename(item.imagepath);
+                tmp.user_id = item.user_id;
+                tmp.user_nickname = item.nickname;
+                tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                tmp.user_position = item.position;
+                tmp.user_genre = item.genre;
+                tmp.user_city = item.city;
+                tmp.user_town = item.town;
+                userResults.push(tmp);
+                done(null)
+            }, function(err){
+                // done
+                if (err) {
+                    // done(err) 발생하지 않음
+                } else {
+                    user.result = userResults;
+                    callback(null, user);
+                }
+            });
         });
     });
 }
 
 // User 검색 끝
 
-function deleteUser(id, callback) {
-
-}
 
 
 module.exports.findByEmail = findByEmail;
@@ -1072,7 +1129,6 @@ module.exports.searchUsersByUser = searchUsersByUser;
 module.exports.searchUsersByLabel = searchUsersByLabel;
 module.exports.getBelongLabel = getBelongLabel;
 module.exports.shortUserInfo = shortUserInfo;
-module.exports.deleteUser = deleteUser;
 
 module.exports.search_sortGenre = search_sortGenre;
 module.exports.search_sortPosition = search_sortPosition;
