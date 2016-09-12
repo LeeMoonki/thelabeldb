@@ -637,6 +637,78 @@ function checkPassword(passInfo, callback) {
 }
 
 
+// GCM 시작
+
+function checkRegID(userId, regID, callback) {
+    // userId 를 갖는 사용자가 동일한 registrationID를 갖고 있을 경우에는 놔두고
+    // 아닌 경우 새로 로그인 할 때 받은 registrationID 로 바꿔주는 모듈
+
+    var sql_select_regID = 'select registrationID from user where id = ? ';
+    var sql_update_regID = 'UPDATE `thelabeldb`.`user` SET `registrationID`=? WHERE `id`=? ';
+    
+    dbPool.getConnection(function(err, dbConn){
+        if (err) {
+            return callback(err);
+        } else {
+            dbConn.beginTransaction(function(err){
+                if (err) {
+                    dbConn.release();
+                    return callback(err);
+                } else {
+                    async.waterfall([checkSameRegID, updateRegID], function(err){
+                        if (err) {
+                            return dbConn.rollback(function(){
+                                dbConn.release();
+                                callback(err);
+                            });
+                        } else {
+                            dbConn.commit(function(){
+                                dbConn.release();
+                                callback(null);
+                            });
+                        }
+                    });
+                }
+            });
+            
+            function checkSameRegID(callback) {
+                dbConn.query(sql_select_regID, [userId], function(err, results){
+                    if (err) {
+                        return callback(err)
+                    } else {
+                        if (results[0].registrationID === regID) {
+                            // 같을 경우 update 실행하지 않는다
+                            callback(null, false);
+                        } else {
+                            // 다를 경우 update 실행
+                            callback(null, true);
+                        }
+                    }
+                });
+            }
+            
+            function updateRegID(flag, callback) {
+                if (flag) {
+                    // 다를 경우
+                    dbConn.query(sql_update_regID, [regID, userId], function(err, result){
+                        if (err) {
+                            return callback(err);
+                        } else {
+                            callback(null);
+                        }
+                    });
+                } else {
+                    // 같을 경우
+                    callback(null);
+                }
+            }
+            
+        }
+    });
+}
+
+// GCM 끝
+
 // User 검색 시작
 // 특정 유저가 속한 레이블 목록을 검색
 function getBelongLabel(userId, callback) {
@@ -1150,6 +1222,7 @@ function search_sortCity(content, page, count, callback) {
 
 
 
+
 module.exports.findByEmail = findByEmail;
 module.exports.verifyPassword = verifyPassword;
 module.exports.findUser = findUser;
@@ -1166,6 +1239,7 @@ module.exports.updatePassword = updatePassword;
 module.exports.checkPassword = checkPassword;
 module.exports.searchUsersByUser = searchUsersByUser;
 module.exports.searchUsersByLabel = searchUsersByLabel;
+module.exports.checkRegID = checkRegID;
 module.exports.getBelongLabel = getBelongLabel;
 module.exports.shortUserInfo = shortUserInfo;
 
