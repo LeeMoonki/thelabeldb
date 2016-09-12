@@ -31,6 +31,9 @@ router.post('/', isAuthenticate, isSecure, function(req, res, next){
       tokens.push(regId);
 
       var message = new gcm.Message({
+        data: {
+          msg: msg
+        },
         notification: {
           body: msg
         }
