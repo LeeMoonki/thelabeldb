@@ -1,92 +1,70 @@
 var express = require('express');
 var router = express.Router();
+var gcm = require('node-gcm');
+var logger = require('./common').logger;
 
 var Message = require('../models/message');
 var isAuthenticate = require('./common').isAuthenticate;
 var isSecure = require('./common').isSecure;
 
+router.post('/', isAuthenticate, isSecure, function(req, res, next){
+  // log 생성
+  logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+  logger.log('debug', 'body: %j', req.body, {});
 
-router.get('/', isAuthenticate, isSecure,function(req, res, next) {
-
-  if (req.query.you) {
-    var page = parseInt(req.query.page) || 1;
-    var count = parseInt(req.query.count) || 5;
-
-    Message.dummyShowMessage(req.user.id, req.query.you, page, count, function(err, results){
-      if (err) {
-        res.send({
-          error: {
-            message: '쪽지 내용 조회를 실패했습니다'
-          }
-        });
-        return next(err);
-      } else {
-        res.send({
-          page: page,
-          count: count,
-          messages: results
-        });
-      }
-    });
-
-  } else {
-    var page = parseInt(req.query.page) || 1;
-    var count = parseInt(req.query.count) || 10;
-
-    Message.dummyShowTotalMessage(req.user.id, page, count, function (err, results) {
-      if (err) {
-        res.send({
-          error: {
-            message: '쪽지 전체 조회를 실패했습니다'
-          }
-        });
-        return next(err);
-      } else {
-        res.send({
-          page: page,
-          count: count,
-          results: results
-        });
-      }
-    });
-  }
-});
-
-router.post('/', isAuthenticate, isSecure,function(req, res, next){
-  var you_id = req.body.you_user_id;
-  var message = req.body.message || '';
-
-  if (you_id) {
-
-    Message.dummySnedMessage(req.user.id, you_id, message, function (err, result) {
-      if (err) {
-        res.send({
-          error: {
-            message: '전송 할 수 없습니다'
-          }
-        });
-        return next(err);
-      } else {
-        if (result) {
-          res.send({
-            message: '전송 완료'
-          });
-        } else {
-          res.send({
-            error: {
-              message: '전송 할 수 없습니다'
-            }
-          });
-        }
-      }
-    });
-  } else {
+  if (!req.body.user_id || !req.body.message) {
     res.send({
-      error: {
-        message: '전송 할 수 없습니다'
-      }
+      message: 'user_id와 message는 필수 정보 입니다'
     });
   }
+
+  var userId = parseInt(req.body.user_id);
+  var msg = req.body.message;
+
+  Message.getRegID(userId, function(err, regId){
+
+    if (err) {
+      return next(err);
+    } else {
+
+      var tokens = [];
+      tokens.push(regId);
+
+      var message = new gcm.Message({
+        data: {
+          msg: msg
+        }
+      });
+
+      // var message = new fcm.Message({
+      //   data: {
+      //     key1: 'value1',
+      //     key2: 'value2'
+      //   },
+      //   notification: {
+      //     title: '',
+      //     icon: '',
+      //     body: ''
+      //   }
+      // });
+
+      // 내 FireBase
+      // var sender = new fcm.Sender('AIzaSyCylDbj-lZc9FIDZaJrKe06bCSFp1WQvpU');
+
+
+      var sender = new gcm.Sender('AIzaSyB7amTJpCeivleEGbX2rGNPna97eROPwFI');
+
+      sender.send(message, {registrationTokens: tokens}, function (err, response) {
+        if (err) {
+          return next(err);
+        }
+        console.log(response);
+        res.send(response);
+      });
+
+    }
+
+  });
 });
 
 module.exports = router;

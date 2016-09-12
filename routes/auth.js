@@ -65,18 +65,32 @@ router.post('/local/login', isSecure, function(req, res, next) {
 }, function(req, res, next) {
     var user = {};
     var filename = path.basename(req.user.imagepath);
-    user.id = req.user.id;
-    user.email = req.user.email;
-    user.nickname = req.user.nickname;
-    user.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
-    user.position_id = req.user.position_id;
-    user.genre_id = req.user.genre_id;
-    user.city_id = req.user.city_id;
-    user.town_id = req.user.town_id;
-    res.send({
-        message: '로그인이 정상적으로 처리되었습니다',
-        user: user
-    });
+
+    if (!req.body.regId) {
+        res.send({
+            message: 'regId 는 필수 입력 사항입니다'
+        });
+    } else {
+        user.id = req.user.id;
+
+        User.checkRegID(user.id, req.body.regId, function(err){
+            if (err) {
+                return next(new Error('checkRegID 도중에 error 발생'));
+            } else {
+                user.email = req.user.email;
+                user.nickname = req.user.nickname;
+                user.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
+                user.position_id = req.user.position_id;
+                user.genre_id = req.user.genre_id;
+                user.city_id = req.user.city_id;
+                user.town_id = req.user.town_id;
+                res.send({
+                    message: '로그인이 정상적으로 처리되었습니다',
+                    user: user
+                });
+            }
+        });
+    }
 });
 
 router.get('/local/logout', function(req, res, next) {
