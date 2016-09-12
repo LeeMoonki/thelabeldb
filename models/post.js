@@ -192,7 +192,7 @@ function showHomePosts(info, callback){
     var meetPosts = [];
     var generalPosts = [];
 
-    var sql_select_meet_posts = 'select p.id id, u.id user_id, nickname, filetype, filepath file_path, ' +
+    var sql_select_meet_posts = 'select p.id id, u.id user_id, nickname, u.imagepath imagepath, filetype, filepath file_path, ' +
                                        'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
                                        'numlike ' +
                                 'from user u join post p on(u.id = p.user_id) ' +
@@ -200,7 +200,7 @@ function showHomePosts(info, callback){
                                 'order by p.id desc ' +
                                 'limit ?';
 
-    var sql_select_general_posts = 'select p.id id, u.id user_id, nickname, filetype, filepath file_path, ' +
+    var sql_select_general_posts = 'select p.id id, u.id user_id, nickname, u.imagepath imagepath, filetype, filepath file_path, ' +
                                           'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
                                           'numlike ' +
                                    'from user u join post p on(u.id = p.user_id) ' +
@@ -225,8 +225,8 @@ function showHomePosts(info, callback){
                     shootResult.page = info.page;
                     shootResult.count = info.count;
                     shootResult.meet = info.meet;
-                    shootResult.meetdata = meetPosts;
-                    shootResult.data = generalPosts;
+                    shootResult.meetpost = meetPosts;
+                    shootResult.post = generalPosts;
 
                     callback(null, shootResult);
                 }
@@ -241,16 +241,19 @@ function showHomePosts(info, callback){
                         async.each(results, function(row, done){
                             var tmpObj = {};
                             var filename = path.basename(row.file_path);
+                            var profileImageName = path.basename(row.imagepath);
                             tmpObj.id = row.id;
                             tmpObj.user_id = row.user_id;
                             tmpObj.nickname = row.nickname;
+                            tmpObj.imagepath = url.resolve(hostAddress, '/userProfiles/' + profileImageName);
                             tmpObj.filetype = row.filetype;
                             if (parseInt(row.filetype) === 2) {
-                                tmpObj.file_path = row.file_path;
+                                tmpObj.fileCode = path.basename(row.file_path);
+                                tmpObj.filepath = row.file_path;
                             } else if (parseInt(row.filetype) === 0) {
-                                tmpObj.file_path = url.resolve(hostAddress, '/avs/' + filename);
+                                tmpObj.filepath = url.resolve(hostAddress, '/avs/' + filename);
                             } else {
-                                tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                                tmpObj.filepath = url.resolve(hostAddress, '/postFiles/' + filename);
                             }
                             tmpObj.date = row.date;
                             tmpObj.numlike = row.numlike;
@@ -277,16 +280,19 @@ function showHomePosts(info, callback){
                         async.each(results, function(row, done){
                             var tmpObj = {};
                             var filename = path.basename(row.file_path);
+                            var profileImageName = path.basename(row.imagepath);
                             tmpObj.id = row.id;
                             tmpObj.user_id = row.user_id;
                             tmpObj.nickname = row.nickname;
+                            tmpObj.imagepath = url.resolve(hostAddress, '/userProfiles/' + profileImageName);
                             tmpObj.filetype = row.filetype;
                             if (parseInt(row.filetype) === 2) {
-                                tmpObj.file_path = row.file_path;
+                                tmpObj.fileCode = path.basename(row.file_path);
+                                tmpObj.filepath = row.file_path;
                             } else if (parseInt(row.filetype) === 0) {
-                                tmpObj.file_path = url.resolve(hostAddress, '/avs/' + filename);
+                                tmpObj.filepath = url.resolve(hostAddress, '/avs/' + filename);
                             } else {
-                                tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                                tmpObj.filepath = url.resolve(hostAddress, '/postFiles/' + filename);
                             }
                             tmpObj.date = row.date;
                             tmpObj.numlike = row.numlike;

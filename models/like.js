@@ -8,7 +8,7 @@ var hostAddress = require('../models/common').hostAddress;
 
 
 function myLikePosts(userId, page, count, callback) {
-  var sql_select_like_posts = 'select p.id id, p.user_id user_id, nickname, filetype, filepath file_path, ' +
+  var sql_select_like_posts = 'select p.id id, p.user_id user_id, nickname, u.imagepath imagepath, filetype, filepath file_path, ' +
                                      'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
                                      'numlike ' +
                               'from post_like l join post p on(l.post_id = p.id) ' +
@@ -33,14 +33,19 @@ function myLikePosts(userId, page, count, callback) {
           async.each(results, function(row, done){
             var tmpObj = {};
             var filename = path.basename(row.file_path);
+            var profileImageName = path.basename(row.imagepath);
             tmpObj.id = row.id;
             tmpObj.user_id = row.user_id;
             tmpObj.nickname = row.nickname;
+            tmpObj.imagepath = url.resolve(hostAddress, '/userProfiles/' + profileImageName);
             tmpObj.filetype = row.filetype;
             if (parseInt(row.filetype) === 2) {
-              tmpObj.file_path = row.file_path;
+              tmpObj.fileCode = path.basename(row.file_path);
+              tmpObj.filepath = row.file_path;
+            } else if (parseInt(row.filetype) === 0) {
+              tmpObj.filepath = url.resolve(hostAddress, '/avs/' + filename);
             } else {
-              tmpObj.file_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+              tmpObj.filepath = url.resolve(hostAddress, '/postFiles/' + filename);
             }
             tmpObj.date = row.date;
             tmpObj.numlike = row.numlike;
@@ -53,7 +58,7 @@ function myLikePosts(userId, page, count, callback) {
             } else {
               shootResult.page = page;
               shootResult.count = count;
-              shootResult.posts = shootPosts;
+              shootResult.post = shootPosts;
               callback(null, shootResult);
             }
           });

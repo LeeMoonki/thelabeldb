@@ -507,13 +507,13 @@ function labelMain(labelId, page, count, callback) {
                                  'where label_id = ?';
 
     // data block
-    var sql_select_posts = 'select p.id id, user_id, nickname, filetype, filepath file_path, ' +
-                                  'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
-                                  'numlike ' +
-                           'from post p join user u on(p.user_id = u.id) ' +
-                           'where p.label_id = ? ' +
-                           'order by p.id desc ' +
-                           'limit ?, ?';
+    var sql_select_posts = 'select p.id, user_id, filetype, filepath file_path, ' +
+      'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
+      'numlike, u.nickname nickname, u.imagepath imagepath ' +
+      'from post p join user u on(p.user_id = u.id) ' +
+      'where user_id = ? ' +
+      'order by p.id desc ' +
+      'limit ?, ?';
 
     var result = {};
     var members = [];
@@ -536,7 +536,7 @@ function labelMain(labelId, page, count, callback) {
 
                     user.label = result;
                     user.member = members;
-                    user.data = data;
+                    user.post = data;
                     callback(null, user);
                 }
             });
@@ -606,16 +606,19 @@ function labelMain(labelId, page, count, callback) {
                     async.each(results, function(row, done){
                         var tmpObj = {};
                         var filename = path.basename(row.file_path);
+                        var profileImageName = path.basename(row.imagepath);
                         tmpObj.id = row.id;
                         tmpObj.user_id = row.user_id;
                         tmpObj.nickname = row.nickname;
+                        tmpObj.imagepath = url.resolve(hostAddress, '/userProfiles/' + profileImageName);
                         tmpObj.filetype = row.filetype;
                         if (parseInt(row.filetype) === 2) {
-                            tmpObj.file_path = row.file_path;
+                            tmpObj.fileCode = path.basename(row.file_path);
+                            tmpObj.filepath = row.file_path;
                         } else if (parseInt(row.filetype) === 0) {
-                            tmpObj.file_path = url.resolve(hostAddress, '/avs/' + filename);
+                            tmpObj.filepath = url.resolve(hostAddress, '/avs/' + filename);
                         } else {
-                            tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                            tmpObj.filepath = url.resolve(hostAddress, '/postFiles/' + filename);
                         }
                         tmpObj.date = row.date;
                         tmpObj.numlike = row.numlike;

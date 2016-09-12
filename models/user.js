@@ -135,13 +135,14 @@ function showMe(userId, page, count, callback) {
     var sql_user_info = 'select u.id id, nickname, imagepath image_path, g.name genre ' +
         'from user u join genre g on (u.genre_id = g.id) ' +
         'where u.id = ?';
-    var sql_posts = 'select id, filetype, filepath, ' +
-        'date_format(convert_tz(ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
-        'numlike ' +
-        'from post ' +
-        'where user_id = ? ' +
-        'order by id desc ' +
-        'limit ?, ?';
+    var sql_posts = 'select p.id, filetype, filepath, ' +
+                           'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
+                           'numlike, u.nickname nickname, u.imagepath imagepath ' +
+                    'from post p join user u on(p.user_id = u.id) ' +
+                    'where user_id = ? ' +
+                    'order by p.id desc ' +
+                    'limit ?, ?';
+    var sql_count_posts = 'select count(id) count from post where user_id = ? ';
 
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
@@ -166,14 +167,18 @@ function showMe(userId, page, count, callback) {
                     async.each(results, function (row, done) {
                         var tmpObj = {};
                         var filename = path.basename(row.filepath);
+                        var profileImageName = path.basename(row.imagepath);
                         tmpObj.id = row.id;
+                        tmpObj.nickname = row.nickname;
+                        tmpObj.imagepath = url.resolve(hostAddress, '/userProfiles/' + profileImageName);
                         tmpObj.filetype = row.filetype;
                         if (parseInt(row.filetype) === 2) {
-                            tmpObj.file_path = row.filepath;
+                            tmpObj.fileCode = path.basename(row.filepath);
+                            tmpObj.filepath = row.filepath;
                         } else if (parseInt(row.filetype) === 0) {
-                            tmpObj.file_path = url.resolve(hostAddress, '/avs/' + filename);
+                            tmpObj.filepath = url.resolve(hostAddress, '/avs/' + filename);
                         } else {
-                            tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                            tmpObj.filepath = url.resolve(hostAddress, '/postFiles/' + filename);
                         }
                         tmpObj.date = row.date;
                         tmpObj.numlike = row.numlike;
@@ -193,20 +198,34 @@ function showMe(userId, page, count, callback) {
 
         function showMeGetUser(posts, callback) {
             // userId를 갖는 사용자의 정보
-            dbConn.query(sql_user_info, [userId], function (err, result) {
+            dbConn.query(sql_user_info, [userId], function (err, results) {
                 if (err) {
                     return callback(err);
                 } else {
+                    var result = {};
                     var user = {};
-                    var filename = path.basename(result[0].image_path);
-                    user.page = page;
-                    user.count = count;
-                    result[0].post_count = posts.length;
-                    user.result = result[0];
-                    user.result.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
-                    user.data = posts;
+                    var filename = path.basename(results[0].image_path);
+                    result.page = page;
+                    result.count = count;
 
-                    callback(null, user);
+                    user.id = results[0].id;
+                    user.nickname = results[0].nickname;
+                    user.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
+                    user.genre = results[0].genre;
+
+                    dbConn.query(sql_count_posts, [userId], function(err, counts){
+                        if (err) {
+                            return callback(err);
+                        } else {
+                            user.post_count = counts[0].count;
+
+                            result.user = user;
+                            result.post = posts;
+
+                            callback(null, result);
+                        }
+                    });
+
                 }
             });
         }
@@ -215,28 +234,31 @@ function showMe(userId, page, count, callback) {
 
 function userPage(id, page, rowCount, callback) {
     // id 라는 사용자 id를 갖는 사용자의 정보를 전달
-    var sql_member = 'select u.id id, u.nickname nickname, u.imagepath imagepath, u.genre_id genre, lm.label_id label_id ' +
-        'from user u left join label_member lm on (lm.user_id = u.id) ' +
-        'where u.id = ?';
+    var sql_member = 'select u.id id, u.nickname nickname, u.imagepath imagepath, g.name genre, lm.label_id label_id ' +
+                     'from user u left join label_member lm on (lm.user_id = u.id)' +
+                                      'join genre g on(u.genre_id = g.id) ' +
+                     'where u.id = ?';
 
-    var sql_post = 'select p.id id, filetype, filepath file_path, ' +
-        'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
-        'numlike ' +
-        'from post p ' +
-        'where p.opento = 0 and p.user_id = ? ' +
-        'order by p.id desc ' +
-        'limit ?,?';
+    var sql_posts = 'select p.id, filetype, filepath, ' +
+                           'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
+                           'numlike, u.nickname nickname, u.imagepath imagepath ' +
+                    'from post p join user u on(p.user_id = u.id) ' +
+                    'where user_id = ? ' +
+                    'order by p.id desc ' +
+                    'limit ?, ?';
+    var sql_count_posts = 'select count(id) count from post where user_id = ? ';
 
     var yourpage = {};
 
     var member = [];
     var post = [];
+    var postCount = 0;
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
         }
 
-        async.waterfall([memberF, postF], function (err) {
+        async.waterfall([memberF, countPost, postF], function (err) {
             dbConn.release();
             if (err) {
                 return callback(err);
@@ -250,56 +272,62 @@ function userPage(id, page, rowCount, callback) {
             labelCount.id = member[0].id;
             labelCount.nickname = member[0].nickname;
             labelCount.genre = member[0].genre;
-            labelCount.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+            labelCount.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
 
             var label = [];
             for (var i = 0; i < member.length; i++) {
                 label.push(member[i].label_id)
             }
+
             if (label[0] === null) {
                 labelCount.label_id = [];
             } else {
                 labelCount.label_id = label;
             }
 
-            labelCount.post_count = post.length;
+            labelCount.post_count = postCount;
 
-            yourpage.result = labelCount;
-            yourpage.data = post;
+            yourpage.user = labelCount;
+            yourpage.post = post;
 
             callback(null, yourpage);
         });
 
 
         function memberF(callback) {
-            dbConn.query(sql_member, [id], function (err, result) {
+            dbConn.query(sql_member, [id], function (err, results) {
                 if (err) {
                     return callback(err);
                 }
                 else {
-                    member = result;
+                    member = results;
                     callback(null);
                 }
             });
         }
 
         function postF(callback) {
-            dbConn.query(sql_post, [id, (page - 1) * rowCount, rowCount]
+            dbConn.query(sql_posts, [id, (page - 1) * rowCount, rowCount]
                 , function (err, results) {
                     if (err) {
                         callback(err);
                     } else {
                         async.each(results, function (row, done) {
                             var tmpObj = {};
-                            var filename = path.basename(row.file_path);
+                            var filename = path.basename(row.filepath);
                             tmpObj.id = row.id;
+                            var profileImageName = path.basename(row.imagepath);
+                            tmpObj.id = row.id;
+                            tmpObj.nickname = row.nickname;
+                            tmpObj.imagepath = url.resolve(hostAddress, '/userProfiles/' + profileImageName);
                             tmpObj.filetype = row.filetype;
                             if (parseInt(row.filetype) === 2) {
-                                tmpObj.file_path = row.filepath;
+                                tmpObj.fileCode = path.basename(row.filepath);
+                                tmpObj.filepath = row.filepath;
                             } else if (parseInt(row.filetype) === 0) {
-                                tmpObj.file_path = url.resolve(hostAddress, '/avs/' + filename);
+                                tmpObj.filepath = url.resolve(hostAddress, '/avs/' + filename);
                             } else {
-                                tmpObj.file_path = url.resolve(hostAddress, '/postFiles/' + filename);
+                                tmpObj.filepath = url.resolve(hostAddress, '/postFiles/' + filename);
                             }
                             tmpObj.date = row.date;
                             tmpObj.numlike = row.numlike;
@@ -315,6 +343,17 @@ function userPage(id, page, rowCount, callback) {
                         });
                     }
                 });
+        }
+
+        function countPost(callback) {
+            dbConn.query(sql_count_posts, [id], function(err, counts){
+                if (err) {
+                    return callback(err);
+                } else {
+                    postCount = counts[0].count;
+                    callback(null);
+                }
+            });
         }
     });
 
