@@ -454,12 +454,12 @@ function showSettingLabelPage(labelId, type, callback){
                 } else {
                     var label = {};
                     var filename = path.basename(results[0].image_path);
-                    label.name = results[0].label_name;
+                    label.label_name = results[0].label_name;
                     label.text = results[0].text;
                     if (type === 1) {
                         label.dbImagePath = results[0].image_path;
                     }
-                    label.imagepath = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                    label.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
                     label.genre_id = results[0].genre_id;
                     label.genre = results[0].genre;
                     // async.each
@@ -478,7 +478,7 @@ function showSettingLabelPage(labelId, type, callback){
                         if (err) {
                             // done(err) 발생하지 않음
                         } else {
-                            label.needposition = tmpArr;
+                            label.need_position = tmpArr;
                             callback(null, label);
                         }
                     });
