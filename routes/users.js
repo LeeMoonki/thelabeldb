@@ -615,6 +615,7 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
             settingInfo.genre_id = parseInt(fields.genre_id) || results.genre_id;
             settingInfo.city_id = parseInt(fields.city_id) || results.city_id;
             settingInfo.town_id = parseInt(fields.town_id) || results.town_id;
+            settingInfo.need = parseInt(fields.need) || results.need;
 
             if (files.image !== undefined) {
               settingInfo.imagepath = files.image.path;

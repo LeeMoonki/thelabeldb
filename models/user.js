@@ -645,7 +645,7 @@ function updateUser(info, callback) {
 
     var sql_update_user = 'UPDATE `thelabeldb`.`user` ' +
         'SET `nickname`=?, `gender`=?, `text`=?, `imagepath`=?, ' +
-        '`position_id`=?, `genre_id`=?, `city_id`=?, `town_id`=? ' +
+        '`position_id`=?, `genre_id`=?, `city_id`=?, `town_id`=?, `need`=? ' +
         'WHERE `id`=?';
 
     dbPool.getConnection(function (err, dbConn) {
@@ -661,7 +661,7 @@ function updateUser(info, callback) {
                     dbConn.query(sql_update_user
                         , [info.nickname, info.gender, info.text, info.imagepath
                             , info.position_id, info.genre_id, info.city_id, info.town_id
-                            , info.user_id]
+                            , info.user_id, info.need]
                         , function (err, result) {
 
                             if (err) {
