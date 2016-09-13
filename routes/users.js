@@ -615,7 +615,12 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
             settingInfo.genre_id = parseInt(fields.genre_id) || results.genre_id;
             settingInfo.city_id = parseInt(fields.city_id) || results.city_id;
             settingInfo.town_id = parseInt(fields.town_id) || results.town_id;
-            settingInfo.need = parseInt(fields.need) || results.need;
+            if (parseInt(fields.need) === 0) {
+              // 0일때는 || 연산시 false로 인식되어 results.need가 들어간다
+              settingInfo.need = 0;
+            } else {
+              settingInfo.need = parseInt(fields.need) || results.need;
+            }
 
             if (files.image !== undefined) {
               settingInfo.imagepath = files.image.path;
@@ -641,7 +646,7 @@ router.put('/me', isSecure, isAuthenticate, function(req, res, next){
               } else {
                 res.send({
                   message: '수정 성공',
-                  resultCode: 1
+                  resultCode: result
                 });
               }
             });

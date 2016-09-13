@@ -648,6 +648,7 @@ function updateUser(info, callback) {
         '`position_id`=?, `genre_id`=?, `city_id`=?, `town_id`=?, `need`=? ' +
         'WHERE `id`=?';
 
+    console.log(info);
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
             return callback(err);
@@ -660,8 +661,8 @@ function updateUser(info, callback) {
                 } else {
                     dbConn.query(sql_update_user
                         , [info.nickname, info.gender, info.text, info.imagepath
-                            , info.position_id, info.genre_id, info.city_id, info.town_id
-                            , info.user_id, info.need]
+                          , info.position_id, info.genre_id, info.city_id, info.town_id
+                          , info.need, info.user_id]
                         , function (err, result) {
 
                             if (err) {
