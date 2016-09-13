@@ -287,28 +287,64 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
         var page = parseInt(req.query.page) || 1;
         var count = parseInt(req.query.count) || 10;
 
-        var info = {};
+        // filter ver
 
-        info.genre_id = req.query.genre_id || req.user.genre_id;
-        info.position_id = req.query.position_id || req.user.position_id;
+        var gpInfo = {
+            g: 0,
+            p: 0
+        };
 
-        User.getBelongLabel(req.user.id, function (err, label_ids) {
+        if (req.query.genre_id) {
+            gpInfo.g = parseInt(req.query.genre_id);
+        }
+        if (req.query.position_id) {
+            gpInfo.p = parseInt(req.query.position_id);
+        }
+
+        if (gpInfo.g === 0 && gpInfo.p === 0) {
+            gpInfo.g = parseInt(req.user.genre_id);
+            gpInfo.p = parseInt(req.user.position_id);
+        }
+        
+        Label.searchLabelFilter(page, count, gpInfo, function(err, results){
             if (err) {
                 return next(err);
             } else {
-                Label.searchLabel(label_ids, page, count, info, function (err, results) {
-                    if (err) {
-                        return next(err);
-                    } else {
-                        var searchResult = {};
-                        searchResult.page = page;
-                        searchResult.count = count;
-                        searchResult.result = results;
-                        res.send(searchResult);
-                    }
-                });
+                var labels = {};
+                labels.page = page;
+                labels.count = count;
+                labels.label = results;
+                res.send(labels);
             }
         });
+        
+        // filter ver
+        
+        
+        
+        // 추천 검색
+        // var info = {};
+        //
+        // info.genre_id = req.query.genre_id || req.user.genre_id;
+        // info.position_id = req.query.position_id || req.user.position_id;
+        //
+        // User.getBelongLabel(req.user.id, function (err, label_ids) {
+        //     if (err) {
+        //         return next(err);
+        //     } else {
+        //         Label.searchLabel(label_ids, page, count, info, function (err, results) {
+        //             if (err) {
+        //                 return next(err);
+        //             } else {
+        //                 var searchResult = {};
+        //                 searchResult.page = page;
+        //                 searchResult.count = count;
+        //                 searchResult.result = results;
+        //                 res.send(searchResult);
+        //             }
+        //         });
+        //     }
+        // });
 
     } else if (nameSearch) {
 

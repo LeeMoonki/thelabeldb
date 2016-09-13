@@ -1,11 +1,28 @@
-//dummy function
-
-var dummyLabel = {};
-dummyLabel.id = 1;
-dummyLabel.name = 'NUGA';
-dummyLabel.image_path = '/usr/desktop/didimdol1.jpg';
-dummyLabel.need_genre = '발라드';
-dummyLabel.need_position = '보컬';
+// query box
+var labelQueryBox = {
+    g: 'select l.id id, l.name name, imagepath imagepath, ' +
+    'g.name genre, p.name needposition ' +
+    'from label l join label_need n on(l.id = n.label_id) ' +
+    'join genre g on(l.genre_id = g.id) ' +
+    'join position p on(n.position_id = p.id) ' +
+    'where l.genre_id = ? ' +
+    'limit ?,?',
+    p: 'select l.id id, l.name name, imagepath imagepath, ' +
+    'g.name genre, p.name needposition ' +
+    'from label l join label_need n on(l.id = n.label_id) ' +
+    'join genre g on(l.genre_id = g.id) ' +
+    'join position p on(n.position_id = p.id) ' +
+    'where n.position_id = ? ' +
+    'limit ?,?',
+    gp: 'select l.id id, l.name name, imagepath imagepath, ' +
+    'g.name genre, p.name needposition ' +
+    'from label l join label_need n on(l.id = n.label_id) ' +
+    'join genre g on(l.genre_id = g.id) ' +
+    'join position p on(n.position_id = p.id) ' +
+    'where l.genre_id = ? and n.position_id = ? ' +
+    'limit ?,?'
+};
+// query box
 
 var mysql = require('mysql');
 var async = require('async');
@@ -833,7 +850,6 @@ function getLabelSearchInfoArr(labelIds, callback){
     });
 }
 
-
 function searchLabel(label_ids, page, count, info, callback){
 
 
@@ -1002,7 +1018,6 @@ function searchLabel(label_ids, page, count, info, callback){
     });
 }
 
-
 function findAlreadyIndex(indexArr, index, callback) {
     var length = indexArr.length;
     var flag = false;
@@ -1108,7 +1123,38 @@ function search_sortPosition(content, page, count, callback) {
     });
 }
 
+function searchLabelFilter (page, count, info, callback) {
 
+    getSelected(info, function(valueArr, sql_query){
+
+        dbPool.getConnection(function(err, dbConn){
+            if (err) {
+                return callback(err);
+            } else {
+                dbConn.query(labelQueryBox[sql_query], valueArr, function(err, results){
+                    dbConn.release();
+                    callback(null, results);
+                });
+            }
+        });
+    });
+
+    function getSelected(gp, callback) {
+        var tmpArr = [];
+        var tmpStr = '';
+        if (gp.g !== 0) {
+            tmpArr.push(info.g);
+            tmpStr = tmpStr + 'g';
+        }
+        if (gp.p !== 0) {
+            tmpArr.push(info.p);
+            tmpStr = tmpStr + 'p';
+        }
+        tmpArr.push((page - 1) * count);
+        tmpArr.push(count);
+        callback(tmpArr, tmpStr);
+    }
+}
 
 
 
@@ -1256,6 +1302,8 @@ module.exports.deleteMember = deleteMember;
 module.exports.searchLabel = searchLabel;
 module.exports.getLabelSearchInfo = getLabelSearchInfo;
 module.exports.getLabelSearchInfoArr = getLabelSearchInfoArr;
+
+module.exports.searchLabelFilter = searchLabelFilter;
 
 module.exports.search_sortGenre = search_sortGenre;
 module.exports.search_sortPosition = search_sortPosition;

@@ -1,15 +1,113 @@
-//dummy data
-var dummyUser = {};
+// query Box
+var queryBox = {
+    g: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.genre_id = ? ' +
+    'limit ?,? ',
+    p: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.position_id = ? ' +
+    'limit ?,? ',
+    c: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.city_id = ? ' +
+    'limit ?,? ',
+    t: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.town_id = ? ' +
+    'limit ?,? ',
+    gp: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.genre_id = ? and u.position_id = ? ' +
+    'limit ?,? ',
+    gc: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.genre_id = ? and u.city_id = ? ' +
+    'limit ?,? ',
+    gt: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.genre_id = ? and u.town_id = ? ' +
+    'limit ?,? ',
+    pc: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.position_id = ? and u.city_id = ? ' +
+    'limit ?,? ',
+    pt: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.position_id = ? and u.town_id = ? ' +
+    'limit ?,? ',
+    ct: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.city_id = ? and u.town_id = ? ' +
+    'limit ?,? ',
+    gpc: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.genre_id = ? and u.position_id = ? and u.city_id = ? ' +
+    'limit ?,? ',
+    gct: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.genre_id = ? and u.city_id = ? and u.town_id = ? ' +
+    'limit ?,? ',
+    gpt: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.genre_id = ? and u.position_id = ? and u.town_id = ? ' +
+    'limit ?,? ',
+    pct: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.position_id = ? and u.city_id = ? and u.town_id = ? ' +
+    'limit ?,? ',
+    gpct:'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    'from user u join position p on(u.position_id = p.id) ' +
+    'join genre g on(u.genre_id = g.id) ' +
+    'join city c on(u.city_id = c.id) ' +
+    'join town t on(u.town_id = t.id) ' +
+    'where u.genre_id = ? and u.position_id = ? and u.city_id = ? and u.town_id = ? ' +
+    'limit ?,? '
+};
+// query Box
 
-dummyUser.dummy_email = 'abcd@naver.com';
-dummyUser.dummy_password = '1234';
-dummyUser.dummy_id = 1;
-dummyUser.dummy_nickname = '닉네임';
-dummyUser.dummy_gender = '남자';
-dummyUser.dummy_position = '보컬';
-dummyUser.dummy_genre = '발라드';
-dummyUser.dummy_city = '서울';
-dummyUser.dummy_town = '관악구';
 
 
 var mysql = require('mysql');
@@ -744,6 +842,47 @@ function getBelongLabel(userId, callback) {
     });
 }
 
+function searchUserFilter(page, count, info, callback) {
+
+    getSelected(info, function(valueArr, sql_query){
+        
+        dbPool.getConnection(function(err, dbConn){
+            if (err) {
+                return callback(err);
+            } else {
+                dbConn.query(queryBox[sql_query], valueArr, function(err, results){
+                    dbConn.release();
+                    callback(null, results);
+                });
+            }
+        });
+    });
+
+    function getSelected(gpct, callback) {
+        var tmpArr = [];
+        var tmpStr = '';
+        if (gpct.g !== 0) {
+            tmpArr.push(info.g);
+            tmpStr = tmpStr + 'g';
+        }
+        if (gpct.p !== 0) {
+            tmpArr.push(info.p);
+            tmpStr = tmpStr + 'p';
+        }
+        if (gpct.c !== 0) {
+            tmpArr.push(info.c);
+            tmpStr = tmpStr + 'c';
+        }
+        if (gpct.t !== 0) {
+            tmpArr.push(info.t);
+            tmpStr = tmpStr + 't';
+        }
+        tmpArr.push((page - 1) * count);
+        tmpArr.push(count);
+        callback(tmpArr, tmpStr);
+    }
+}
+
 function searchUsersByUser(userId, page, count, info, callback) {
 
     // 이미 검색된 사용자를 검색 결과에서 지우기 위해
@@ -1237,6 +1376,7 @@ module.exports.showProfilePage = showProfilePage;
 module.exports.updateUser = updateUser;
 module.exports.updatePassword = updatePassword;
 module.exports.checkPassword = checkPassword;
+module.exports.searchUserFilter = searchUserFilter;
 module.exports.searchUsersByUser = searchUsersByUser;
 module.exports.searchUsersByLabel = searchUsersByLabel;
 module.exports.checkRegID = checkRegID;
