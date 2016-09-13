@@ -415,7 +415,7 @@ function showProfilePage(userId, type, callback) {
                     user.nickname = result[0].nickname;
                     user.gender = result[0].gender;
                     user.text = result[0].text;
-                    user.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                    user.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
                     if (type === 0) {
                         user.position = result[0].position;
                         user.genre = result[0].genre;
