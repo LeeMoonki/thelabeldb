@@ -460,7 +460,7 @@ router.get('/:label_id', isSecure, isAuthenticate, function (req, res, next) {
             });
         } else if (del) {
             // 레이블 탈퇴 GET
-            Label.get_deleteMember(label_id, function (err, result) {
+            Label.get_authority_user(label_id, function (err, result) {
                 if (err) {
                     return next(err);
                 } else {
@@ -472,7 +472,12 @@ router.get('/:label_id', isSecure, isAuthenticate, function (req, res, next) {
                             res.send({users: myprofile});
                         });
                     } else {
-                        res.send({users: result});
+                        Label.get_memberDelete(label_id, function (err, results) {
+                           if (err) {
+                               return next (err);
+                           }
+                            res.send({users: results});
+                        });
                     }
                 }
             });

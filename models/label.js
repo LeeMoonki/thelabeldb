@@ -1113,10 +1113,33 @@ function search_sortPosition(content, page, count, callback) {
 
 
 //레이블 탈퇴 GET 권한 유저
-function get_deleteMember(label_id, callback) {
-    var sql = 'SELECT l.id, l.authority_user_id, lm.user_id ' +
-      'FROM label l join label_member lm on (lm.label_id = l.id) ' +
-      'where label_id = ?';
+function get_authority_user(label_id, callback) {
+    var sql = 'SELECT lm.user_id, u.nickname, u.imagepath, l.authority_user_id ' +
+    'FROM label l join label_member lm on (lm.label_id = l.id) ' +
+    'join user u on (u.id = lm.user_id) ' +
+    'where label_id = ?';
+
+    dbPool.getConnection(function (err, dbConn) {
+        if (err) {
+            return callback (err);
+        } else {
+            dbConn.query(sql, [label_id], function (err, results) {
+                dbConn.release();
+                if (err) {
+                    return callback (err);
+                } else {
+                    callback (null, results);
+                }
+            });
+        }
+    });
+}
+
+function get_memberDelete(label_id, callback) {
+    var sql = 'SELECT lm.user_id id, u.nickname nickname, u.imagepath imagepath ' +
+        'FROM label l join label_member lm on (lm.label_id = l.id) ' +
+        'join user u on (u.id = lm.user_id) ' +
+        'where label_id = ?';
 
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
@@ -1137,9 +1160,10 @@ function get_deleteMember(label_id, callback) {
 //레이블 탈퇴 GET 권한없는 유저
 function get_myprofile(label_id, user_id, callback) {
 
-    var sql = 'SELECT l.id, l.authority_user_id, lm.user_id ' +
-      'FROM label l join label_member lm on (lm.label_id = l.id) ' +
-      'where label_id = ? and user_id = ?';
+    var sql = 'SELECT lm.user_id id, u.nickname nickname, u.imagepath imagepath ' +
+        'FROM label l join label_member lm on (lm.label_id = l.id) ' +
+        'join user u on (u.id = lm.user_id) ' +
+        'where label_id = ? and user_id = ?';
 
     dbPool.getConnection(function (err, dbConn) {
         if (err) {
@@ -1236,5 +1260,6 @@ module.exports.getLabelSearchInfoArr = getLabelSearchInfoArr;
 module.exports.search_sortGenre = search_sortGenre;
 module.exports.search_sortPosition = search_sortPosition;
 
-module.exports.get_deleteMember = get_deleteMember;
+module.exports.get_authority_user = get_authority_user;
 module.exports.get_myprofile = get_myprofile;
+module.exports.get_memberDelete = get_memberDelete;
