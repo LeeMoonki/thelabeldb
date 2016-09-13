@@ -1,104 +1,104 @@
 // query Box
 var queryBox = {
-    g: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    g: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.genre_id = ? ' +
     'limit ?,? ',
-    p: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    p: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.position_id = ? ' +
     'limit ?,? ',
-    c: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    c: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.city_id = ? ' +
     'limit ?,? ',
-    t: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    t: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.town_id = ? ' +
     'limit ?,? ',
-    gp: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    gp: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.genre_id = ? and u.position_id = ? ' +
     'limit ?,? ',
-    gc: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    gc: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.genre_id = ? and u.city_id = ? ' +
     'limit ?,? ',
-    gt: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    gt: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.genre_id = ? and u.town_id = ? ' +
     'limit ?,? ',
-    pc: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    pc: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.position_id = ? and u.city_id = ? ' +
     'limit ?,? ',
-    pt: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    pt: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.position_id = ? and u.town_id = ? ' +
     'limit ?,? ',
-    ct: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    ct: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.city_id = ? and u.town_id = ? ' +
     'limit ?,? ',
-    gpc: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    gpc: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.genre_id = ? and u.position_id = ? and u.city_id = ? ' +
     'limit ?,? ',
-    gct: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    gct: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.genre_id = ? and u.city_id = ? and u.town_id = ? ' +
     'limit ?,? ',
-    gpt: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    gpt: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.genre_id = ? and u.position_id = ? and u.town_id = ? ' +
     'limit ?,? ',
-    pct: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    pct: 'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
     'join town t on(u.town_id = t.id) ' +
     'where u.position_id = ? and u.city_id = ? and u.town_id = ? ' +
     'limit ?,? ',
-    gpct:'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town ' +
+    gpct:'select u.id id, nickname,u.imagepath imagepath ,p.name position, g.name genre, c.name city, t.name town, need ' +
     'from user u join position p on(u.position_id = p.id) ' +
     'join genre g on(u.genre_id = g.id) ' +
     'join city c on(u.city_id = c.id) ' +
@@ -121,7 +121,7 @@ var hostAddress = require('../models/common').hostAddress;
 
 // using in Localstrategy in auth
 function findByEmail(email, callback) {
-    var sql_search_by_email = 'select id, email, nickname, gender, text, imagepath, ' +
+    var sql_search_by_email = 'select id, email, nickname, gender, text, imagepath, need, ' +
         'position_id, genre_id, city_id, town_id, password ' +
         'from user ' +
         'where email = ?';
@@ -155,6 +155,7 @@ function findByEmail(email, callback) {
                             user.genre_id = result[0].genre_id;
                             user.city_id = result[0].city_id;
                             user.town_id = result[0].town_id;
+                            user.need = result[0].need;
                             user.password = result[0].password;
                             callback(null, user);
                         }
@@ -193,7 +194,7 @@ function verifyPassword(typedPassword, storedPassword, callback) {
 
 // using in deserialize of auth 
 function findUser(userId, callback) {
-    var sql_search_by_userId = 'select id, email, nickname, gender, text, ' +
+    var sql_search_by_userId = 'select id, email, nickname, gender, text, need, ' +
         'imagepath, position_id, genre_id, city_id, town_id ' +
         'from user ' +
         'where id = ?';
@@ -230,7 +231,7 @@ function findUser(userId, callback) {
 function showMe(userId, page, count, callback) {
     // userId 를 받아서 해당 사용자의 정보를 전달한다
 
-    var sql_user_info = 'select u.id id, nickname, imagepath image_path, g.name genre ' +
+    var sql_user_info = 'select u.id id, nickname, need, imagepath image_path, g.name genre ' +
         'from user u join genre g on (u.genre_id = g.id) ' +
         'where u.id = ?';
     var sql_posts = 'select p.id, filetype, filepath, ' +
@@ -316,6 +317,7 @@ function showMe(userId, page, count, callback) {
                             return callback(err);
                         } else {
                             user.post_count = counts[0].count;
+                            user.need = results[0].need;
 
                             result.user = user;
                             result.post = posts;
@@ -332,7 +334,7 @@ function showMe(userId, page, count, callback) {
 
 function userPage(id, page, rowCount, callback) {
     // id 라는 사용자 id를 갖는 사용자의 정보를 전달
-    var sql_member = 'select u.id id, u.nickname nickname, u.imagepath imagepath, g.name genre, lm.label_id label_id ' +
+    var sql_member = 'select u.id id, u.nickname nickname, need, u.imagepath imagepath, g.name genre, lm.label_id label_id ' +
                      'from user u left join label_member lm on (lm.user_id = u.id)' +
                                       'join genre g on(u.genre_id = g.id) ' +
                      'where u.id = ?';
@@ -384,6 +386,7 @@ function userPage(id, page, rowCount, callback) {
             }
 
             labelCount.post_count = postCount;
+            labelCount.need = member[0].need;
 
             yourpage.user = labelCount;
             yourpage.post = post;
@@ -489,7 +492,7 @@ function showProfilePage(userId, type, callback) {
     // 사용자 정보 설정 화면에 기존의 정보를 전달
     // type 0 : id 대신 이름을 제공
     // type 1 : id를 제공
-    var sql_search_by_userId = 'select u.id id, nickname, gender, text, imagepath, p.name position, ' +
+    var sql_search_by_userId = 'select u.id id, nickname, gender, text, need, imagepath, p.name position, ' +
         'g.name genre, c.name city, t.name town, p.id pid, g.id gid, c.id cid, t.id tid ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
@@ -526,6 +529,7 @@ function showProfilePage(userId, type, callback) {
                         user.city_id = result[0].cid;
                         user.town_id = result[0].tid;
                     }
+                    user.need = result[0].need;
                     callback(null, user);
                 }
             });
@@ -1206,7 +1210,7 @@ function findAlreadyIndex(indexArr, index, callback) {
 
 function search_sortGenre(content, page, count, callback) {
 
-    var sql_search = 'select u.id user_id, nickname, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
+    var sql_search = 'select u.id user_id, nickname, need, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
         'join city c on(u.city_id = c.id) ' +
@@ -1240,6 +1244,7 @@ function search_sortGenre(content, page, count, callback) {
                 tmp.user_genre = item.genre;
                 tmp.user_city = item.city;
                 tmp.user_town = item.town;
+                tmp.user_need = item.need;
                 userResults.push(tmp);
                 done(null)
             }, function(err){
@@ -1257,7 +1262,7 @@ function search_sortGenre(content, page, count, callback) {
 
 function search_sortPosition(content, page, count, callback) {
 
-    var sql_search = 'select u.id user_id, nickname, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
+    var sql_search = 'select u.id user_id, nickname, need, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
         'join city c on(u.city_id = c.id) ' +
@@ -1291,6 +1296,7 @@ function search_sortPosition(content, page, count, callback) {
                 tmp.user_genre = item.genre;
                 tmp.user_city = item.city;
                 tmp.user_town = item.town;
+                tmp.user_need = item.need;
                 userResults.push(tmp);
                 done(null)
             }, function(err){
@@ -1308,7 +1314,7 @@ function search_sortPosition(content, page, count, callback) {
 
 function search_sortCity(content, page, count, callback) {
 
-    var sql_search = 'select u.id user_id, nickname, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
+    var sql_search = 'select u.id user_id, nickname, need, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
         'join city c on(u.city_id = c.id) ' +
@@ -1342,6 +1348,7 @@ function search_sortCity(content, page, count, callback) {
                 tmp.user_genre = item.genre;
                 tmp.user_city = item.city;
                 tmp.user_town = item.town;
+                tmp.need = item.need;
                 userResults.push(tmp);
                 done(null)
             }, function(err){

@@ -11,6 +11,7 @@ var hostAddress = require('../models/common').hostAddress;
 
 
 passport.use(new LocalStrategy({usernameField: 'email', passwordField: 'password'}, function(email, password, done) {
+    // req.user 에 넣는 데이터는 findByEmail 에서 결정한다
     User.findByEmail(email, function(err, user) {
         if (err) {
             return done(err);
@@ -84,6 +85,7 @@ router.post('/local/login', isSecure, function(req, res, next) {
                 user.genre_id = req.user.genre_id;
                 user.city_id = req.user.city_id;
                 user.town_id = req.user.town_id;
+                user.need = req.user.need;
                 res.send({
                     message: '로그인이 정상적으로 처리되었습니다',
                     user: user
