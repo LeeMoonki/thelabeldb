@@ -41,11 +41,12 @@ router.post('/', isAuthenticate, isSecure, function(req, res, next){
               data: {
                 receiverId: youId,
                 message: msg
-              },
-              notification: {
-                title: 'message wattdda',
-                body: 'quickly read it!!'
               }
+              // ,
+              // notification: {
+              //   title: 'message wattdda',
+              //   body: 'quickly read it!!'
+              // }
             });
 
             // var message = new fcm.Message({
