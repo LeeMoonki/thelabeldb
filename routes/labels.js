@@ -374,7 +374,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                         res.send({
                             message : '검색어를 입력하시오.'
                         });
-                    } else if (result.result.length === 0) {
+                    } else if (result.label.length === 0) {
                         res.send({
                             error : msg });
                     } else {
@@ -391,7 +391,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                         res.send({
                             message : '검색어를 입력하시오.'
                         });
-                    } else if (result.result.length === 0) {
+                    } else if (result.label.length === 0) {
                         res.send({
                             error : msg });
                     } else {
@@ -408,7 +408,7 @@ router.get('/', isSecure, isAuthenticate, function (req, res, next) {
                         res.send({
                             message : '검색어를 입력하시오.'
                         });
-                    } else if (result.result.length === 0) {
+                    } else if (result.label.length === 0) {
                         res.send({
                             error : msg });
                     } else {

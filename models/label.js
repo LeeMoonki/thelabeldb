@@ -72,7 +72,6 @@ function numOfJoinCheck(userId, callback) {
             });
         }
     });
-
 }
 
 function createLabel(info, callback) {
@@ -1060,11 +1059,11 @@ function search_sortGenre(content, page, count, callback) {
             async.each(results, function(row, done){
                 var tmp = {};
                 var filename = path.basename(row.label_image_path);
-                tmp.label_id = row.label_id;
-                tmp.label_name = row.label_name;
-                tmp.label_image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
-                tmp.label_genre = row.label_genre;
-                tmp.label_need_position = row.label_need_position;
+                tmp.id = row.label_id;
+                tmp.name = row.label_name;
+                tmp.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                tmp.genre = row.label_genre;
+                tmp.needposition = row.label_need_position;
                 labelResults.push(tmp);
                 done(null);
             }, function(err){
@@ -1072,7 +1071,7 @@ function search_sortGenre(content, page, count, callback) {
                 if (err) {
                     // done(err) 발생하지 않음
                 } else {
-                    label.result = labelResults;
+                    label.label = labelResults;
                     callback(null, label);
                 }
             });
@@ -1106,11 +1105,11 @@ function search_sortPosition(content, page, count, callback) {
             async.each(results, function(row, done){
                 var tmp = {};
                 var filename = path.basename(row.label_image_path);
-                tmp.label_id = row.label_id;
-                tmp.label_name = row.label_name;
-                tmp.label_image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
-                tmp.label_genre = row.label_genre;
-                tmp.label_need_position = row.label_need_position;
+                tmp.id = row.label_id;
+                tmp.name = row.label_name;
+                tmp.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                tmp.genre = row.label_genre;
+                tmp.needposition = row.label_need_position;
                 labelResults.push(tmp);
                 done(null);
             }, function(err){
@@ -1118,7 +1117,7 @@ function search_sortPosition(content, page, count, callback) {
                 if (err) {
                     // done(err) 발생하지 않음
                 } else {
-                    label.result = labelResults;
+                    label.label = labelResults;
                     callback(null, label);
                 }
             });
