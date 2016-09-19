@@ -1239,14 +1239,14 @@ function search_sortGenre(content, page, count, callback) {
             async.each(results, function(item, done){
                 var tmp = {};
                 var filename = path.basename(item.imagepath);
-                tmp.user_id = item.user_id;
-                tmp.user_nickname = item.nickname;
-                tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
-                tmp.user_position = item.position;
-                tmp.user_genre = item.genre;
-                tmp.user_city = item.city;
-                tmp.user_town = item.town;
-                tmp.user_need = item.need;
+                tmp.id = item.user_id;
+                tmp.nickname = item.nickname;
+                tmp.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                tmp.position = item.position;
+                tmp.genre = item.genre;
+                tmp.city = item.city;
+                tmp.town = item.town;
+                tmp.need = item.need;
                 userResults.push(tmp);
                 done(null)
             }, function(err){
@@ -1254,7 +1254,7 @@ function search_sortGenre(content, page, count, callback) {
                 if (err) {
                     // done(err) 발생하지 않음
                 } else {
-                    user.result = userResults;
+                    user.user = userResults;
                     callback(null, user);
                 }
             });
@@ -1291,14 +1291,14 @@ function search_sortPosition(content, page, count, callback) {
             async.each(results, function(item, done){
                 var tmp = {};
                 var filename = path.basename(item.imagepath);
-                tmp.user_id = item.user_id;
-                tmp.user_nickname = item.nickname;
-                tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
-                tmp.user_position = item.position;
-                tmp.user_genre = item.genre;
-                tmp.user_city = item.city;
-                tmp.user_town = item.town;
-                tmp.user_need = item.need;
+                tmp.id = item.user_id;
+                tmp.nickname = item.nickname;
+                tmp.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                tmp.position = item.position;
+                tmp.genre = item.genre;
+                tmp.city = item.city;
+                tmp.town = item.town;
+                tmp.need = item.need;
                 userResults.push(tmp);
                 done(null)
             }, function(err){
@@ -1306,7 +1306,7 @@ function search_sortPosition(content, page, count, callback) {
                 if (err) {
                     // done(err) 발생하지 않음
                 } else {
-                    user.result = userResults;
+                    user.user = userResults;
                     callback(null, user);
                 }
             });
@@ -1343,13 +1343,13 @@ function search_sortCity(content, page, count, callback) {
             async.each(results, function(item, done){
                 var tmp = {};
                 var filename = path.basename(item.imagepath);
-                tmp.user_id = item.user_id;
-                tmp.user_nickname = item.nickname;
-                tmp.user_image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
-                tmp.user_position = item.position;
-                tmp.user_genre = item.genre;
-                tmp.user_city = item.city;
-                tmp.user_town = item.town;
+                tmp.id = item.user_id;
+                tmp.nickname = item.nickname;
+                tmp.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
+                tmp.position = item.position;
+                tmp.genre = item.genre;
+                tmp.city = item.city;
+                tmp.town = item.town;
                 tmp.need = item.need;
                 userResults.push(tmp);
                 done(null)
@@ -1358,7 +1358,7 @@ function search_sortCity(content, page, count, callback) {
                 if (err) {
                     // done(err) 발생하지 않음
                 } else {
-                    user.result = userResults;
+                    user.user = userResults;
                     callback(null, user);
                 }
             });
