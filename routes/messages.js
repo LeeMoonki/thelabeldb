@@ -39,7 +39,7 @@ router.post('/', isAuthenticate, isSecure, function(req, res, next){
 
             var message = new fcm.Message({
               data: {
-                receiverId: youId,
+                receiverId: userId,
                 message: msg
               }
               // ,
