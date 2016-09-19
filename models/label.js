@@ -471,12 +471,12 @@ function showSettingLabelPage(labelId, type, callback){
                 } else {
                     var label = {};
                     var filename = path.basename(results[0].image_path);
-                    label.label_name = results[0].label_name;
+                    label.name = results[0].label_name;
                     label.text = results[0].text;
                     if (type === 1) {
                         label.dbImagePath = results[0].image_path;
                     }
-                    label.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
+                    label.imagepath = url.resolve(hostAddress, '/labelProfiles/' + filename);
                     label.genre_id = results[0].genre_id;
                     label.genre = results[0].genre;
                     // async.each
