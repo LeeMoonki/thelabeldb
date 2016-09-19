@@ -66,7 +66,7 @@ function findMessage(userId, youId, date, callback) {
     if (err) {
       return callback(err);
     } else {
-      dbConn.query(sql_select_messages, [date, userId, youId], function(err, results){
+      dbConn.query(sql_select_messages, [date, youId, userId], function(err, results){
         dbConn.release();
         if (err) {
           return callback(err);
