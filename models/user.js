@@ -492,7 +492,7 @@ function showProfilePage(userId, type, callback) {
     // 사용자 정보 설정 화면에 기존의 정보를 전달
     // type 0 : id 대신 이름을 제공
     // type 1 : id를 제공
-    var sql_search_by_userId = 'select u.id id, nickname, gender, text, need, imagepath, p.name position, ' +
+    var sql_search_by_userId = 'select email, u.id id, nickname, gender, text, need, imagepath, p.name position, ' +
         'g.name genre, c.name city, t.name town, p.id pid, g.id gid, c.id cid, t.id tid ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
@@ -512,6 +512,7 @@ function showProfilePage(userId, type, callback) {
 
                     var user = {};
                     var filename = path.basename(result[0].imagepath);
+                    user.email = result[0].email;
                     user.id = result[0].id;
                     user.nickname = result[0].nickname;
                     user.gender = result[0].gender;

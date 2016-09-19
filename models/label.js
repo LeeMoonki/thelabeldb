@@ -482,13 +482,15 @@ function showSettingLabelPage(labelId, type, callback){
                     // async.each
                     var tmpArr = [];
                     async.each(results, function(row, done){
-                        var tmpObj = {};
                         if (type === 1) {
+                            var tmpObj = {};
                             tmpObj.need_id = row.nid;
+                            tmpObj.id = row.position_id;
+                            tmpObj.name = row.position;
+                            tmpArr.push(tmpObj);
+                        } else {
+                            tmpArr.push(row.position_id);
                         }
-                        tmpObj.id = row.position_id;
-                        tmpObj.name = row.position;
-                        tmpArr.push(tmpObj);
                         done(null);
                     }, function(err){
                         // done
@@ -510,7 +512,7 @@ function showSettingLabelPage(labelId, type, callback){
 
 function labelMain(labelId, page, count, callback) {
     // result block
-    var sql_select_label_info = 'select l.id id, l.name name, imagepath, g.name genre, l.authority_user_id authority ' +
+    var sql_select_label_info = 'select l.id id, l.name name, imagepath, g.name genre, numlike, l.authority_user_id authority ' +
                                 'from label l join genre g on(l.genre_id = g.id) ' +
                                 'where l.id = ?';
     var sql_select_label_need = 'select name ' +
@@ -569,6 +571,7 @@ function labelMain(labelId, page, count, callback) {
                     result.name = results[0].name;
                     result.imagepath = url.resolve(hostAddress, '/labelProfiles/' + filename);
                     result.genre = results[0].genre;
+                    result.numlike = results[0].numlike;
                     result.authority = results[0].authority;
                     dbConn.query(sql_select_label_need, [labelId], function(err, needResults){
                         if (err) {
