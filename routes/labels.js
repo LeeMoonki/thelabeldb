@@ -229,38 +229,44 @@ router.post('/:label_id', isSecure, isAuthenticate, function (req, res, next) {
 
         var joinInfo = {};
         joinInfo.label_id = parseInt(req.params.label_id);
-        joinInfo.user_id = req.user.id;
+        if (!req.body.user_id) {
+            res.send({
+                message: 'user_id를 입력하십시오'
+            });
+        } else {
+            joinInfo.user_id = parseInt(req.body.user_id);
 
-        Label.checkCanJoin(joinInfo.user_id, joinInfo.label_id, function (err, code) {
-            if (err) {
-                return next(err);
-            } else if (code === 0) {
-                // 가입 가능
-                Label.joinLabel(joinInfo, function (err, result) {
-                    if (err) {
-                        return next(err);
-                    } else {
-                        res.send({
-                            message: '레이블에 가입되었습니다',
-                            resultCode: 1
-                        });
-                    }
-                });
-            } else {
-                // 가입 불가능
-                if (code === 1) {
-                    res.send({
-                        message: '가입한 레이블이 3개 이상입니다',
-                        resultCode: 2
+            Label.checkCanJoin(joinInfo.user_id, joinInfo.label_id, function (err, code) {
+                if (err) {
+                    return next(err);
+                } else if (code === 0) {
+                    // 가입 가능
+                    Label.joinLabel(joinInfo, function (err, result) {
+                        if (err) {
+                            return next(err);
+                        } else {
+                            res.send({
+                                message: '레이블에 가입되었습니다',
+                                resultCode: 1
+                            });
+                        }
                     });
                 } else {
-                    res.send({
-                        message: '이미 가입한 레이블입니다',
-                        resultCode: 2
-                    });
+                    // 가입 불가능
+                    if (code === 1) {
+                        res.send({
+                            message: '가입한 레이블이 3개 이상입니다',
+                            resultCode: 2
+                        });
+                    } else {
+                        res.send({
+                            message: '이미 가입한 레이블입니다',
+                            resultCode: 2
+                        });
+                    }
                 }
-            }
-        });
+            });
+        }
     } else {
         res.send({
             message: 'join 값을 확인하십시오',
