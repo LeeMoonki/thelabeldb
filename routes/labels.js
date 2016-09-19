@@ -548,7 +548,7 @@ router.put('/:label_id', isSecure, isAuthenticate, function (req, res, next) {
     logger.log('debug', 'query: %j', req.query, {});
 
     // 레이블 권한위임을 위한 변수
-    var authorize = parseBoolean(req.query.members) || false;
+    var authorize = parseBoolean(req.query.authorize) || false;
 
     // 레이블 수정시에 필요한 레이블 아이디
     var label_id = parseInt(req.params.label_id);
