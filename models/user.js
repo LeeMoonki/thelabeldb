@@ -476,6 +476,7 @@ function shortUserInfo(userId, callback) {
                     var shootObj = {};
                     var tmpObj = {};
                     var filename = path.basename(results[0].imagepath);
+                    tmpObj.id = userId;
                     tmpObj.nickname = results[0].nickname;
                     tmpObj.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
                     shootObj.user = tmpObj;
