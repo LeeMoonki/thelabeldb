@@ -71,7 +71,6 @@ router.post('/', isAuthenticate, isSecure, function(req, res, next){
               if (err) {
                 return next(err);
               }
-              console.log(response);
               res.send(response);
             });
 
