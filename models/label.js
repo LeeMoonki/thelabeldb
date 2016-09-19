@@ -476,6 +476,7 @@ function showSettingLabelPage(labelId, type, callback){
                     if (type === 1) {
                         label.dbImagePath = results[0].image_path;
                     }
+                    
                     label.imagepath = url.resolve(hostAddress, '/labelProfiles/' + filename);
                     label.genre_id = results[0].genre_id;
                     label.genre = results[0].genre;
