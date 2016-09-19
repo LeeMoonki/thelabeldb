@@ -1065,6 +1065,13 @@ function search_sortGenre(content, page, count, callback) {
                 tmp.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
                 tmp.genre = row.label_genre;
                 tmp.needposition = row.label_need_position;
+
+                if (row.label_need_position === '선택하지않음') {
+                    tmp.need = 0
+                } else {
+                    tmp.need = 1
+                }
+
                 labelResults.push(tmp);
                 done(null);
             }, function(err){
@@ -1111,6 +1118,13 @@ function search_sortPosition(content, page, count, callback) {
                 tmp.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
                 tmp.genre = row.label_genre;
                 tmp.needposition = row.label_need_position;
+
+                if (row.label_need_position === '선택하지않음') {
+                    tmp.need = 0
+                } else {
+                    tmp.need = 1
+                }
+
                 labelResults.push(tmp);
                 done(null);
             }, function(err){
