@@ -1035,7 +1035,7 @@ function findAlreadyIndex(indexArr, index, callback) {
 
 function search_sortGenre(content, page, count, callback) {
     var sql_search = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
-      'g.name label_genre, p.name label_need_position ' +
+      'g.name label_genre, l.numlike, p.name label_need_position ' +
       'from label l join label_need n on(l.id = n.label_id) ' +
       'join genre g on(l.genre_id = g.id) ' +
       'join position p on(n.position_id = p.id) ' +
@@ -1064,6 +1064,7 @@ function search_sortGenre(content, page, count, callback) {
                 tmp.name = row.label_name;
                 tmp.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
                 tmp.genre = row.label_genre;
+                tmp.like = row.numlike;
                 tmp.needposition = row.label_need_position;
 
                 if (row.label_need_position === '선택하지않음') {
@@ -1089,7 +1090,7 @@ function search_sortGenre(content, page, count, callback) {
 
 function search_sortPosition(content, page, count, callback) {
     var sql_search = 'select l.id label_id, l.name label_name, imagepath label_image_path, ' +
-      'g.name label_genre, p.name label_need_position ' +
+      'g.name label_genre, l.numlike, p.name label_need_position ' +
       'from label l join label_need n on(l.id = n.label_id) ' +
       'join genre g on(l.genre_id = g.id) ' +
       'join position p on(n.position_id = p.id) ' +
@@ -1117,6 +1118,7 @@ function search_sortPosition(content, page, count, callback) {
                 tmp.name = row.label_name;
                 tmp.image_path = url.resolve(hostAddress, '/labelProfiles/' + filename);
                 tmp.genre = row.label_genre;
+                tmp.like = row.numlike;
                 tmp.needposition = row.label_need_position;
 
                 if (row.label_need_position === '선택하지않음') {
