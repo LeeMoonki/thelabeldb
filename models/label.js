@@ -291,7 +291,7 @@ function joinLabel(info, callback) {
 
 function authorize(userId, labelId, callback) {
 
-    var sql_update_authority = 'UPDATE `thelabeldb`.`label` SET `authority_user_id`=? WHERE `id`=? ';
+    var sql_update_authority = 'UPDATE thelabeldb.label SET authority_user_id = ? WHERE id= ?';
 
     dbPool.getConnection(function(err, dbConn){
         if (err) {
@@ -1213,6 +1213,11 @@ function get_memberDelete(label_id, callback) {
                 if (err) {
                     return callback (err);
                 } else {
+                    for (var i =0; i < results.length; i++) {
+                        var filename = path.basename(results[i].imagepath);
+                        results[i].imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
+                    }
+
                     callback (null, results);
                 }
             });
@@ -1238,6 +1243,11 @@ function get_myprofile(label_id, user_id, callback) {
                     return callback (err);
                 }
                 else {
+                    for (var i =0; i < results.length; i++) {
+                        var filename = path.basename(results[i].imagepath);
+                        results[i].imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
+                    }
+
                     callback(null, results);
                 }
             });
