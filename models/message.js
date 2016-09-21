@@ -61,19 +61,66 @@ function findMessage(userId, youId, date, callback) {
     'from message ' +
     'where ctime > date_format(convert_tz(?, "+00:00", "-09:00"), "%Y-%m-%d %H:%i:%s") and user_id = ? and you_user_id = ? ' +
     'order by ctime desc ';
+  
+  var sql_delete_messages = 'DELETE FROM `thelabeldb`.`message` WHERE `id`=? ';
 
   dbPool.getConnection(function(err, dbConn){
     if (err) {
       return callback(err);
     } else {
-      dbConn.query(sql_select_messages, [date, youId, userId], function(err, results){
-        dbConn.release();
+
+      var shootResults = [];
+      dbConn.beginTransaction(function(err){
         if (err) {
+          dbConn.release();
           return callback(err);
         } else {
-          callback(null, results);
+          async.waterfall([getMeg, delMeg], function(err){
+            if (err) {
+              return dbConn.rollback(function(){
+                dbConn.release();
+                callback(err);
+              });
+            } else {
+              dbConn.commit(function(){
+                dbConn.release();
+                callback(null, shootResults);
+              });
+            }
+          });
         }
       });
+
+      function getMeg(callback) {
+        dbConn.query(sql_select_messages, [date, youId, userId], function(err, results){
+          if (err) {
+            return callback(err);
+          } else {
+            shootResults = results;
+            callback(null, results);
+          }
+        });
+      }
+
+      function delMeg(results, callback) {
+        async.each(results, function(row, done){
+          dbConn.query(sql_delete_messages, [row.id], function(err, result){
+            if (err) {
+              done(err);
+            } else {
+              done(null);
+            }
+          });
+        }, function(err){
+          // done
+          if (err) {
+            callback(err);
+          } else {
+            callback(null);
+          }
+        });
+      }
+
     }
   });
 
