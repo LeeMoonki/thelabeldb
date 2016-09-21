@@ -1220,7 +1220,7 @@ function findAlreadyIndex(indexArr, index, callback) {
 
 function search_sortGenre(content, page, count, callback) {
 
-    var sql_search = 'select u.id user_id, nickname, need, u.imagepath image_path, p.name position, g.name genre, c.name city, t.name town ' +
+    var sql_search = 'select u.id user_id, nickname, need, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
         'join city c on(u.city_id = c.id) ' +
@@ -1272,7 +1272,7 @@ function search_sortGenre(content, page, count, callback) {
 
 function search_sortPosition(content, page, count, callback) {
 
-    var sql_search = 'select u.id user_id, nickname, need, u.imagepath image_path, p.name position, g.name genre, c.name city, t.name town ' +
+    var sql_search = 'select u.id user_id, nickname, need, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
         'join city c on(u.city_id = c.id) ' +
@@ -1324,7 +1324,7 @@ function search_sortPosition(content, page, count, callback) {
 
 function search_sortCity(content, page, count, callback) {
 
-    var sql_search = 'select u.id user_id, nickname, need, u.imagepath image_path, p.name position, g.name genre, c.name city, t.name town ' +
+    var sql_search = 'select u.id user_id, nickname, need, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
         'join city c on(u.city_id = c.id) ' +
