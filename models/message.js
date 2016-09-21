@@ -59,7 +59,7 @@ function findMessage(userId, youId, date, callback) {
   var sql_select_messages = 'select id, user_id, you_user_id, text, ' +
     'date_format(convert_tz(ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date ' +
     'from message ' +
-    'where ctime > date_format(?, "%Y-%m-%d %H:%i:%s") and user_id = ? and you_user_id = ? ' +
+    'where ctime > date_format(convert_tz(?, "+00:00", "-09:00"), "%Y-%m-%d %H:%i:%s") and user_id = ? and you_user_id = ? ' +
     'order by ctime desc ';
 
   dbPool.getConnection(function(err, dbConn){
