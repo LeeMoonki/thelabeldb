@@ -334,9 +334,13 @@ function showMe(userId, page, count, callback) {
 
 function userPage(id, page, rowCount, callback) {
     // id 라는 사용자 id를 갖는 사용자의 정보를 전달
-    var sql_member = 'select u.id id, u.nickname nickname, need, u.imagepath imagepath, g.name genre, lm.label_id label_id ' +
+    var sql_member = 'select u.id id, u.nickname nickname, need, u.imagepath imagepath, g.name genre, lm.label_id label_id, ' +
+                            'p.name position, c.name city, t.name town ' +
                      'from user u left join label_member lm on (lm.user_id = u.id)' +
                                       'join genre g on(u.genre_id = g.id) ' +
+                                      'join position p on(u.position_id = p.id) ' +
+                                      'join city c on(u.city_id = c.id) ' +
+                                      'join town t on(u.town_id = t.id) ' +
                      'where u.id = ?';
 
     var sql_posts = 'select p.id, filetype, filepath, ' +
@@ -372,7 +376,10 @@ function userPage(id, page, rowCount, callback) {
             labelCount.id = member[0].id;
             labelCount.nickname = member[0].nickname;
             labelCount.genre = member[0].genre;
-            labelCount.imagepath = url.resolve(hostAddress, '/userProfiles/' + filename);
+            labelCount.position = member[0].position;
+            labelCount.city = member[0].city;
+            labelCount.town = member[0].town;
+            labelCount.image_path = url.resolve(hostAddress, '/userProfiles/' + filename);
 
             var label = [];
             for (var i = 0; i < member.length; i++) {
@@ -1213,7 +1220,7 @@ function findAlreadyIndex(indexArr, index, callback) {
 
 function search_sortGenre(content, page, count, callback) {
 
-    var sql_search = 'select u.id user_id, nickname, need, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
+    var sql_search = 'select u.id user_id, nickname, need, u.imagepath image_path, p.name position, g.name genre, c.name city, t.name town ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
         'join city c on(u.city_id = c.id) ' +
@@ -1265,7 +1272,7 @@ function search_sortGenre(content, page, count, callback) {
 
 function search_sortPosition(content, page, count, callback) {
 
-    var sql_search = 'select u.id user_id, nickname, need, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
+    var sql_search = 'select u.id user_id, nickname, need, u.imagepath image_path, p.name position, g.name genre, c.name city, t.name town ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
         'join city c on(u.city_id = c.id) ' +
@@ -1317,7 +1324,7 @@ function search_sortPosition(content, page, count, callback) {
 
 function search_sortCity(content, page, count, callback) {
 
-    var sql_search = 'select u.id user_id, nickname, need, u.imagepath imagepath, p.name position, g.name genre, c.name city, t.name town ' +
+    var sql_search = 'select u.id user_id, nickname, need, u.imagepath image_path, p.name position, g.name genre, c.name city, t.name town ' +
         'from user u join position p on(u.position_id = p.id) ' +
         'join genre g on(u.genre_id = g.id) ' +
         'join city c on(u.city_id = c.id) ' +
