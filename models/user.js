@@ -236,7 +236,7 @@ function showMe(userId, page, count, callback) {
         'where u.id = ?';
     var sql_posts = 'select p.id, filetype, filepath, ' +
                            'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
-                           'numlike, u.nickname nickname, u.imagepath imagepath ' +
+                           'numlike, u.nickname nickname, u.imagepath imagepath, p.text text ' +
                     'from post p join user u on(p.user_id = u.id) ' +
                     'where user_id = ? ' +
                     'order by p.id desc ' +
@@ -281,6 +281,7 @@ function showMe(userId, page, count, callback) {
                         }
                         tmpObj.date = row.date;
                         tmpObj.numlike = row.numlike;
+                        tmpObj.text = row.text;
                         postsArr.push(tmpObj);
                         done(null);
                     }, function (err) {
@@ -345,7 +346,7 @@ function userPage(id, page, rowCount, callback) {
 
     var sql_posts = 'select p.id, filetype, filepath, ' +
                            'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
-                           'numlike, u.nickname nickname, u.imagepath imagepath ' +
+                           'numlike, u.nickname nickname, u.imagepath imagepath, p.text text ' +
                     'from post p join user u on(p.user_id = u.id) ' +
                     'where user_id = ? ' +
                     'order by p.id desc ' +
@@ -439,6 +440,7 @@ function userPage(id, page, rowCount, callback) {
                             }
                             tmpObj.date = row.date;
                             tmpObj.numlike = row.numlike;
+                            tmpObj.text = row.text;
                             post.push(tmpObj);
                             done(null);
                         }, function (err) {

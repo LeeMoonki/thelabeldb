@@ -528,7 +528,7 @@ function labelMain(labelId, page, count, callback) {
     // data block
     var sql_select_posts = 'select p.id, user_id, filetype, filepath file_path, ' +
       'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
-      'numlike, u.nickname nickname, u.imagepath imagepath ' +
+      'numlike, u.nickname nickname, u.imagepath imagepath, p.text text ' +
       'from post p join user u on(p.user_id = u.id) ' +
       'where p.label_id = ? ' +
       'order by p.id desc ' +
@@ -642,6 +642,7 @@ function labelMain(labelId, page, count, callback) {
                         }
                         tmpObj.date = row.date;
                         tmpObj.numlike = row.numlike;
+                        tmpObj.text = row.text;
                         data.push(tmpObj);
                         done(null);
                     }, function(err){

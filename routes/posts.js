@@ -21,17 +21,17 @@ router.get('/', isAuthenticate, isSecure, function (req, res, next) {
     var page = parseInt(req.query.page) || 1;
     var count = parseInt(req.query.count) || 10;
     var meet = parseInt(req.query.meet) || 2;
-    
+
     var getPostInfo = {};
     getPostInfo.user_id = req.user.id;
     getPostInfo.position_id = req.user.position_id;
     getPostInfo.genre_id = req.user.genre_id;
-    
+
     getPostInfo.page = page;
     getPostInfo.count = count;
     getPostInfo.meet = meet;
-    
-    Post.showHomePosts(getPostInfo, function(err, results){
+
+    Post.showHomePosts(getPostInfo, function (err, results) {
         if (err) {
             return next(err);
         } else {
@@ -60,7 +60,7 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
 
             if (!fields.filetype || (!files.file && !fields.file) || !fields.opento) {
                 if (files.file) {
-                    unlinkFile(files.file.path, function(err, code){
+                    unlinkFile(files.file.path, function (err, code) {
                         if (err) {
                             return next(err);
                         } else {
@@ -74,10 +74,10 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
                         message: '필수 정보를 입력하십시오'
                     });
                 }
-                
+
             } else if (fields.filetype < 0 || fields.filetype > 2) {
                 if (files.file) {
-                    unlinkFile(files.file.path, function(err, code){
+                    unlinkFile(files.file.path, function (err, code) {
                         if (err) {
                             return next(err);
                         } else {
@@ -91,10 +91,10 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
                         message: 'filetype은 0, 1, 2 중에 하나의 값을 넣어야 합니다'
                     });
                 }
-                
+
             } else if (fields.opento < 0 || fields.opento > 2) {
                 if (files.file) {
-                    unlinkFile(files.file.path, function(err, code){
+                    unlinkFile(files.file.path, function (err, code) {
                         if (err) {
                             return next(err);
                         } else {
@@ -140,7 +140,7 @@ router.post('/', isAuthenticate, isSecure, function (req, res, next) {
     });
 });
 
-router.put('/:post_id', isAuthenticate, isSecure, function(req, res, next){
+router.put('/:post_id', isAuthenticate, isSecure, function (req, res, next) {
 
     // log 생성
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
@@ -150,14 +150,14 @@ router.put('/:post_id', isAuthenticate, isSecure, function(req, res, next){
     var settingInfo = {};
 
 
-    Post.getAPostInfo(post_id, function(err, result){
+    Post.getAPostInfo(post_id, function (err, result) {
         if (err) {
             return next(err);
         } else {
             settingInfo.post_id = post_id;
             settingInfo.text = req.body.text || result.text;
             settingInfo.opento = req.body.opento || result.opento;
-            Post.updatePost(settingInfo, function(err){
+            Post.updatePost(settingInfo, function (err) {
                 if (err) {
                     return next(err);
                 } else {
@@ -170,6 +170,32 @@ router.put('/:post_id', isAuthenticate, isSecure, function(req, res, next){
         }
     });
 
+});
+
+router.delete('/', isAuthenticate, isSecure, function (req, res, next) {
+    logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
+    logger.log('debug', 'query: %j', req.query, {});
+    logger.log('debug', 'body: %j', req.body, {});
+
+    var post_id = parseInt(req.body.post_id);
+    var user_id = parseInt(req.user.id);
+    Post.post_delete(post_id, function (err, result) {
+        if (err) {
+            return next(err);
+        } else {
+            Post.showPost(user_id, function (err, result) {
+                if (err) {
+                    return next(err);
+                } else {
+                    if (result[0].user_id === user_id) {
+                        res.send({message: '게시물이 삭제되었습니다.'})
+                    } else if(result[0].user_id !== user_id){
+                        res.send({message: '다른 유저의 게시물은 삭제할수 없습니다.'})
+                    }
+                }
+            })
+        }
+    });
 });
 
 module.exports = router;

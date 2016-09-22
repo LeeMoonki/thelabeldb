@@ -111,14 +111,14 @@ function dummyUploadPost(postInfo, callback) {
 function homePost(id ,position_id, page, rowCount, meet, callback) {  // 함수명 변경
 
     var meet_sql =
-        'select p.id post_id, u.id user_id, u.nickname nickname, p.filetype filetype, p.filepath file_path, date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, p.numlike numlike ' +
+        'select p.id post_id, u.id user_id, u.nickname nickname, p.filetype filetype, p.filepath file_path, date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, p.numlike numlike, p.text ' +
     'from post p join user u on (p.user_id = u.id) ' +
     'where p.opento =0 and p.filetype = 0 and u.position_id = ? and not user_id = ? ' +
     'order by p.id desc ' +
     'limit 2';
 
     var data_sql =
-        'select p.id post_id, u.id user_id, u.nickname nickname, p.filetype filetype, p.filepath file_path, date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, p.numlike numlike ' +
+        'select p.id post_id, u.id user_id, u.nickname nickname, p.filetype filetype, p.filepath file_path, date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, p.numlike numlike, p.text ' +
         'from post p join user u on (p.user_id = u.id) ' +
         'where p.opento =1 and p.filetype = 0 ' +
         'order by p.id desc ' +
@@ -194,7 +194,7 @@ function showHomePosts(info, callback){
 
     var sql_select_meet_posts = 'select p.id id, u.id user_id, nickname, u.imagepath imagepath, filetype, filepath file_path, ' +
                                        'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
-                                       'numlike ' +
+                                       'numlike, p.text ' +
                                 'from user u join post p on(u.id = p.user_id) ' +
                                 'where u.position_id = ? and p.opento = 0 and u.id not in (?) ' +
                                 'order by p.id desc ' +
@@ -202,7 +202,7 @@ function showHomePosts(info, callback){
 
     var sql_select_general_posts = 'select p.id id, u.id user_id, nickname, u.imagepath imagepath, filetype, filepath file_path, ' +
                                           'date_format(convert_tz(p.ctime, "+00:00", "+09:00"), "%Y-%m-%d %H:%i:%s") date, ' +
-                                          'numlike ' +
+                                          'numlike, p.text ' +
                                    'from user u join post p on(u.id = p.user_id) ' +
                                    'where p.opento = 0 and u.id not in (?) ' +
                                    'order by p.id desc ' +
@@ -257,6 +257,7 @@ function showHomePosts(info, callback){
                             }
                             tmpObj.date = row.date;
                             tmpObj.numlike = row.numlike;
+                            tmpObj.text = row.text;
                             meetPosts.push(tmpObj);
                             done(null);
                         }, function(err){
@@ -296,6 +297,7 @@ function showHomePosts(info, callback){
                             }
                             tmpObj.date = row.date;
                             tmpObj.numlike = row.numlike;
+                            tmpObj.text = row.text;
                             generalPosts.push(tmpObj);
                             done(null);
                         }, function(err){
@@ -399,11 +401,59 @@ function postUpload(post, callback) {
     });
 }
 
+function post_delete(id, callback) {
+    var sql = 'DELETE FROM `thelabeldb`.`post` WHERE `id`=?';
+
+    var sql_post = 'select user_id, id from post where user_id = ?';
+
+    dbPool.getConnection(function (err, dbConn) {
+       if(err) {
+           return callback (err);
+       }
+       dbConn.beginTransaction(function (err) {
+           if (err) {
+               return callback(err);
+               dbConn.release();
+           }
+           dbConn.query(sql, [id], function (err, result) {
+               if (err) {
+                   return dbConn.rollback(function(){
+                       dbConn.release();
+                       callback(err);
+                   });
+               }
+               dbConn.commit(function(){
+                   dbConn.release();
+                   callback (null);
+               });
+           });
+       });
+    });
+}
+
+function showPost(user_id, callback) {
+    var sql = 'select user_id, opento, label_id from post where user_id = ?';
+
+    dbPool.getConnection(function (err, dbConn) {
+       if(err) {
+           return callback(err);
+       }
+       dbConn.query(sql, [user_id], function (err, results) {
+           if(err) {
+               return callback(err);
+           }
+           callback(null, results);
+       })
+    });
+}
+
 module.exports.dummyShowPosts = dummyShowPosts;
 module.exports.dummyUploadPost = dummyUploadPost;
 
 module.exports.homePost = homePost;
 module.exports.postUpload = postUpload;
+module.exports.post_delete = post_delete;
+module.exports.showPost = showPost;
 
 module.exports.getAPostInfo = getAPostInfo;
 module.exports.updatePost = updatePost;
