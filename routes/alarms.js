@@ -106,7 +106,7 @@ router.post('/label_id', isAuthenticate, isSecure, function(req, res, next){
 router.put('/:label_id', isSecure, isAuthenticate, function(req, res, next) {
     logger.log('debug', '%s %s://%s%s', req.method, req.protocol, req.headers['host'], req.originalUrl);
     logger.log('debug', 'query: %j', req.query, {});
-console.log(req.body.type);
+
     var type = parseInt(req.body.type);
     var from_id = parseInt(req.body.from_id);
     var label_id = parseInt(req.params.label_id);
@@ -124,6 +124,8 @@ console.log(req.body.type);
             if(err) {
                 return callback(err);
             } else {
+                console.log('result1 : '+result);
+                console.log('result2 : '+result[0].type);
                 if (result[0].type === 1) {
                     Alarm.labelJoin(from_id, label_id, function (err, result) {
                         if (err) {
@@ -132,7 +134,7 @@ console.log(req.body.type);
                         callback(null);
                     });
                 } else if (result[0].type === 2) {
-                    Alarm.refuse(from_id, label_id, function (err, result) {
+                    Alarm.refuse(from_id, label_id, type, function (err, result) {
                         if (err) {
                             return callback(err);
                         }
@@ -160,8 +162,11 @@ console.log(req.body.type);
         if(err) {
             return next(err)
         }
+        console.log(type);
         if(type ===1) message = '가입을 승인하였습니다.';
-        else if(type ===2 ) message= '가입요청이 거절당하였습니다.';
+        else if(type ===2 ) {
+            console.log(1234);
+        } message= '가입요청이 거절당하였습니다.';
         res.send({message: message});
     });
 });

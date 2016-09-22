@@ -150,8 +150,8 @@ function labelJoin(from_id, label_id, callback) {
     })
 }
 
-function refuse(from_id, label_id, callback) {
-    var sql_refuse = 'DELETE FROM `thelabeldb`.`alarm` WHERE `from_id` = ? and `label_id` = ?';
+function refuse(from_id, label_id, type,  callback) {
+    var sql_refuse = 'DELETE FROM `thelabeldb`.`alarm` WHERE `from_id` = ? and `label_id` = ? and `type` = ?';
 
     dbPool.getConnection(function (err, dbConn) {
         if(err) {
@@ -162,7 +162,7 @@ function refuse(from_id, label_id, callback) {
                 dbConn.release();
                 return callback(err);
             } else {
-                dbConn.query(sql_refuse, [from_id, label_id], function (err, result) {
+                dbConn.query(sql_refuse, [from_id, label_id, type], function (err, result) {
                     if (err) {
                         return dbConn.rollback(function () {
                             dbConn.release();
